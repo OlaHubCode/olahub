@@ -1,5 +1,5 @@
 {
-    "name": "olahub/user-common",
+    "name": "olahubcode/user-back",
     "description": "The Laravel Lumen Framework.",
     "keywords": ["framework", "laravel", "lumen"],
     "license": "MIT",
