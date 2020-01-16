@@ -23,7 +23,7 @@
                 "name": "olahub",
                 "version": "dev-master",
                 "source": {
-                    "url": "https://github.com/mohamedElabsy/userCommon",
+                    "url": "https://github.com/OlaHubCode/olahub",
                     "type": "git",
                     "reference": "origin/master"
                 }
