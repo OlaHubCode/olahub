@@ -8,7 +8,8 @@ use OlaHub\UserPortal\Models\CelebrationModel;
 use OlaHub\UserPortal\Models\CelebrationParticipantsModel;
 use OlaHub\UserPortal\Models\CelebrationShippingAddressModel;
 
-class CelebrationController extends BaseController {
+class CelebrationController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
@@ -16,14 +17,16 @@ class CelebrationController extends BaseController {
     private $cartData;
     protected $userAgent;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
 
-    public function createNewCelebration() {
+    public function createNewCelebration()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create new celebration"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationModel::$columnsMaping, (array) $this->requestData);
@@ -50,7 +53,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'InternalServerError', 'code' => 500], 200);
     }
 
-    public function createCelebrationByCalendar() {
+    public function createCelebrationByCalendar()
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create celebration by calendar"]);
 
@@ -95,7 +99,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function createCelebrationByCart() {
+    public function createCelebrationByCart()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create celebration by cart"]);
 
         if (isset($this->requestData['cartId']) && $this->requestData['cartId'] <= 0) {
@@ -139,7 +144,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []], 200);
     }
 
-    public function updateCelebration() {
+    public function updateCelebration()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Update celebration"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start updating celebration"]);
@@ -177,7 +183,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function deleteCelebration() {
+    public function deleteCelebration()
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Delete celebration"]);
 
@@ -192,8 +199,7 @@ class CelebrationController extends BaseController {
                     return response(['status' => false, 'msg' => 'NotAuthorizedToDeleteCelebration', 'code' => 400], 200);
                 } elseif ($celebration->commit_date != null) {
                     foreach ($participants as $participant) {
-                        if ($participant->payment_status == 3)
-                            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'participantsPaied', 'code' => 400]]);
+                        if ($participant->payment_status == 3) (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'participantsPaied', 'code' => 400]]);
                         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                         return response(['status' => false, 'msg' => 'participantsPaied', 'code' => 400], 200);
                     }
@@ -227,7 +233,8 @@ class CelebrationController extends BaseController {
                         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedCelebration($participantData, app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name, $celebration->title, $celebrationOwner->first_name . ' ' . $celebrationOwner->last_name);
                     }
                 }
-            }(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to celebration"]);
+            }
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to celebration"]);
             $removeNotifications = \OlaHub\UserPortal\Models\NotificationMongo::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->get();
             foreach ($removeNotifications as $removeNotification) {
                 if ($removeNotification) {
@@ -253,7 +260,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    private function deleteCelebrationDetails($celebration) {
+    private function deleteCelebrationDetails($celebration)
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Delete celebration details"]);
 
@@ -270,21 +278,25 @@ class CelebrationController extends BaseController {
                 }
             }
             $cart->delete();
-        }(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete videos and images related to celebration"]);
+        }
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete videos and images related to celebration"]);
         if (count($celebrationContents) > 0) {
             foreach ($celebrationContents as $celebrationContent) {
                 $celebrationContent->delete();
             }
-        }(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete shipping address related to celebration"]);
+        }
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete shipping address related to celebration"]);
         if ($celebration->shippingAddress) {
             $celebration->shippingAddress()->delete();
-        }(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete celebration participants related to celebration"]);
+        }
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete celebration participants related to celebration"]);
         if ($celebration->celebrationParticipants) {
             $celebration->celebrationParticipants()->delete();
         }
     }
 
-    private function firstParticipant() {
+    private function firstParticipant()
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "First participant"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Make celebration creator participant in this celebration"]);
@@ -301,7 +313,8 @@ class CelebrationController extends BaseController {
         }
     }
 
-    private function saveCelebrationData() {
+    private function saveCelebrationData()
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Save celebration data"]);
 
@@ -335,7 +348,8 @@ class CelebrationController extends BaseController {
         return false;
     }
 
-    public function ListCelebrations() {
+    public function ListCelebrations()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "List celebrations"]);
 
         $participants = CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->get();
@@ -346,9 +360,9 @@ class CelebrationController extends BaseController {
                 $celebrationId[] = $participant->celebration_id;
             }
 
-            $celebration = CelebrationModel::whereIn('id', $celebrationId)->orderBy('created_at', 'desc')->whereHas("cart", function($q) {
-                        $q->withoutGlobalScope("countryUser");
-                    })->paginate(10);
+            $celebration = CelebrationModel::whereIn('id', $celebrationId)->orderBy('created_at', 'desc')->whereHas("cart", function ($q) {
+                $q->withoutGlobalScope("countryUser");
+            })->paginate(10);
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');
             $return['status'] = true;
             $return['code'] = 200;
@@ -363,7 +377,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getOneCelebration() {
+    public function getOneCelebration()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get one celebration"]);
 
 
@@ -382,7 +397,8 @@ class CelebrationController extends BaseController {
 
                     return response(['status' => false, 'msg' => 'authorizedToOpenCelebration', 'code' => 400], 200);
                 }
-            }(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check celebration existance to show its details for user"]);
+            }
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check celebration existance to show its details for user"]);
             if ($celebration) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Show details of selected celebration"]);
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');
@@ -403,8 +419,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUserShippingAddress() {
-
+    public function getUserShippingAddress()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get user shipping address"]);
 
         if (isset($this->requestData['userId']) && $this->requestData['userId']) {
@@ -451,6 +467,17 @@ class CelebrationController extends BaseController {
                 ];
             }
 
+            $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
+            $reg = [];
+            foreach ($regions as $region) {
+                $reg[] = [
+                    'key' => $region->id,
+                    'text' => $region->name,
+                    'value' => $region->id,
+                ];
+            }
+            $return['cities'] = $reg;
+
             $return['status'] = true;
             $return['code'] = 200;
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
@@ -462,7 +489,8 @@ class CelebrationController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getCreatorShippingAddress() {
+    public function getCreatorShippingAddress()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get creator shipping address"]);
 
         $cart = \OlaHub\UserPortal\Models\Cart::getUserCart(app('session')->get('tempID'));
@@ -485,5 +513,4 @@ class CelebrationController extends BaseController {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response($return, 200);
     }
-
 }

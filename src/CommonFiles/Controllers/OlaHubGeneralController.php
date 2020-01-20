@@ -879,8 +879,8 @@ class OlaHubGeneralController extends BaseController {
                             });
                             $q->orWhere(function($storePosts) use($currentCountryID) {
                                 $storePosts->whereNull('user_id');
-                                // $storePosts->orWhere('country', $currentCountryID);
                                 $storePosts->where('country_id', $currentCountryID);
+                                // $storePosts->orWhere('country', $currentCountryID);
                             });
                         })->orderBy('created_at', 'desc')->whereNull('group_id')->paginate(20);
 

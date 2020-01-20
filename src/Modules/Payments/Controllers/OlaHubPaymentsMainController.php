@@ -266,7 +266,9 @@ class OlaHubPaymentsMainController extends BaseController {
         if ($this->userVoucherAccount) {
             $this->userVoucher = $this->userVoucherAccount->voucher_balance;
             if ($this->billing) {
-                $this->userVoucher += $this->billing->voucher_used;
+                if($this->billing->voucher_used == 0){
+                    $this->userVoucher += $this->billing->voucher_used;
+                }
                 $this->userVoucherAccount->voucher_balance = $this->userVoucher;
                 $this->userVoucherAccount->save();
             }

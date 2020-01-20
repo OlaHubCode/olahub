@@ -4,6 +4,13 @@ namespace OlaHub\UserPortal\Helpers;
 
 class UserHelper extends OlaHubCommonHelper {
 
+    //get user data by IP address by Rami
+    function getIPInfo() {
+        $ip = $_SERVER['REMOTE_ADDR'];
+        return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
+        // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+    }
+
     function checkUnique($value = false) {
         if ($value && strlen($value) > 3) {
             $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)

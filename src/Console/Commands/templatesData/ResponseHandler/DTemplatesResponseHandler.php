@@ -5,7 +5,6 @@
  * Handling response object how it will show  
  * all functions return with object
  * 
- * @author Mohamed EL-Absy <mohamed.elabsy@yahoo.com>
  * @copyright (c) 2018, OlaHub LLC
  * @version 1.0.0
  */

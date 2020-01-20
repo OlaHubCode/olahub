@@ -73,7 +73,8 @@ class UserModel extends Model {
             'column' => 'email',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'max:50|email'
+            'validation' => 'max:50'
+            // 'validation' => 'max:50|email'
         ],
         'userBirthday' => [
             'column' => 'user_birthday',

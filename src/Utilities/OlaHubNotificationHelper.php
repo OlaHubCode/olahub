@@ -85,7 +85,7 @@ class OlaHubNotificationHelper {
                 'email' => "amjad.sawais@olahub.com"
             ];
             $to[] = [
-                'email' => "mohamed.elabsy@olahub.com"
+                'email' => "rami.hashash@olahub.com"
             ];
             $sendEmail = new \OlaHub\UserPortal\Libraries\SendEmails;
             $sendEmail->subject = "SMS Error";

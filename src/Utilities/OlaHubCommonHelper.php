@@ -149,9 +149,13 @@ abstract class OlaHubCommonHelper {
 
         shuffle($seed);
         $rand = '';
-        foreach (array_rand($seed, $length) as $k) {
+        foreach (array_rand($seed, 6) as $k) {
             $rand .= $seed[$k];
+            shuffle($seed);
         }
+        // foreach (array_rand($seed, $length) as $k) {
+        //     $rand .= $seed[$k];
+        // }
         return $rand;
     }
 
@@ -703,9 +707,9 @@ abstract class OlaHubCommonHelper {
         for ($i = 2; $i <= $totalDays + 1; $i++) {
             $timeStamp = strtotime("+$i Days");
             $day = date("N", $timeStamp);
-            // if (in_array($day, WEEK_END_DATES)) {
-            //     $returnDates++;
-            // }
+            if (in_array($day, WEEK_END_DATES)) {
+                $returnDates++;
+            }
         }
         $checkTotal = strtotime("+$returnDates Days");
         $day = date("N", $checkTotal);

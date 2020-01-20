@@ -5,7 +5,6 @@
  * This the main class that used to send/recieved data from/to API
  * all functions return with Json object
  * 
- * @author Mohamed EL-Absy <mohamed.elabsy@yahoo.com>
  * @copyright (c) 2018, OlaHub LLC
  * @version 1.0.0
  */
