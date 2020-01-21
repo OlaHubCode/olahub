@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\PaymentMethod;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
-class OlaHubPaymentsMainController extends BaseController {
+class OlaHubPaymentsMainController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
@@ -45,7 +46,8 @@ class OlaHubPaymentsMainController extends BaseController {
     protected $friends;
     protected $calendar;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $this->return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $this->return['requestData'];
         $this->requestFilter = $this->return['requestFilter'];
@@ -57,7 +59,8 @@ class OlaHubPaymentsMainController extends BaseController {
         $this->cart = false;
     }
 
-    public function getPaymentsList($type = "default") {
+    public function getPaymentsList($type = "default")
+    {
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
@@ -100,7 +103,8 @@ class OlaHubPaymentsMainController extends BaseController {
         return response($this->return, 200);
     }
 
-    function checkPayPoint() {
+    function checkPayPoint()
+    {
         $points = \OlaHub\UserPortal\Models\UserPoints::selectRaw('SUM(points_collected) as total_points')->first();
         $this->pointsUsedInt = $points->total_points;
         if ($this->billing && $this->billing->points_used > 0) {
@@ -144,7 +148,8 @@ class OlaHubPaymentsMainController extends BaseController {
           } */
     }
 
-    protected function checkCrossCountries() {
+    protected function checkCrossCountries()
+    {
         $getIPInfo = new \OlaHub\UserPortal\Helpers\getIPInfo();
         $countryCode = $getIPInfo->ipData('countrycode');
         $countryID = 0;
@@ -159,14 +164,16 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function getCartDetails() {
+    protected function getCartDetails()
+    {
         $this->cartDetails = $this->cart->cartDetails()->get();
         if (!($this->cartDetails->count() > 0)) {
             throw new NotAcceptableHttpException(404);
         }
     }
 
-    protected function checkPromoCode($cartSubTotal, $recordUse = true) {
+    protected function checkPromoCode($cartSubTotal, $recordUse = true)
+    {
         if ($this->cart->promo_code_id) {
             $coupon = \OlaHub\UserPortal\Models\Coupon::find($this->cart->promo_code_id);
             if ($coupon) {
@@ -180,13 +187,14 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function setCartTotal($withExtra = true) {
-        $this->cartTotal = (double) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
+    protected function setCartTotal($withExtra = true)
+    {
+        $this->cartTotal = (float) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
         $this->checkPromoCode($this->cartTotal, $withExtra);
         if ($withExtra) {
-            $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function($q) {
-                        $q->where('is_shipment_free', '0');
-                    })->first() ? 3.5 : 0;
+            $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+                $q->where('is_shipment_free', '0');
+            })->first() ? 3.5 : 0;
             $this->shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart);
             if ($this->paymentMethodCountryData) {
                 $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
@@ -207,40 +215,42 @@ class OlaHubPaymentsMainController extends BaseController {
                 $this->cashOnDeliver = $this->cashOnDeliver / $participants->count();
             }
         }
-        $this->total = (double) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
+        $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
     }
 
-    protected function getPaymentMethodsDetails($country) {
+    protected function getPaymentMethodsDetails($country)
+    {
         $typeID = $this->typeID;
         if ($this->crossCountry) {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
-                    ->whereHas('PaymentData', function($q) use($typeID) {
-                        $q->whereHas('typeDataSync', function($query) use($typeID) {
-                            $query->where('lkp_payment_method_types.id', $typeID);
-                        });
-                    })
-                    ->where('is_cross', '1')
-                    ->get();
+                ->whereHas('PaymentData', function ($q) use ($typeID) {
+                    $q->whereHas('typeDataSync', function ($query) use ($typeID) {
+                        $query->where('lkp_payment_method_types.id', $typeID);
+                    });
+                })
+                ->where('is_cross', '1')
+                ->get();
         } else {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
-                            ->whereHas('PaymentData', function($q) use($typeID) {
-                                $q->whereHas('typeDataSync', function($query) use($typeID) {
-                                    $query->where('lkp_payment_method_types.id', $typeID);
-                                });
-                            })->groupBy("payment_method_id")->get();
+                ->whereHas('PaymentData', function ($q) use ($typeID) {
+                    $q->whereHas('typeDataSync', function ($query) use ($typeID) {
+                        $query->where('lkp_payment_method_types.id', $typeID);
+                    });
+                })->groupBy("payment_method_id")->get();
         }
 
         if (!$this->paymentMethodCountryData->count()) {
-            $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::whereHas('PaymentData', function($q) use($typeID) {
-                        $q->where("accept_cross", "1");
-                        $q->whereHas('typeDataSync', function($query) use($typeID) {
-                            $query->where('lkp_payment_method_types.id', $typeID);
-                        });
-                    })->get();
+            $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::whereHas('PaymentData', function ($q) use ($typeID) {
+                $q->where("accept_cross", "1");
+                $q->whereHas('typeDataSync', function ($query) use ($typeID) {
+                    $query->where('lkp_payment_method_types.id', $typeID);
+                });
+            })->get();
         }
     }
 
-    protected function checkUserBalanceCover() {
+    protected function checkUserBalanceCover()
+    {
         if ($this->total > $this->userVoucher) {
             $this->voucherAfterPay = 0;
             $this->voucherUsed = $this->userVoucher;
@@ -251,7 +261,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function checkPendingBill() {
+    protected function checkPendingBill()
+    {
         $pendingStatusIDs = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("cycle_order", 1)->where("action_id", ">", 0)->get();
         $pendingIds = [];
         foreach ($pendingStatusIDs as $one) {
@@ -260,13 +271,14 @@ class OlaHubPaymentsMainController extends BaseController {
         $this->billing = \OlaHub\UserPortal\Models\UserBill::where('temp_cart_id', $this->cart->id)->where('country_id', $this->cart->country_id)->whereIn('pay_status', $pendingIds)->first();
     }
 
-    protected function getUserVoucher($userID = false, $newVoucher = 0) {
+    protected function getUserVoucher($userID = false, $newVoucher = 0)
+    {
         $this->userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::withoutGlobalScope('voucherCountry')->where('country_id', $this->cart->country_id)->where('user_id', $this->userId)->first();
 
         if ($this->userVoucherAccount) {
             $this->userVoucher = $this->userVoucherAccount->voucher_balance;
             if ($this->billing) {
-                if($this->billing->voucher_used == 0){
+                if ($this->billing->voucher_used == 0) {
                     $this->userVoucher += $this->billing->voucher_used;
                 }
                 $this->userVoucherAccount->voucher_balance = $this->userVoucher;
@@ -282,18 +294,20 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function setCurrencyCode() {
+    protected function setCurrencyCode()
+    {
         $cart = $this->cart;
-        $this->currency = \OlaHub\UserPortal\Models\Currency::whereHas('countries', function ($q) use($cart) {
-                    $q->where('id', 5);
-                    // $q->where('id', $cart->country_id);
-                })->first();
+        $this->currency = \OlaHub\UserPortal\Models\Currency::whereHas('countries', function ($q) use ($cart) {
+            // $q->where('id', 5);
+            $q->where('id', $cart->country_id);
+        })->first();
         if (!$this->currency) {
             $this->currency = app('session')->get('def_currency');
         }
     }
 
-    protected function createUserBillingDetails() {
+    protected function createUserBillingDetails()
+    {
         \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $this->billing->id)->delete();
         foreach ($this->cartDetails as $this->cartItem) {
             switch ($this->cartItem->item_type) {
@@ -380,7 +394,8 @@ class OlaHubPaymentsMainController extends BaseController {
         $this->billingDetails = $this->billing->billDetails;
     }
 
-    protected function setRequestShipingAddress() {
+    protected function setRequestShipingAddress()
+    {
         $return = [];
         $cityName = "";
         $regionName = "";
@@ -390,7 +405,7 @@ class OlaHubPaymentsMainController extends BaseController {
                     $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $this->cart->country_id)->first();
                     $region = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->where('id', $this->requestData['billState'])->first();
                     $regionName = isset($region->name) ? $region->name : null;
-                }else{
+                } else {
                     $regionName = $this->requestData['billState'];
                 }
             }
@@ -410,12 +425,13 @@ class OlaHubPaymentsMainController extends BaseController {
         return $return;
     }
 
-    protected function getCelebrationDetails() {
+    protected function getCelebrationDetails()
+    {
 
         $celebrationID = $this->celebrationID;
-        $this->participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::whereHas('celebration', function($q) use($celebrationID) {
-                    $q->where('celebration_id', $celebrationID);
-                })->where('user_id', app('session')->get('tempID'))->where('payment_status', '2')->first();
+        $this->participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::whereHas('celebration', function ($q) use ($celebrationID) {
+            $q->where('celebration_id', $celebrationID);
+        })->where('user_id', app('session')->get('tempID'))->where('payment_status', '2')->first();
         if (!$this->participant) {
             throw new NotAcceptableHttpException(404);
         }
@@ -425,14 +441,15 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function createUserBillingHistory($paidBy = "0", $paidResult = null) {
+    protected function createUserBillingHistory($paidBy = "0", $paidResult = null)
+    {
         $pay_status = 0;
         if (!$this->billing) {
             $billingNum = (new \OlaHub\UserPortal\Helpers\BillsHelper)->createUserBillNumber();
             $this->billing = new \OlaHub\UserPortal\Models\UserBill;
             $this->billing->billing_number = $billingNum;
-            $this->billing->country_id = 5;
-            // $this->billing->country_id = $this->cart->country_id;
+            // $this->billing->country_id = 5;
+            $this->billing->country_id = $this->cart->country_id;
             $this->billing->user_id = app('session')->get('tempID');
             $this->billing->pay_for = $this->cart->celebration_id > 0 ? $this->cart->celebration_id : 0;
             $this->billing->calendar_id = $this->cart->calendar_id > 0 ? $this->cart->calendar_id : 0;
@@ -466,12 +483,12 @@ class OlaHubPaymentsMainController extends BaseController {
         $this->billing->promo_code_id = $this->cart->promo_code_id;
         $this->billing->promo_code_saved = $this->promoCodeSave;
         $this->billing->order_address = serialize($this->setRequestShipingAddress());
-        // $this->billing->country_id = 5;
-        $this->billing->billing_currency = 'JOD';
+        // $this->billing->billing_currency = 'JOD';
         $this->billing->save();
     }
 
-    protected function payStatusID($paidBy, $cycle_order, $success = 0, $fail = 0) {
+    protected function payStatusID($paidBy, $cycle_order, $success = 0, $fail = 0)
+    {
         $paidArray = explode("_", $paidBy);
         $return = 0;
         $paymentId = 0;
@@ -483,10 +500,10 @@ class OlaHubPaymentsMainController extends BaseController {
 
         if ($paymentId > 0) {
             $paymenStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("action_id", $paymentId)
-                    ->where("cycle_order", $cycle_order)
-                    ->where("is_success", $success)
-                    ->where("is_fail", $fail)
-                    ->first();
+                ->where("cycle_order", $cycle_order)
+                ->where("is_success", $success)
+                ->where("is_fail", $fail)
+                ->first();
             if ($paymenStatus) {
                 $return = $paymenStatus->id;
             } else {
@@ -497,7 +514,8 @@ class OlaHubPaymentsMainController extends BaseController {
         return $return;
     }
 
-    protected function updateUserVoucher() {
+    protected function updateUserVoucher()
+    {
         if ($this->voucherUsed > 0) {
             if ($this->pointsUsedCurr > 0 && $this->voucherAfterPay > 0) {
                 $voucherAfterPay = $this->voucherAfterPay - $this->pointsUsedCurr;
@@ -518,7 +536,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function finalizeSuccessPayment($sendEmails = true, $cycle_order = 1, $success = 1, $fail = 0) {
+    protected function finalizeSuccessPayment($sendEmails = true, $cycle_order = 1, $success = 1, $fail = 0)
+    {
         $pay_status = $this->payStatusID($this->billing->paid_by, $cycle_order, $success, $fail);
         $this->billing->pay_status = $pay_status;
         if (isset($this->paymentMethodCountryData->extra_fees)) {
@@ -539,22 +558,22 @@ class OlaHubPaymentsMainController extends BaseController {
             \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
             \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         }
-        
-        if($success == 1){
+
+        if ($success == 1) {
             $stores = [];
             $fcmTokens = [];
-            foreach ($this->billingDetails as $item){
-                if($item->item_type != 'designer'){
+            foreach ($this->billingDetails as $item) {
+                if ($item->item_type != 'designer') {
                     array_push($stores, $item->store_id);
                     array_push($stores, $item->merchant_id);
                 }
             }
-            if(count($stores) > 0){
+            if (count($stores) > 0) {
                 $fcms = \OlaHub\UserPortal\Models\FcmStoreToken::whereIn('for_id', $stores)->whereIn('for_type', ['merchant', 'store'])->get();
-                foreach ($fcms as $fcmToken){
+                foreach ($fcms as $fcmToken) {
                     array_push($fcmTokens, $fcmToken->fcm_token);
                 }
-               (new \OlaHub\UserPortal\Helpers\PaymentHelper())->sendSellersNewOrdersNotifications($fcmTokens); 
+                (new \OlaHub\UserPortal\Helpers\PaymentHelper())->sendSellersNewOrdersNotifications($fcmTokens);
             }
         }
 
@@ -562,7 +581,8 @@ class OlaHubPaymentsMainController extends BaseController {
         $this->billing->save();
     }
 
-    protected function finalizeFailPayment($reason) {
+    protected function finalizeFailPayment($reason)
+    {
         $pay_status = $this->payStatusID($this->billing->paid_by, 2, 0, 1);
         $this->billing->pay_status = $pay_status;
         $this->billing->save();
@@ -576,7 +596,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function finalizeSuccessMeMails() {
+    protected function finalizeSuccessMeMails()
+    {
         \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
@@ -591,7 +612,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function finalizeSuccessGiftMails() {
+    protected function finalizeSuccessGiftMails()
+    {
         \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         $shipping = unserialize($this->billing->order_address);
@@ -609,7 +631,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function finalizeSuccessCelebrationMails() {
+    protected function finalizeSuccessCelebrationMails()
+    {
         $this->participant->payment_status = 3;
         $this->participant->save();
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserPaymentCelebration(app('session')->get('tempData'), $this->billing);
@@ -634,7 +657,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function checkActionPermission($type) {
+    protected function checkActionPermission($type)
+    {
         if (!$this->userId) {
             throw new NotAcceptableHttpException(404);
         }
@@ -653,9 +677,9 @@ class OlaHubPaymentsMainController extends BaseController {
             $time = strtotime("+3 Days");
             $minTime = date("Y-m-d", $time);
             $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)
-                    ->where("id", $this->id)
-                    ->where("calender_date", ">=", $minTime)
-                    ->first();
+                ->where("id", $this->id)
+                ->where("calender_date", ">=", $minTime)
+                ->first();
             if (!$this->calendar) {
                 $return['status'] = false;
                 $return['code'] = 404;
@@ -664,9 +688,9 @@ class OlaHubPaymentsMainController extends BaseController {
             }
         } elseif ($type == "celebration" && $this->id > 0 && $this->userId > 0) {
             $userId = $this->userId;
-            $this->celebration = \OlaHub\UserPortal\Models\CelebrationModel::whereHas("celebrationParticipants", function($q) use($userId) {
-                        $q->where("user_id", $userId);
-                    })->where("id", $this->id)->first();
+            $this->celebration = \OlaHub\UserPortal\Models\CelebrationModel::whereHas("celebrationParticipants", function ($q) use ($userId) {
+                $q->where("user_id", $userId);
+            })->where("id", $this->id)->first();
             if (!$this->celebration) {
                 $return['status'] = false;
                 $return['code'] = 404;
@@ -675,9 +699,9 @@ class OlaHubPaymentsMainController extends BaseController {
             }
             $this->celebrationDetails = $this->celebration;
             $celebrationID = $this->id;
-            $this->participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::whereHas('celebration', function($q) use($celebrationID) {
-                        $q->where('celebration_id', $celebrationID);
-                    })->where('user_id', app('session')->get('tempID'))->where('payment_status', '2')->first();
+            $this->participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::whereHas('celebration', function ($q) use ($celebrationID) {
+                $q->where('celebration_id', $celebrationID);
+            })->where('user_id', app('session')->get('tempID'))->where('payment_status', '2')->first();
             if (!$this->participant) {
                 $return['status'] = false;
                 $return['code'] = 404;
@@ -687,22 +711,24 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function cartFilter($type) {
+    protected function cartFilter($type)
+    {
         $this->cartModel = (new \OlaHub\UserPortal\Models\Cart)->newQuery();
         switch ($type) {
             case "default":
                 return $this->cartModel->whereNull("calendar_id")->first();
             case "celebration":
                 return $this->cartModel->withoutGlobalScope("countryUser")
-                                ->whereNull("calendar_id")
-                                ->whereNull("user_id")
-                                ->where("celebration_id", $this->id)->first();
+                    ->whereNull("calendar_id")
+                    ->whereNull("user_id")
+                    ->where("celebration_id", $this->id)->first();
             case "event":
                 return $this->cartModel->where("calendar_id", $this->id)->first();
         }
     }
 
-    protected function setTypeID($type) {
+    protected function setTypeID($type)
+    {
         switch ($type) {
             case "default":
                 if ($this->cart->for_friend > 0) {
@@ -722,7 +748,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function checkCart($type) {
+    protected function checkCart($type)
+    {
         $this->cart = null;
         $checkCart = $this->cartFilter($type);
 
@@ -740,7 +767,8 @@ class OlaHubPaymentsMainController extends BaseController {
         }
     }
 
-    protected function creatCart($type) {
+    protected function creatCart($type)
+    {
         $country = $this->celebration ? \OlaHub\UserPortal\Models\Country::where('id', $this->celebration->country_id)->first() : \OlaHub\UserPortal\Models\Country::where('id', app('session')->get('def_country')->id)->first();
         $this->cartModel = new \OlaHub\UserPortal\Models\Cart;
         $this->cartModel->shopping_cart_date = date('Y-m-d h:i');
@@ -758,5 +786,4 @@ class OlaHubPaymentsMainController extends BaseController {
                 return $this->cartModel->save();
         }
     }
-
 }

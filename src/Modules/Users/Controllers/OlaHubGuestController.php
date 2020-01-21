@@ -39,12 +39,12 @@ class OlaHubGuestController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "registerUser"]);
 
         $validation = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserModel::$columnsMaping, (array) $this->requestData);
-        $this->requestData['userPhoneNumber'] = str_replace("+", "00", $this->requestData['userPhoneNumber']);
+        // $this->requestData['userPhoneNumber'] = str_replace("+", "00", $this->requestData['userPhoneNumber']);
         if (isset($validation['status']) && !$validation['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validation['data']], 200);
         }
 
-        if (!(new \OlaHub\UserPortal\Helpers\UserHelper)->checkUnique($this->requestData['userEmail'])) {
+        if (!(new \OlaHub\UserPortal\Helpers\UserHelper)->checkUnique($this->requestData['userEmail'], $this->requestData['userCountry'])) {
             if (is_numeric($this->requestData['userEmail'])) {
                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
             } else {
@@ -75,10 +75,10 @@ class OlaHubGuestController extends BaseController
                 $userData->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(UserModel::$columnsMaping, $input)} = $value ? $value : null;
             }
         }
-        // $userData->country_id = app('session')->get('def_country')->id;
-        $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-        $userData->country_id = $country->id;
+        // $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+        // $userData->country_id = $country->id;
         $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+        // print_r($userData); return "";
         $userData->save();
 
         $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
@@ -222,6 +222,7 @@ class OlaHubGuestController extends BaseController
             $checkUserSession = (new \OlaHub\UserPortal\Helpers\UserHelper)->createActiveSession($checkUserSession, $userData, $this->userAgent, $this->requestCart);
         }
         $returnUserToSecure = array(
+            'country_id' => $userData->country_id,
             'username' => "$userData->first_name $userData->last_name",
             'avatar' => ($userData->profile_picture ? STORAGE_URL . "/$userData->profile_picture" : NULL)
         );
@@ -446,43 +447,48 @@ class OlaHubGuestController extends BaseController
         if (isset($this->requestData["userEmail"])) {
             $userEmail = $this->requestData["userEmail"];
         }
-        $userPhoneNumber = str_replace("+", "00", $userPhoneNumber);
+        $country_id = $this->requestData["userCountry"];
+        // $userPhoneNumber = str_replace("+", "00", $userPhoneNumber);
         $emailType = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($userEmail);
         $phoneType = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($userPhoneNumber);
         if ($emailType || $phoneType) {
             $email = $userEmail;
             $mobile = $userPhoneNumber;
             if ($emailType == 'email') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {
                     $q->where('email', $email);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($emailType == 'phoneNumber') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $email);
+                    $q->where('mobile_no', $email);
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($phoneType == 'email') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
                     $q->where('email', $mobile);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($phoneType == 'phoneNumber') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $mobile);
+                    $q->where('mobile_no', $mobile);
+                    $q->where('country_id', $country_id);
                 })->first();
             }
 
@@ -523,33 +529,41 @@ class OlaHubGuestController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resendSecureCode"]);
 
         if (isset($this->requestData["userEmail"]) && !empty($this->requestData["userEmail"])) {
-            if (substr($this->requestData["userEmail"], 0, 5) !== "00962" && substr($this->requestData["userEmail"], 0, 1) === "0") {
-                $phoneTemp = str_split($this->requestData["userEmail"], 1);
-                unset($phoneTemp[0]);
-                $this->requestData["userEmail"] = implode("", $phoneTemp);
-            }
-            $requestEmailData = str_replace("+", "00", $this->requestData["userEmail"]);
+            // if (substr($this->requestData["userEmail"], 0, 5) !== "00962" && substr($this->requestData["userEmail"], 0, 1) === "0") {
+            //     $phoneTemp = str_split($this->requestData["userEmail"], 1);
+            //     unset($phoneTemp[0]);
+            //     $this->requestData["userEmail"] = implode("", $phoneTemp);
+            // }
+            $requestEmailData = $this->requestData["userEmail"];
+            $country_id = $this->requestData["userCountry"];
             $type = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
             $userData = false;
             if ($type == 'email') {
-                $userData = UserModel::where(function ($q) use ($requestEmailData) {
+                $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where('email', $requestEmailData);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->where('is_active', '1')->first();
             } elseif ($type == 'phoneNumber') {
-                $userData = UserModel::where(function ($q) use ($requestEmailData) {
+                $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $requestEmailData);
+                    $q->where('mobile_no', $requestEmailData);
+                    $q->where('country_id', $country_id);
                 })->where('is_active', '1')->first();
             }
 
             if ($userData) {
+                $returnUserToSecure = array(
+                    'country_id' => $userData->country_id,
+                    'username' => "$userData->first_name $userData->last_name",
+                    'avatar' => ($userData->profile_picture ? STORAGE_URL . "/$userData->profile_picture" : NULL)
+                );
                 $checkSession = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkUserSession($userData, $this->userAgent, $this->requestCart);
                 $userSession = (new \OlaHub\UserPortal\Helpers\UserHelper)->createNotActiveSession($checkSession, $userData, $this->userAgent, $this->requestCart);
                 if ($type == "email") {
@@ -560,7 +574,7 @@ class OlaHubGuestController extends BaseController
                 $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'secure', 'type' => $type, 'token' => false, 'code' => 200]]);
                 $log->saveLogSessionData();
 
-                return response(['status' => true, 'logged' => 'secure', 'type' => $type, 'token' => false, 'code' => 200], 200);
+                return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'secure', 'type' => $type, 'token' => false, 'code' => 200], 200);
             }
         }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'invalidEmailPhone', 'code' => 406, 'errorData' => []]]);
@@ -723,46 +737,50 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "checkActiveCode"]);
 
-        $this->requestData["userPhoneNumber"] = str_replace("+", "00", $this->requestData["userPhoneNumber"]);
+        // $this->requestData["userPhoneNumber"] = str_replace("+", "00", $this->requestData["userPhoneNumber"]);
         $emailType = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
         $phoneType = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($this->requestData["userPhoneNumber"]);
         if (isset($this->requestData['userCode']) && $this->requestData['userCode'] && ($emailType || $phoneType)) {
             $email = $this->requestData["userEmail"];
             $mobile = $this->requestData["userPhoneNumber"];
+            $country_id = $this->requestData["userCountry"];
             if ($emailType == 'email') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {
                     $q->where('email', $email);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($emailType == 'phoneNumber') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $email);
+                    $q->where('mobile_no', $email);
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($phoneType == 'email') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
                     $q->where('email', $mobile);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->first();
             } elseif ($phoneType == 'phoneNumber') {
-                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile) {
+                $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $mobile);
+                    $q->where('mobile_no', $mobile);
+                    $q->where('country_id', $country_id);
                 })->first();
             }
-
             if ($userData && (new \OlaHub\UserPortal\Helpers\UserHelper)->checExpireCode($userData)) {
                 if ($userData->activation_code != $this->requestData['userCode']) {
                     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'invalidEmailPhoneCode', 'code' => 406, 'errorData' => []]]);
@@ -802,29 +820,32 @@ class OlaHubGuestController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "checkSecureActive"]);
 
         if (isset($this->requestData['userEmail']) && $this->requestData['userEmail'] && isset($this->requestData['userCode']) && $this->requestData['userCode']) {
-            if (substr($this->requestData["userEmail"], 0, 5) !== "00962" && substr($this->requestData["userEmail"], 0, 1) === "0") {
-                $phoneTemp = str_split($this->requestData["userEmail"], 1);
-                unset($phoneTemp[0]);
-                $this->requestData["userEmail"] = implode("", $phoneTemp);
-            }
-            $requestEmailData = str_replace("+", "00", $this->requestData["userEmail"]);
+            // if (substr($this->requestData["userEmail"], 0, 5) !== "00962" && substr($this->requestData["userEmail"], 0, 1) === "0") {
+            //     $phoneTemp = str_split($this->requestData["userEmail"], 1);
+            //     unset($phoneTemp[0]);
+            //     $this->requestData["userEmail"] = implode("", $phoneTemp);
+            // }
+            $requestEmailData = $this->requestData["userEmail"];
+            $country_id = $this->requestData["userCountry"];
             $type = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($requestEmailData);
             $userData = false;
             if ($type == 'email') {
-                $userData = UserModel::where(function ($q) use ($requestEmailData) {
+                $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where('email', $requestEmailData);
                     $q->where(function ($query) {
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
+                    $q->where('country_id', $country_id);
                 })->where('is_active', '1')->first();
             } elseif ($type == 'phoneNumber') {
-                $userData = UserModel::where(function ($q) use ($requestEmailData) {
+                $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
-                    $q->where('mobile_no', 'LIKE', "%" . $requestEmailData);
+                    $q->where('mobile_no', $requestEmailData);
+                    $q->where('country_id', $country_id);
                 })->where('is_active', '1')->first();
             }
 

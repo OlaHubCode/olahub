@@ -45,6 +45,12 @@ class UserModel extends Model {
 
     protected $table = 'users';
     static $columnsMaping = [
+        'userCountry' => [
+            'column' => 'country_id',
+            'type' => 'int',
+            'relation' => false,
+            'validation' => 'required'
+        ],
         'userFirstName' => [
             'column' => 'first_name',
             'type' => 'string',
@@ -171,7 +177,7 @@ class UserModel extends Model {
 
     static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false) {
         $userModel = (new UserModel)->newQuery();
-        $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
+        // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
         $userModel->where(function($query) use ($q) {
                     $query->whereRaw('LOWER(`email`) like ?', array("%" . $q . "%"))
                     ->orWhereRaw('CONCAT(LOWER(`first_name`), " ", LOWER(`last_name`)) like ?', array("%" . $q . "%"))

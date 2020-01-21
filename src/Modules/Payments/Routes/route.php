@@ -13,4 +13,4 @@ $router->group([
     $router->post(basename(strtolower(dirname(__DIR__))). "/{type:\bdefault|event|celebration\b}", 'OlaHubPaymentsMainController@getPaymentsList');
     $router->post('prepareBilling/{type:\bdefault|event|celebration\b}', 'OlaHubPaymentsPrepareController@createUserBilling');
 });
-$router->post('callbackBilling', 'OlaHubPaymentsCallbackController@callbackUserBilling');
+$router->get('callbackBilling', 'OlaHubPaymentsCallbackController@callbackUserBilling');

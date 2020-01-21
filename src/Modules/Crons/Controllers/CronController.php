@@ -334,7 +334,7 @@ class CronController extends BaseController {
        
         $users = \OlaHub\UserPortal\Models\UserModel::paginate(1000);
         foreach ($users as $user) {
-            $user->mobile_no = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($user->mobile_no);
+            // $user->mobile_no = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($user->mobile_no);
             $user->save();
         }
     }

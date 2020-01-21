@@ -6,13 +6,15 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
-class OlaHubGeneralController extends BaseController {
+class OlaHubGeneralController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
     protected $userAgent;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = (object) $return['requestData'];
         $this->requestFilter = (object) $return['requestFilter'];
@@ -20,7 +22,8 @@ class OlaHubGeneralController extends BaseController {
         $this->requestShareData = $return['requestData'];
     }
 
-    public function setAdsStatisticsData($getFrom) {
+    public function setAdsStatisticsData($getFrom)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Set Ads statistics data"]);
 
         $request = \Illuminate\Http\Request::capture();
@@ -32,7 +35,7 @@ class OlaHubGeneralController extends BaseController {
 
         if (!$oldVisit) {
             \DB::table('ads_from_statistics')->insert(
-                    ['from_ip' => $userIP, 'browser_name' => $userBrowser, "come_from" => $getFrom, "visit_date" => date("Y-m-d")]
+                ['from_ip' => $userIP, 'browser_name' => $userBrowser, "come_from" => $getFrom, "visit_date" => date("Y-m-d")]
             );
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ["status" => true]]);
@@ -40,14 +43,15 @@ class OlaHubGeneralController extends BaseController {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response(["status" => true], 200);
     }
-    public function getCities ($regionId){
-        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('region_id',$regionId)->get();
+    public function getCities($regionId)
+    {
+        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('region_id', $regionId)->get();
         $result = [];
         foreach ($cities as $city) {
             $result[] = [
-                'key'=>$city->id,
-                'value'=>$city->id,
-                'text'=>$city->name,
+                'key' => $city->id,
+                'value' => $city->id,
+                'text' => $city->name,
             ];
         }
         $return['cities'] = $result;
@@ -56,7 +60,8 @@ class OlaHubGeneralController extends BaseController {
 
         return response($return);
     }
-    public function getAllCountries() {
+    public function getAllCountries()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "getAllCountries"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting countries data"]);
 
@@ -66,7 +71,13 @@ class OlaHubGeneralController extends BaseController {
             throw new NotAcceptableHttpException(404);
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
-
+        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode")
+            ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
+            ->orderBy('shipping_countries.name', 'asc')->get();
+        foreach ($allCountries as $country) {
+            $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text');
+        }
+        $return['allCountries'] = $allCountries;
         $actionData["action_endData"] = json_encode(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler'));
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData($actionData);
 
@@ -78,7 +89,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getAllListedCountries() {
+    public function getAllListedCountries()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "getAllListedCountries"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting all countries data in DB"]);
 
@@ -100,7 +112,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getAllUnsupportCountries() {
+    public function getAllUnsupportCountries()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all unsupported countries"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting unsupported countries data"]);
 
@@ -117,7 +130,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getSocialAccounts() {
+    public function getSocialAccounts()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get social accounts"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting social accounts data"]);
 
@@ -143,8 +157,9 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getAllCommuntites() {
-        
+    public function getAllCommuntites()
+    {
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all communites"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch home page communities data"]);
 
@@ -156,7 +171,7 @@ class OlaHubGeneralController extends BaseController {
 
         $return['homeComm'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($generalCommunities, '\OlaHub\UserPortal\ResponseHandlers\CommunitiesForLandingPageResponseHandler');
         $return['olahubComm'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($olahubCommunities, '\OlaHub\UserPortal\ResponseHandlers\CommunitiesForLandingPageResponseHandler');
-        
+
         $return['status'] = true;
         $return['code'] = 200;
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
@@ -165,7 +180,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getOlaHubCommuntites() {
+    public function getOlaHubCommuntites()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get OlaHub communities"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch Olahub communtities data"]);
 
@@ -183,7 +199,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getAllInterests() {
+    public function getAllInterests()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all Interests"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch interest data"]);
         $interests = \OlaHub\UserPortal\Models\Interests::whereIn('countries', [app('session')->get('def_country')->id])->get();
@@ -199,7 +216,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getStaticPage($type) {
+    public function getStaticPage($type)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get static page"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch static pages", "action_startData" => $type]);
@@ -219,7 +237,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getUserNotification() {
+    public function getUserNotification()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
@@ -267,7 +286,8 @@ class OlaHubGeneralController extends BaseController {
         }
     }
 
-    public function getAllNotifications() {
+    public function getAllNotifications()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all notifications"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch all notification"]);
@@ -315,7 +335,8 @@ class OlaHubGeneralController extends BaseController {
         }
     }
 
-    public function readNotification() {
+    public function readNotification()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Read notification"]);
 
         if (isset($this->requestData->notificationId) && $this->requestData->notificationId) {
@@ -337,7 +358,8 @@ class OlaHubGeneralController extends BaseController {
         return ['status' => false, 'msg' => 'NoData', 'code' => 204];
     }
 
-    public function getCodeCountries() {
+    public function getCodeCountries()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get code countries"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch countries"]);
@@ -354,7 +376,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function checkUserCountry() {
+    public function checkUserCountry()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Check user country"]);
 
         $defCountryCode = 'JO';
@@ -375,7 +398,8 @@ class OlaHubGeneralController extends BaseController {
         return response(['status' => true, 'country' => strtoupper($country->two_letter_iso_code), 'code' => 200], 200);
     }
 
-    public function checkUserMerchant() {
+    public function checkUserMerchant()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Check user merchant"]);
 
         $data = [
@@ -399,7 +423,8 @@ class OlaHubGeneralController extends BaseController {
         return response(['status' => true, 'data' => $data, 'code' => 200], 200);
     }
 
-    public function searchUsers() {
+    public function searchUsers()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Search users"]);
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
@@ -433,7 +458,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function searchAll() {
+    public function searchAll()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Search All"]);
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
@@ -513,7 +539,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function searchAllFilters() {
+    public function searchAllFilters()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Search all filters"]);
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
@@ -532,15 +559,15 @@ class OlaHubGeneralController extends BaseController {
                         $users = \OlaHub\UserPortal\Models\UserModel::searchUsers($q, false, false, $count, TRUE);
                         if ($users->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($users, '\OlaHub\UserPortal\ResponseHandlers\UserSearchResponseHandler');
-//                            foreach ($users as $user) {
-//                                $searchData[] = [
-//                                    "itemId" => isset($user->id) ? $user->id : 0,
-//                                    "itemName" => isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : NULL,
-//                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
-//                                    "itemSlug" => \OlaHub\UserPortal\Models\UserModel::getUserSlug($user),
-//                                    "itemType" => 'user'
-//                                ];
-//                            }
+                            //                            foreach ($users as $user) {
+                            //                                $searchData[] = [
+                            //                                    "itemId" => isset($user->id) ? $user->id : 0,
+                            //                                    "itemName" => isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : NULL,
+                            //                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
+                            //                                    "itemSlug" => \OlaHub\UserPortal\Models\UserModel::getUserSlug($user),
+                            //                                    "itemType" => 'user'
+                            //                                ];
+                            //                            }
                         }
                     }
                     break;
@@ -551,15 +578,15 @@ class OlaHubGeneralController extends BaseController {
                         $groups = \OlaHub\UserPortal\Models\groups::searchGroups($q, $count, $groupInterests);
                         if ($groups->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($groups, '\OlaHub\UserPortal\ResponseHandlers\GroupSearchResponseHandler');
-//                            foreach ($groups as $group) {
-//                                $searchData[] = [
-//                                    "itemId" => isset($group->{"_id"}) ? $group->{"_id"} : 0,
-//                                    "itemName" => isset($group->name) ? $group->name : NULL,
-//                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->image),
-//                                    "itemCover" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->cover),
-//                                    "itemType" => 'group'
-//                                ];
-//                            }
+                            //                            foreach ($groups as $group) {
+                            //                                $searchData[] = [
+                            //                                    "itemId" => isset($group->{"_id"}) ? $group->{"_id"} : 0,
+                            //                                    "itemName" => isset($group->name) ? $group->name : NULL,
+                            //                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->image),
+                            //                                    "itemCover" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->cover),
+                            //                                    "itemType" => 'group'
+                            //                                ];
+                            //                            }
                         }
                     }
                     break;
@@ -568,21 +595,21 @@ class OlaHubGeneralController extends BaseController {
                     $brands = \OlaHub\UserPortal\Models\Brand::searchBrands($q, $count);
                     if ($brands->count() > 0) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandSearchResponseHandler');
-//                        foreach ($brands as $brand) {
-//                            $brandName = isset($brand->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name') : NULL;
-//                            $brandImage = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref);
-//                            $merBrand = $brand->merchant()->first();
-//                            $searchData[] = [
-//                                "itemName" => $brandName,
-//                                "itemImage" => $brandImage,
-//                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $brandName),
-//                                "itemPhone" => isset($brand->contact_phone_no) ? $brand->contact_phone_no : NULL,
-//                                "itememail" => isset($brand->contact_email) ? $brand->contact_email : NULL,
-//                                "itemWebsite" => isset($merBrand->company_website) ? $merBrand->company_website : null,
-//                                "itemAddress" => isset($merBrand->company_street_address) ? $merBrand->company_street_address : null,
-//                                "itemType" => 'brand'
-//                            ];
-//                        }
+                        //                        foreach ($brands as $brand) {
+                        //                            $brandName = isset($brand->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name') : NULL;
+                        //                            $brandImage = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref);
+                        //                            $merBrand = $brand->merchant()->first();
+                        //                            $searchData[] = [
+                        //                                "itemName" => $brandName,
+                        //                                "itemImage" => $brandImage,
+                        //                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $brandName),
+                        //                                "itemPhone" => isset($brand->contact_phone_no) ? $brand->contact_phone_no : NULL,
+                        //                                "itememail" => isset($brand->contact_email) ? $brand->contact_email : NULL,
+                        //                                "itemWebsite" => isset($merBrand->company_website) ? $merBrand->company_website : null,
+                        //                                "itemAddress" => isset($merBrand->company_street_address) ? $merBrand->company_street_address : null,
+                        //                                "itemType" => 'brand'
+                        //                            ];
+                        //                        }
                     }
                     break;
                 case "items":
@@ -590,19 +617,19 @@ class OlaHubGeneralController extends BaseController {
                     $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count);
                     if ($items->count() > 0) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
-//                        foreach ($items as $item) {
-//                            $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
-//                            $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
-//                            $itemImage = $this->setDefImageData($item);
-//                            $searchData[] = [
-//                                "itemName" => $itemName,
-//                                "itemDescription" => $itemDescription,
-//                                "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
-//                                "itemImage" => $itemImage,
-//                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-//                                "itemType" => 'item'
-//                            ];
-//                        }
+                        //                        foreach ($items as $item) {
+                        //                            $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
+                        //                            $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
+                        //                            $itemImage = $this->setDefImageData($item);
+                        //                            $searchData[] = [
+                        //                                "itemName" => $itemName,
+                        //                                "itemDescription" => $itemDescription,
+                        //                                "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
+                        //                                "itemImage" => $itemImage,
+                        //                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
+                        //                                "itemType" => 'item'
+                        //                            ];
+                        //                        }
                     }
                     break;
                 case "desginer_items":
@@ -626,20 +653,20 @@ class OlaHubGeneralController extends BaseController {
                         $items = \OlaHub\UserPortal\Models\CatalogItem::searchItemByClassification($q, $classification->class_slug, $count);
                         if ($items && $items->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ClassificationSearchResponseHandler');
-//                            foreach ($items as $item) {
-//                                $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
-//                                $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
-//                                $itemImage = $this->setDefImageData($item);
-//                                $searchData[] = [
-//                                    "itemName" => $itemName,
-//                                    "itemDescription" => $itemDescription,
-//                                    "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
-//                                    "itemImage" => $itemImage,
-//                                    "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-//                                    "itemType" => 'classification',
-//                                    "itemClassName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($classification, 'name')
-//                                ];
-//                            }
+                            //                            foreach ($items as $item) {
+                            //                                $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
+                            //                                $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
+                            //                                $itemImage = $this->setDefImageData($item);
+                            //                                $searchData[] = [
+                            //                                    "itemName" => $itemName,
+                            //                                    "itemDescription" => $itemDescription,
+                            //                                    "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
+                            //                                    "itemImage" => $itemImage,
+                            //                                    "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
+                            //                                    "itemType" => 'classification',
+                            //                                    "itemClassName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($classification, 'name')
+                            //                                ];
+                            //                            }
                         }
                     }
                     break;
@@ -655,7 +682,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    private function setDefImageData($item) {
+    private function setDefImageData($item)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Set default image data"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start set default image data"]);
@@ -668,7 +696,8 @@ class OlaHubGeneralController extends BaseController {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End set default image data"]);
     }
 
-    public function inviteNewUser() {
+    public function inviteNewUser()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Invite new user"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(\OlaHub\UserPortal\Models\UserModel::$columnsInvitationMaping, (array) $this->requestData);
@@ -785,7 +814,8 @@ class OlaHubGeneralController extends BaseController {
         return $return;
     }
 
-    public function sendSellWithUsEmail() {
+    public function sendSellWithUsEmail()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Send sell with us Email"]);
 
 
@@ -843,7 +873,8 @@ class OlaHubGeneralController extends BaseController {
         return response($return, 200);
     }
 
-    public function getUserTimeline() {
+    public function getUserTimeline()
+    {
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         $timeline = [];
         $friends = [];
@@ -852,37 +883,37 @@ class OlaHubGeneralController extends BaseController {
         $user = \OlaHub\UserPortal\Models\UserMongo::find(app('session')->get('tempID'));
         if ($user) {
             $friends = is_array($user->friends) ? $user->friends : [];
-            $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift',1)
-            ->where('gift_for',app('session')->get('tempID'))
-            ->where('gift_date',$now)
-            ->where('seen',0)
-            ->get();
+            $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+                ->where('gift_for', app('session')->get('tempID'))
+                ->where('gift_date', $now)
+                ->where('seen', 0)
+                ->get();
             foreach ($nonSeenGifts as $gift) {
                 $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
-                $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id',$gift->id)->get();
+                $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
                 $nonSeenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
                 $all[] = [
                     'type' => 'gift',
                     'gift_sender' => $gift_sender,
                     'message' => isset($gift->gift_message) ? $gift->gift_message : "",
                     'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
-                    'items' =>$nonSeenGiftsResponse['data']
+                    'items' => $nonSeenGiftsResponse['data']
                 ];
             }
             //posts
             try {
                 $currentCountryID = (int) app('session')->get('def_country')->id;
                 $friends[] = (int) app('session')->get('tempID');
-                $posts = \OlaHub\UserPortal\Models\Post::where(function($q) use($currentCountryID, $friends) {
-                            $q->where(function($userPost) use($friends) {
-                                $userPost->whereIn('user_id', $friends);
-                            });
-                            $q->orWhere(function($storePosts) use($currentCountryID) {
-                                $storePosts->whereNull('user_id');
-                                $storePosts->where('country_id', $currentCountryID);
-                                // $storePosts->orWhere('country', $currentCountryID);
-                            });
-                        })->orderBy('created_at', 'desc')->whereNull('group_id')->paginate(20);
+                $posts = \OlaHub\UserPortal\Models\Post::where(function ($q) use ($currentCountryID, $friends) {
+                    $q->where(function ($userPost) use ($friends) {
+                        $userPost->whereIn('user_id', $friends);
+                    });
+                    $q->orWhere(function ($storePosts) use ($currentCountryID) {
+                        $storePosts->whereNull('user_id');
+                        $storePosts->where('country_id', $currentCountryID);
+                        // $storePosts->orWhere('country', $currentCountryID);
+                    });
+                })->orderBy('created_at', 'desc')->whereNull('group_id')->paginate(20);
 
                 if ($posts->count() > 0) {
                     foreach ($posts as $post) {
@@ -898,7 +929,7 @@ class OlaHubGeneralController extends BaseController {
                                     foreach ($likes as $like) {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
-                                            $likerData [] = [
+                                            $likerData[] = [
                                                 'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                 'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                             ];
@@ -937,7 +968,7 @@ class OlaHubGeneralController extends BaseController {
                                     foreach ($likes as $like) {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
-                                            $likerData [] = [
+                                            $likerData[] = [
                                                 'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                 'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                             ];
@@ -978,13 +1009,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
                                             if (in_array($like, $friends)) {
-                                                $friendslikerData [] = [
+                                                $friendslikerData[] = [
                                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'likerName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $likerData [] = [
+                                                $likerData[] = [
                                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'likerName' => isset($userData->username) ? $userData->username : NULL,
@@ -1000,13 +1031,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
                                         if ($userData) {
                                             if (in_array($wishlist, $friends)) {
-                                                $friendsWishlistsData [] = [
+                                                $friendsWishlistsData[] = [
                                                     'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $wishlistsData [] = [
+                                                $wishlistsData[] = [
                                                     'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
@@ -1022,13 +1053,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
                                         if ($userData) {
                                             if (in_array($share, $friends)) {
-                                                $friendsShareData [] = [
+                                                $friendsShareData[] = [
                                                     'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'shareUserName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $shareData [] = [
+                                                $shareData[] = [
                                                     'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'shareUserName' => isset($userData->username) ? $userData->username : NULL,
@@ -1083,13 +1114,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
                                             if (in_array($like, $friends)) {
-                                                $friendslikerData [] = [
+                                                $friendslikerData[] = [
                                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'likerName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $likerData [] = [
+                                                $likerData[] = [
                                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'likerName' => isset($userData->username) ? $userData->username : NULL,
@@ -1105,13 +1136,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
                                         if ($userData) {
                                             if (in_array($wishlist, $friends)) {
-                                                $friendsWishlistsData [] = [
+                                                $friendsWishlistsData[] = [
                                                     'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $wishlistsData [] = [
+                                                $wishlistsData[] = [
                                                     'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
@@ -1127,13 +1158,13 @@ class OlaHubGeneralController extends BaseController {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
                                         if ($userData) {
                                             if (in_array($share, $friends)) {
-                                                $friendsShareData [] = [
+                                                $friendsShareData[] = [
                                                     'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'shareUserName' => isset($userData->username) ? $userData->username : NULL,
                                                 ];
                                             } else {
-                                                $shareData [] = [
+                                                $shareData[] = [
                                                     'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
                                                     'shareUserName' => isset($userData->username) ? $userData->username : NULL,
@@ -1201,7 +1232,7 @@ class OlaHubGeneralController extends BaseController {
                                     foreach ($likes as $like) {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
-                                            $likerData [] = [
+                                            $likerData[] = [
                                                 'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                 'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                             ];
@@ -1240,10 +1271,10 @@ class OlaHubGeneralController extends BaseController {
                                         $timeLineMerchant = $timeline[$merchantIndex];
                                         $oldItems = $timeLineMerchant["items"];
                                         if (is_array($oldItems) && count($oldItems) > 0) {
-                                            foreach($items as $oneItem){ 
-                                                        if(count($oldItems) >= 26)break;
-                                                        $oldItems[] = $oneItem;
-                                                }
+                                            foreach ($items as $oneItem) {
+                                                if (count($oldItems) >= 26) break;
+                                                $oldItems[] = $oneItem;
+                                            }
                                             $timeline[$merchantIndex]["items"] = $oldItems;
                                         }
                                     }
@@ -1274,7 +1305,7 @@ class OlaHubGeneralController extends BaseController {
                                     foreach ($likes as $like) {
                                         $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                         if ($userData) {
-                                            $likerData [] = [
+                                            $likerData[] = [
                                                 'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                 'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                             ];
@@ -1313,15 +1344,15 @@ class OlaHubGeneralController extends BaseController {
                                         $timeLineMerchant = $timeline[$merchantIndex];
                                         $oldItems = $timeLineMerchant["items"];
                                         if (is_array($oldItems) && count($oldItems) > 0) {
-                                            foreach($items as $oneItem){ 
-                                                        if(count($oldItems) >= 26)break;
-                                                        $oldItems[] = $oneItem;
-                                                }
+                                            foreach ($items as $oneItem) {
+                                                if (count($oldItems) >= 26) break;
+                                                $oldItems[] = $oneItem;
+                                            }
                                             $timeline[$merchantIndex]["items"] = $oldItems;
                                         }
                                     }
 
-                                    break;    
+                                    break;
                                 case 'post':
                                     $author = \OlaHub\UserPortal\Models\UserModel::find($post->user_id);
                                     if ($author) {
@@ -1336,7 +1367,7 @@ class OlaHubGeneralController extends BaseController {
                                         foreach ($likes as $like) {
                                             $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                                             if ($userData) {
-                                                $likerData [] = [
+                                                $likerData[] = [
                                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                                 ];
@@ -1390,7 +1421,6 @@ class OlaHubGeneralController extends BaseController {
                     }
                 }
             } catch (Exception $ex) {
-                
             }
         }
 
@@ -1436,7 +1466,6 @@ class OlaHubGeneralController extends BaseController {
                 }
             }
         } catch (Exception $ex) {
-            
         }
 
 
@@ -1459,7 +1488,7 @@ class OlaHubGeneralController extends BaseController {
                         foreach ($likes as $like) {
                             $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
                             if ($userData) {
-                                $likerData [] = [
+                                $likerData[] = [
                                     'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                                     'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
                                 ];
@@ -1492,7 +1521,6 @@ class OlaHubGeneralController extends BaseController {
                 }
             }
         } catch (Exception $ex) {
-            
         }
 
         // Sponsers
@@ -1507,9 +1535,9 @@ class OlaHubGeneralController extends BaseController {
                         $liked = 0;
                         if ($campaign) {
                             $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
-                                    ->where('country_id', app('session')->get('def_country')->id)
-                                    ->where('campign_id', $campaign->id)
-                                    ->first();
+                                ->where('country_id', app('session')->get('def_country')->id)
+                                ->where('campign_id', $campaign->id)
+                                ->first();
                             if ($oldLike) {
                                 $liked = 1;
                             }
@@ -1531,34 +1559,30 @@ class OlaHubGeneralController extends BaseController {
                 }
             }
         } catch (Exception $ex) {
-            
         }
-        try{
-            $seenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift',1)
-            ->where('gift_for',app('session')->get('tempID'))
-            ->where('gift_date',$now)
-            ->where('seen',1)
-            ->paginate(5);
+        try {
+            $seenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+                ->where('gift_for', app('session')->get('tempID'))
+                ->where('gift_date', $now)
+                ->where('seen', 1)
+                ->paginate(5);
             foreach ($seenGifts as $gift) {
                 $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
-                $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id',$gift->id)->get();
+                $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
                 $seenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
                 $timeline[] = [
                     'type' => 'gift',
                     'gift_sender' => $gift_sender,
                     'message' => isset($gift->gift_message) ? $gift->gift_message : "",
                     'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
-                    'items' =>$seenGiftsResponse['data']
+                    'items' => $seenGiftsResponse['data']
                 ];
-
-
             }
-        } catch(Exception $ex){
-
+        } catch (Exception $ex) {
         }
         if (count($timeline) > 0) {
             // shuffle($timeline);
-            
+
             $count_timeline = count($timeline);
             $count_sponsers = count($sponsers_arr);
             $break = ($count_sponsers - 1) > 0 ? (int) ($count_timeline / $count_sponsers - 1) : 0;
@@ -1572,14 +1596,15 @@ class OlaHubGeneralController extends BaseController {
                 }
             }
 
-            $return = ['status' => true, 'data' => $all , 'celebrations' => $celebrations, 'code' => 200];
+            $return = ['status' => true, 'data' => $all, 'celebrations' => $celebrations, 'code' => 200];
         }
-//        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-//        $logHelper->setLog("", $return, 'getUserTimeline', $this->userAgent);
+        //        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
+        //        $logHelper->setLog("", $return, 'getUserTimeline', $this->userAgent);
         return response($return, 200);
     }
 
-    private function getMerchantIndexFromSlug($timeline, $storeSlug) {
+    private function getMerchantIndexFromSlug($timeline, $storeSlug)
+    {
         $index = false;
         if (is_array($timeline) && count($timeline) > 0) {
             foreach ($timeline as $key => $value) {
@@ -1593,7 +1618,8 @@ class OlaHubGeneralController extends BaseController {
         return $index;
     }
 
-    public function shareNewItem() {
+    public function shareNewItem()
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "shareNewItem"]);
 
         if (isset($this->requestShareData['itemID']) && !$this->requestShareData['itemID']) {
@@ -1623,7 +1649,8 @@ class OlaHubGeneralController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function userFollow($type, $id) {
+    public function userFollow($type, $id)
+    {
         $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
         if (!$user) {
             $user = new \OlaHub\UserPortal\Models\UserMongo;
@@ -1653,7 +1680,8 @@ class OlaHubGeneralController extends BaseController {
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 
-    public function userUnFollow($type, $id) {
+    public function userUnFollow($type, $id)
+    {
         $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
         if (!$user) {
             $user = new \OlaHub\UserPortal\Models\UserMongo;
@@ -1686,7 +1714,8 @@ class OlaHubGeneralController extends BaseController {
         return response(['status' => false, 'msg' => 'unknown type and id', 'code' => 404], 200);
     }
 
-    public function listUserFollowing() {
+    public function listUserFollowing()
+    {
         $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
         if ($user) {
             $return = [];
@@ -1723,5 +1752,4 @@ class OlaHubGeneralController extends BaseController {
         }
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
 }

@@ -2,23 +2,27 @@
 
 namespace OlaHub\UserPortal\Helpers;
 
-class UserHelper extends OlaHubCommonHelper {
+class UserHelper extends OlaHubCommonHelper
+{
 
     //get user data by IP address by Rami
-    function getIPInfo() {
+    function getIPInfo()
+    {
         $ip = $_SERVER['REMOTE_ADDR'];
         return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
         // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
-    function checkUnique($value = false) {
+    function checkUnique($value = false, $country_id)
+    {
         if ($value && strlen($value) > 3) {
-            $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
-                    ->orWhere('mobile_no', $value)
-                    ->orWhere('facebook_id', $value)
-                    ->orWhere('google_id', $value)
-                    ->orWhere('twitter_id', $value)
-                    ->first();
+            $exist = \OlaHub\UserPortal\Models\UserModel::where('country_id', $country_id)
+                ->whereRaw("(email = '$value' or 
+                mobile_no = '$value' or
+                facebook_id = '$value' or
+                google_id = '$value' or 
+                twitter_id = '$value')")
+                ->first();
             if (!$exist) {
                 return true;
             }
@@ -27,8 +31,25 @@ class UserHelper extends OlaHubCommonHelper {
         }
         return false;
     }
+    // function checkUnique($value = false, $country_id) {
+    //     if ($value && strlen($value) > 3) {
+    //         $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
+    //                 ->orWhere('mobile_no', $value)
+    //                 ->orWhere('facebook_id', $value)
+    //                 ->orWhere('google_id', $value)
+    //                 ->orWhere('twitter_id', $value)
+    //                 ->first();
+    //         if (!$exist) {
+    //             return true;
+    //         }
+    //     } elseif (strlen($value) <= 3) {
+    //         return TRUE;
+    //     }
+    //     return false;
+    // }
 
-    function createProfileSlug($userName,$userId) {
+    function createProfileSlug($userName, $userId)
+    {
         /*$profileSlug = parent::createSlugFromString($userName, '.');
         $existSlug = \Illuminate\Support\Facades\DB::table('users')
                         ->where('profile_url', 'LIKE', $profileSlug . '%')->orderBy('profile_url', 'desc')->first();
@@ -40,19 +61,20 @@ class UserHelper extends OlaHubCommonHelper {
                 $profileSlug = $profileSlug . '.' . 1;
             }
         }*/
-        
-        
+
+
         $lower = strtolower($userName);
         $replace = str_replace(' ', '_', $lower);
         $replaceSpcial = preg_replace('/^[\p{Arabic}a-zA-Z\p{N}]+\h?[\p{N}\p{Arabic}a-zA-Z]*$/u', '', $replace);
         $lowerSpecial = strtolower(trim($replaceSpcial, '-'));
         $replaceDashes = preg_replace("/[\/_|+ -]+/", '.', $lowerSpecial);
         $profileSlug = $replaceDashes . '.' . $userId;
-        
+
         return $profileSlug;
     }
 
-    function createActiveSession($userSession, $userData, $userAgent, $requestCart) {
+    function createActiveSession($userSession, $userData, $userAgent, $requestCart)
+    {
         if (!$userSession) {
             $userSession = new \OlaHub\UserPortal\Models\UserSessionModel;
         }
@@ -67,7 +89,8 @@ class UserHelper extends OlaHubCommonHelper {
         return $userSession;
     }
 
-    function createNotActiveSession($userSession, $userData, $userAgent, $requestCart) {
+    function createNotActiveSession($userSession, $userData, $userAgent, $requestCart)
+    {
         if (!$userSession) {
             $userSession = new \OlaHub\UserPortal\Models\UserSessionModel;
         }
@@ -82,7 +105,8 @@ class UserHelper extends OlaHubCommonHelper {
         return $userSession;
     }
 
-    function checkUserSession($userData, $userAgent, $activationCode = false) {
+    function checkUserSession($userData, $userAgent, $activationCode = false)
+    {
         if ($activationCode) {
             $session = \OlaHub\UserPortal\Models\UserSessionModel::where('user_id', $userData->id)->where('user_agent', $userAgent)->where('activation_code', $activationCode)->where('status', 0)->first();
         } else {
@@ -91,7 +115,8 @@ class UserHelper extends OlaHubCommonHelper {
         return $session;
     }
 
-    function checExpireCode($userData, $column = 'updated_at') {
+    function checExpireCode($userData, $column = 'updated_at')
+    {
         $return = false;
         if (isset($userData->$column) && (strtotime($userData->$column . "+30 minutes") >= time())) {
             $return = TRUE;
@@ -99,7 +124,8 @@ class UserHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    function checkEmailPhoneChange($userData, $requestData) {
+    function checkEmailPhoneChange($userData, $requestData)
+    {
         if (isset($requestData['userEmail']) && $userData->email != $requestData['userEmail'] && isset($requestData["oldPassword"]) && (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($requestData["oldPassword"], $userData->password)) {
             return ['change' => 'email'];
         }
@@ -109,7 +135,8 @@ class UserHelper extends OlaHubCommonHelper {
         return TRUE;
     }
 
-    function sendUpdateActivationCode($userData, $checkChanges) {
+    function sendUpdateActivationCode($userData, $checkChanges)
+    {
         if (is_array($checkChanges) && array_key_exists('change', $checkChanges)) {
             $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
             $userData->is_active = '0';
@@ -127,7 +154,8 @@ class UserHelper extends OlaHubCommonHelper {
         return false;
     }
 
-    function sendUserEmail($email, $code, $template = 'user_activation_code') {
+    function sendUserEmail($email, $code, $template = 'user_activation_code')
+    {
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
             $sendMail->template_code = $template;
@@ -138,7 +166,8 @@ class UserHelper extends OlaHubCommonHelper {
         }
     }
 
-    function sendForgetEmail($email, $code, $template = 'user_forgetPass_temaplate') {
+    function sendForgetEmail($email, $code, $template = 'user_forgetPass_temaplate')
+    {
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
             $sendMail->template_code = $template;
@@ -149,7 +178,8 @@ class UserHelper extends OlaHubCommonHelper {
         }
     }
 
-    function uploadUserImage($user, $columnName, $userPhoto = false) {
+    function uploadUserImage($user, $columnName, $userPhoto = false)
+    {
         if ($userPhoto) {
             $mimes = ['image/bmp', 'image/gif', 'image/jpeg', 'image/x-citrix-jpeg', 'image/png', 'image/x-citrix-png', 'image/x-png'];
             $mime = $userPhoto->getMimeType();
@@ -167,14 +197,15 @@ class UserHelper extends OlaHubCommonHelper {
             $path = $userPhoto->move($filePath, $fileNameStore);
             if ($user->$columnName) {
                 $oldImage = $user->$columnName;
-                @unlink(DEFAULT_IMAGES_PATH.'/' . $oldImage);
+                @unlink(DEFAULT_IMAGES_PATH . '/' . $oldImage);
             }
             return "users/" . app('session')->get('tempID') . "/$fileNameStore";
         }
         return $userPhoto;
     }
 
-    function checkEmailOrPhoneNumber($requestData) {
+    function checkEmailOrPhoneNumber($requestData)
+    {
         if (preg_match("/^[^@]+@[^@]+\.[a-z]{2,6}$/i", $requestData)) {
             return "email";
         } elseif (preg_match("/^[0-9]+$/i", $requestData)) {
@@ -183,7 +214,8 @@ class UserHelper extends OlaHubCommonHelper {
         return FALSE;
     }
 
-    function handleUserPhoneNumber($phoneNumber = false) {
+    function handleUserPhoneNumber($phoneNumber = false)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Handle user phone number", "action_startData" => $phoneNumber]);
         $return = NULL;
         if ($phoneNumber) {
@@ -195,5 +227,4 @@ class UserHelper extends OlaHubCommonHelper {
         }
         return $return;
     }
-
 }
