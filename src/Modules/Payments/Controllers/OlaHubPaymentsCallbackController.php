@@ -22,13 +22,13 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         if(!$requestAll['vpc_TransactionNo']){
             return redirect()->to(REDIRECT_FRONT . '/checkoutCallback?paymentFail&failMsg='.$requestAll['vpc_Message']);
         }
-        print_r($requestAll); return "";
+       // print_r($requestAll); return "";
         if (isset($requestAll["TransactionId"])) {
             $billnumber = explode("_", $request["TransactionId"]);
         } else {
             $billnumber = explode('_', $this->request->{config('paymentGateway.vpc_MerchTxnRef')});
         }
-        // print_r($requestAll); return "";
+       //  print_r($requestAll); return "";
         $this->billnumber = $billnumber[0];
         $this->billtoken = $billnumber[1];
         $this->getBillMainData($requestAll);
@@ -36,7 +36,7 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         $this->getPaymentMethodID();
         $this->getPaymentMethodDetails();
         $this->{'callback' . ucfirst($this->paymentMethodData->call_back_func)}();
-        return redirect()->to($this->return);
+ 	return redirect()->to($this->return);
         // return response($this->return, 200);
     }
 
@@ -124,7 +124,6 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         }
 
         $this->return = REDIRECT_FRONT . '/checkoutCallback?';
-
         if ($txnResponseCode != "0" || $errorExists) {
             $this->finalizeFailPayment($txnResponseCodeDesc);
             $this->return .= 'paymentFail';

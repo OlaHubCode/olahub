@@ -543,7 +543,6 @@ class OlaHubPaymentsMainController extends BaseController
         if (isset($this->paymentMethodCountryData->extra_fees)) {
             $this->billing->billing_fees += $this->paymentMethodCountryData->extra_fees;
         }
-
         $this->billing->save();
         $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
         if ($this->typeID == 1 && $sendEmails) {
@@ -589,7 +588,7 @@ class OlaHubPaymentsMainController extends BaseController
         if ($this->billing->voucher_used && $this->billing->voucher_used > 0) {
             \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->billing->voucher_used, $this->billing->country_id);
         }
-        if (app('session')->get('tempData')->email) {
+        if (app('session')->get('tempData')->email){
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
         } elseif (app('session')->get('tempData')->mobile_no) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
