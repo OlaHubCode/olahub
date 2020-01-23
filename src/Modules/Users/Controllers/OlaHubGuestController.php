@@ -43,9 +43,9 @@ class OlaHubGuestController extends BaseController
         if (isset($validation['status']) && !$validation['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validation['data']], 200);
         }
-
-        if (!(new \OlaHub\UserPortal\Helpers\UserHelper)->checkUnique($this->requestData['userEmail'], $this->requestData['userCountry'])) {
-            if (is_numeric($this->requestData['userEmail'])) {
+        $is_phone = is_numeric($this->requestData['userEmail']);
+        if (!(new \OlaHub\UserPortal\Helpers\UserHelper)->checkUnique($this->requestData['userEmail'], $this->requestData['userCountry'], $is_phone)) {
+            if ($is_phone) {
                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
             } else {
                 return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]], 200);

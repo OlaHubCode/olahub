@@ -471,7 +471,6 @@ class CelebrationController extends BaseController
             $reg = [];
             foreach ($regions as $region) {
                 $reg[] = [
-                    'key' => $region->id,
                     'text' => $region->name,
                     'value' => $region->id,
                 ];

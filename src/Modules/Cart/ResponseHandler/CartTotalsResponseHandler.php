@@ -38,8 +38,8 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $userReedem = $userPoints * $exchangeRate->sell_price;
         $userVoucher += $userReedem;
         $shippingFees = $this->data->cartDetails()->whereHas('itemsMainData', function ($q) {
-            $q->where('is_shipment_free', '0');
-        })->first() ? 3.5 : 0;
+            $q->where('is_shipment_free', '1');
+        })->first() ? SHIPPING_FEES : 0;
         $shippingFees += Cart::checkDesignersShipping($this->data);
         $cashOnDeliver = TRUE ? 0 : 3;
         $total = (float) $cartSubTotal + $shippingFees + $cashOnDeliver - $this->promoCodeSave;
