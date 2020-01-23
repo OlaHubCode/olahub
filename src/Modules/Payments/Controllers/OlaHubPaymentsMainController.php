@@ -193,27 +193,35 @@ class OlaHubPaymentsMainController extends BaseController
         $this->checkPromoCode($this->cartTotal, $withExtra);
         if ($withExtra) {
             $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-                $q->where('is_shipment_free', '0');
-            })->first() ? 3.5 : 0;
-            $this->shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart);
+                $q->where('is_shipment_free', '1');
+            })->first() ? SHIPPING_FEES : 0;
+            // $this->shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart);
             if ($this->paymentMethodCountryData) {
                 $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
             }
         }
         if ($this->celebration) {
-            $participants = $this->celebration->celebrationParticipants;
-            $participantAmount = $this->cartTotal / $participants->count();
-            $reminder = $this->cartTotal - ($participantAmount * $participants->count());
-            if ($reminder > 0 && $this->celebrationDetails->created_by == app('session')->get('tempID')) {
-                $participantAmount = $participantAmount + $reminder;
-            }
-            $this->cartTotal = $participantAmount;
-            if ($this->shippingFees > 0) {
-                $this->shippingFees = $this->shippingFees / $participants->count();
-            }
-            if ($this->cashOnDeliver && $this->cashOnDeliver > 0) {
-                $this->cashOnDeliver = $this->cashOnDeliver / $participants->count();
-            }
+            $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
+                ->where('user_id', app('session')->get('tempID'))->first();
+            $this->shippingFees = SHIPPING_FEES;
+            $pp = $this->celebration->celebrationParticipants->count();
+            $debt = ($this->shippingFees / $pp);
+            $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2, ".", "");
+            $this->shippingFees = ($this->shippingFees == ($debt * $pp) ? $debt : number_format(($this->shippingFees - ($debt * $pp)) + $debt, 2, ".", ""));
+            $this->cartTotal = $participant->amount_to_pay - $this->shippingFees;
+
+            // $participants = $this->celebration->celebrationParticipants;
+            // $participantAmount = $this->cartTotal / $participants->count();
+            // $reminder = $this->cartTotal - ($participantAmount * $participants->count());
+            // if ($reminder > 0 && $this->celebrationDetails->created_by == app('session')->get('tempID')) {
+            //     $participantAmount = $participantAmount + $reminder;
+            // }
+            // if ($this->shippingFees > 0) {
+            //     $this->shippingFees = $this->shippingFees / $participants->count();
+            // }
+            // if ($this->cashOnDeliver && $this->cashOnDeliver > 0) {
+            //     $this->cashOnDeliver = $this->cashOnDeliver / $participants->count();
+            // }
         }
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
     }

@@ -8,7 +8,8 @@ use OlaHub\UserPortal\Models\Cart;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use Symfony\Component\HttpFoundation\Cookie;
 
-class OlaHubCartController extends BaseController {
+class OlaHubCartController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
@@ -26,7 +27,8 @@ class OlaHubCartController extends BaseController {
     private $countryId;
     private $lang;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = (object) $return['requestData'];
         $this->requestFilter = (object) $return['requestFilter'];
@@ -44,7 +46,8 @@ class OlaHubCartController extends BaseController {
         $this->lang = $request->header('language');
     }
 
-    public function getList($type = "default", $first = false) {
+    public function getList($type = "default", $first = false)
+    {
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
@@ -56,25 +59,27 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function uploadGiftVideo(Request $request) {
+    public function uploadGiftVideo(Request $request)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Cart", 'function_name' => "Upload cart gift video"]);
         $this->requestData = isset($this->uploadVideoData) ? $this->uploadVideoData : [];
-        $uploadResult = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData["GiftVideo"], DEFAULT_IMAGES_PATH . "cart/",STORAGE_URL.'/cart', false);
+        $uploadResult = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData["GiftVideo"], DEFAULT_IMAGES_PATH . "cart/", STORAGE_URL . '/cart', false);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Checking if array key exists for upload cart gift video", "action_startData" => $uploadResult]);
         if (array_key_exists('path', $uploadResult)) {
-             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Gift Video Uploaded', 'code' => 200]]);
-             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-            
-            return response(['status' => true, 'msg' => 'WishVideoSuccussfully','video'=>$uploadResult['path'], 'code' => 200], 200);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Gift Video Uploaded', 'code' => 200]]);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+            return response(['status' => true, 'msg' => 'WishVideoSuccussfully', 'video' => $uploadResult['path'], 'code' => 200], 200);
         } else {
-           (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $uploadResult]);
-           (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-            
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $uploadResult]);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
             response($uploadResult, 200);
         }
     }
 
-    public function setNewCountryForDefaultCart($country) {
+    public function setNewCountryForDefaultCart($country)
+    {
         $type = "default";
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
@@ -93,7 +98,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function setDefaultCartToBeGift($type = "default") {
+    public function setDefaultCartToBeGift($type = "default")
+    {
         $return = ["status" => false, "msg" => "noData"];
         if (isset($this->requestData->user) && $this->requestData->user > 0) {
             $user = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("id", $this->requestData->user)->first();
@@ -114,7 +120,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function setCartToBeGiftDate($type = "default") {
+    public function setCartToBeGiftDate($type = "default")
+    {
         $return = ["status" => false, "msg" => "noData"];
         if (isset($this->requestData->date) && $this->requestData->date) {
             $checkPermission = $this->checkActionPermission($type);
@@ -133,7 +140,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function cancelDefaultCartToBeGift($type = "default") {
+    public function cancelDefaultCartToBeGift($type = "default")
+    {
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
@@ -148,7 +156,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function getDefaultCartGiftDetails($type = "default") {
+    public function getDefaultCartGiftDetails($type = "default")
+    {
         $return = ["status" => false, "msg" => "noData"];
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
@@ -182,7 +191,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function getCartTotals($type = "default") {
+    public function getCartTotals($type = "default")
+    {
 
         if (!$this->userId) {
             if ($this->cartCookie && is_array($this->cartCookie) && count($this->cartCookie) > 0) {
@@ -204,7 +214,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function newCartItem($itemType = "store", $type = "default") {
+    public function newCartItem($itemType = "store", $type = "default")
+    {
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Cart::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
@@ -227,7 +238,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function removeCartItem($itemType = "store", $type = "default") {
+    public function removeCartItem($itemType = "store", $type = "default")
+    {
         $return = ['status' => FALSE, 'msg' => 'ProductNotCart', 'code' => 204];
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Cart::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -260,7 +272,8 @@ class OlaHubCartController extends BaseController {
         return response($return, 200);
     }
 
-    public function getNotLoginCartItems() {
+    public function getNotLoginCartItems()
+    {
         if (isset($this->NotLoginCartItems["products"]) && count($this->NotLoginCartItems["products"]) > 0) {
             $return['data'] = [];
             $storeItems = [];
@@ -301,7 +314,8 @@ class OlaHubCartController extends BaseController {
      * Helper functions for this module
      */
 
-    private function checkActionPermission($type) {
+    private function checkActionPermission($type)
+    {
         if (!$this->userId) {
             throw new NotAcceptableHttpException(404);
         }
@@ -320,9 +334,9 @@ class OlaHubCartController extends BaseController {
             $time = strtotime("+3 Days");
             $minTime = date("Y-m-d", $time);
             $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)
-                    ->where("id", $this->id)
-                    ->where("calender_date", ">=", $minTime)
-                    ->first();
+                ->where("id", $this->id)
+                ->where("calender_date", ">=", $minTime)
+                ->first();
             if (!$this->calendar) {
                 $return['status'] = false;
                 $return['code'] = 404;
@@ -332,9 +346,9 @@ class OlaHubCartController extends BaseController {
         }
         if ($type == "celebration" && $this->id > 0 && $this->userId > 0) {
             $userId = $this->userId;
-            $this->celebration = \OlaHub\UserPortal\Models\CelebrationModel::whereHas("celebrationParticipants", function($q) use($userId) {
-                        $q->where("user_id", $userId);
-                    })->where("id", $this->id)->first();
+            $this->celebration = \OlaHub\UserPortal\Models\CelebrationModel::whereHas("celebrationParticipants", function ($q) use ($userId) {
+                $q->where("user_id", $userId);
+            })->where("id", $this->id)->first();
             if (!$this->celebration) {
                 $return['status'] = false;
                 $return['code'] = 404;
@@ -344,11 +358,19 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function handleCartReturn($first = false) {
+    private function handleCartReturn($first = false)
+    {
         if ($this->celebration) {
+            $shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+                $q->where('is_shipment_free', '1');
+            })->first() ? SHIPPING_FEES : 0;
             $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
-            $return['total_price'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id);
+            $return['total'] = $this->cart->total_price > 0 ? array(
+                'sub_price' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id),
+                'shipping_fees' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees, true, $this->celebration->country_id),
+                'total_price' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price + $shippingFees, true, $this->celebration->country_id),
+            ) : null;
         } else {
             if ($first) {
                 $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
@@ -365,22 +387,24 @@ class OlaHubCartController extends BaseController {
         return $return;
     }
 
-    protected function cartFilter($type) {
+    protected function cartFilter($type)
+    {
         $this->cartModel = (new Cart)->newQuery();
         switch ($type) {
             case "default":
                 return $this->cartModel->whereNull("calendar_id")->first();
             case "celebration":
                 return $this->cartModel->withoutGlobalScope("countryUser")
-                                ->whereNull("calendar_id")
-                                ->whereNull("user_id")
-                                ->where("celebration_id", $this->id)->first();
+                    ->whereNull("calendar_id")
+                    ->whereNull("user_id")
+                    ->where("celebration_id", $this->id)->first();
             case "event":
                 return $this->cartModel->where("calendar_id", $this->id)->first();
         }
     }
 
-    private function checkCart($type) {
+    private function checkCart($type)
+    {
         $this->cart = null;
         $checkCart = $this->cartFilter($type);
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
@@ -408,7 +432,8 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function creatCart($type) {
+    private function creatCart($type)
+    {
         $country = $this->celebration ? \OlaHub\UserPortal\Models\Country::where('id', $this->celebration->country_id)->first() : app('session')->get('def_country');
         $this->cartModel = new Cart;
         $this->cartModel->shopping_cart_date = date('Y-m-d h:i');
@@ -427,15 +452,16 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function cartAction($itemType = "store") {
+    private function cartAction($itemType = "store")
+    {
         $country = $this->celebration ? $this->celebration->country_id : app('session')->get('def_country')->id;
         $likers['user_id'] = [];
         switch ($itemType) {
             case "store":
-                $item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")->whereHas('merchant', function ($q) use($country) {
-                            $q->withoutGlobalScope("country");
-                            $q->country_id = $country;
-                        })->find($this->requestData->itemID);
+                $item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")->whereHas('merchant', function ($q) use ($country) {
+                    $q->withoutGlobalScope("country");
+                    $q->country_id = $country;
+                })->find($this->requestData->itemID);
                 if ($item) {
                     $checkItem = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
                     if ($checkItem) {
@@ -459,7 +485,7 @@ class OlaHubCartController extends BaseController {
                     $cartItems->updated_by = app('session')->get('tempID');
                     $cartItems->unit_price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, TRUE);
                     $cartItems->quantity = isset($this->requestData->itemQuantity) && $this->requestData->itemQuantity > 0 ? $this->requestData->itemQuantity : 1;
-                    $cartItems->total_price = (double) $cartItems->unit_price * $cartItems->quantity;
+                    $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if ($this->celebration) {
                         $likers['user_id'][] = app('session')->get('tempID');
                         $cartItems->paricipant_likers = serialize($likers);
@@ -511,15 +537,15 @@ class OlaHubCartController extends BaseController {
                     $cartItems->updated_by = app('session')->get('tempID');
                     $cartItems->unit_price = $item->item_price;
                     $cartItems->quantity = isset($this->requestData->itemQuantity) && $this->requestData->itemQuantity > 0 ? $this->requestData->itemQuantity : 1;
-                    $cartItems->total_price = (double) $cartItems->unit_price * $cartItems->quantity;
+                    $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if ($this->celebration) {
                         $likers['user_id'][] = app('session')->get('tempID');
                         $cartItems->paricipant_likers = serialize($likers);
                     }
                     if ($cartItems->save()) {
                         $totalPrice = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
-//                        $this->cart->total_price = $totalPrice;
-//                        $this->cart->save();
+                        //                        $this->cart->total_price = $totalPrice;
+                        //                        $this->cart->save();
                         if ($this->celebration) {
                             $this->handleAddItemToCelebration($totalPrice);
                         }
@@ -532,7 +558,8 @@ class OlaHubCartController extends BaseController {
         return FALSE;
     }
 
-    private function handleRemoveItemFromCelebration($totalPrice) {
+    private function handleRemoveItemFromCelebration($totalPrice)
+    {
         if ($this->celebration && $totalPrice >= 0) {
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)->get();
             $price = $totalPrice / $participants->count();
@@ -546,7 +573,8 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function handleAddItemToCelebration($totalPrice) {
+    private function handleAddItemToCelebration($totalPrice)
+    {
         if ($this->celebration && $totalPrice >= 0) {
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)->get();
             $price = $totalPrice / $participants->count();
@@ -572,7 +600,8 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function handleStoreItemsResponse($itemData) {
+    private function handleStoreItemsResponse($itemData)
+    {
         $item = $itemData;
         $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
         $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
@@ -596,18 +625,19 @@ class OlaHubCartController extends BaseController {
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => 1,
             "productCurrency" => isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD"),
-            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((double) $itemFinal, false),
+            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) $itemFinal, false),
             "productImage" => $itemImage,
             "productOwner" => $itemOwner['productOwner'],
             "productOwnerName" => $itemOwner['productOwnerName'],
             "productOwnerSlug" => $itemOwner['productOwnerSlug'],
             "productselectedAttributes" => $itemAttrs,
-                //"productAttributes" => $productAttributes,
+            //"productAttributes" => $productAttributes,
         ];
         return $return;
     }
 
-    private function setItemImageData($item) {
+    private function setItemImageData($item)
+    {
         $images = isset($item->images) ? $item->images : [];
         if (count($images) > 0 && $images->count() > 0) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
@@ -616,7 +646,8 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function setItemSelectedAttrData($item) {
+    private function setItemSelectedAttrData($item)
+    {
         $return = [];
         $values = $item->valuesData;
         if ($values->count() > 0) {
@@ -633,7 +664,8 @@ class OlaHubCartController extends BaseController {
         return $return;
     }
 
-    private function setItemOwnerData($item) {
+    private function setItemOwnerData($item)
+    {
         $merchant = $item->merchant;
         $return["productOwner"] = isset($merchant->id) ? $merchant->id : NULL;
         $return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($merchant, 'company_legal_name');
@@ -642,10 +674,10 @@ class OlaHubCartController extends BaseController {
         return $return;
     }
 
-    public function saveCookie() {
+    public function saveCookie()
+    {
         setcookie("userCheck", $this->NotLoginCartItems["cookieId"], 2592000, "/", "localhost", false, false);
         if (isset($this->NotLoginCartItems["cookieId"]) && $this->NotLoginCartItems["cookieId"]) {
-            
         }
         $_COOKIE["cookie"] = $this->NotLoginCartItems["cookieId"];
         //var_dump($_COOKIE["cookie"]);
@@ -653,7 +685,8 @@ class OlaHubCartController extends BaseController {
         return response(["status" => true], 200)->withCookie(new Cookie("userCheck", $this->NotLoginCartItems["cookieId"], 2592000, "/", "localhost"));
     }
 
-    private function getDesignerItemData($itemData, $designerItemId) {
+    private function getDesignerItemData($itemData, $designerItemId)
+    {
 
         $return["productID"] = isset($itemData->item_id) ? $itemData->item_id : 0;
         $return["productType"] = 'designer';
@@ -698,7 +731,8 @@ class OlaHubCartController extends BaseController {
         return $return;
     }
 
-    private function setDesignerItemImageData($item) {
+    private function setDesignerItemImageData($item)
+    {
         $images = [];
         if (isset($item->item_images)) {
             $images = $item->item_images;
@@ -712,7 +746,8 @@ class OlaHubCartController extends BaseController {
         }
     }
 
-    private function setDesignerPriceData($item) {
+    private function setDesignerPriceData($item)
+    {
         $return["productPrice"] = isset($item->item_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price) : 0;
         $return["productDiscountedPrice"] = isset($item->item_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price) : 0;
         $return["productHasDiscount"] = false;
@@ -724,5 +759,4 @@ class OlaHubCartController extends BaseController {
 
         return $return;
     }
-
 }

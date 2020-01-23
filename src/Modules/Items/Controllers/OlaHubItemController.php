@@ -29,7 +29,7 @@ class OlaHubItemController extends BaseController
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
 
-    public function getRamiItems()
+    public function getItemsData()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "ItemsCriatria"]);
@@ -174,16 +174,43 @@ class OlaHubItemController extends BaseController
                 }
             }
         }
+
+        // Categories
+        $q1 = $itemsQuery;
+        $itemsIDs = $q1->pluck('id');
+        $categoryModel = (new \OlaHub\UserPortal\Models\ItemCategory)->newQuery();
+        $categoryModel->where(function ($wherQ) use ($itemsIDs) {
+            $wherQ->where(function ($ww) {
+                $ww->whereNull('parent_id')
+                    ->orWhere('parent_id', '0');
+            });
+            $wherQ->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                $q->whereIn('id', $itemsIDs);
+            });
+        });
+        $categoryModel->orWhere(function ($wherQ) use ($itemsIDs) {
+            $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs) {
+                $childQ->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                    $q->whereIn('id', $itemsIDs);
+                });
+            });
+        });
+        $categoryModel->groupBy('id');
+        $categories = $categoryModel->get();
+
+        // Items
         $itemsQuery->orderBy($column, $type);
         $items = $itemsQuery->paginate(20);
+
         $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+        $return['categories'] = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs);
         $return['status'] = true;
         $return['code'] = 200;
         return response($return, 200);
         return response($items, 200);
     }
 
-    public function getRamiCatsData($all = false)
+    public function getCatsData($all = false)
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getItemFiltersCatsData"]);
