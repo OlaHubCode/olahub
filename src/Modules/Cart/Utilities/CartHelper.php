@@ -118,7 +118,7 @@ class CartHelper extends OlaHubCommonHelper {
                 }
             }
             $subTotal += \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($total, false);
-            $shippingFees += \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->where('is_shipment_free', '0')->first() ? 3.5 : 0;
+            $shippingFees += \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->where('is_shipment_free', '1')->first() ? SHIPPING_FEES : 0;
             
         }
         $totalVal = (double) $subTotal + $shippingFees;

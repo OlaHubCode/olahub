@@ -15,7 +15,7 @@
 $router->group([
     'prefix' => basename(strtolower(dirname(__DIR__)))
         ], function () use($router) {
-    $router->post('/', 'OlaHubItemController@getRamiItems');
+    $router->post('/', 'OlaHubItemController@getItemsData');
     $router->post('sitemap', 'OlaHubLandingPageController@getItemsSitemap');
     // $router->post('/', 'OlaHubItemController@getItems');
     $router->post('voucher', 'OlaHubItemController@getVoucherItems');
@@ -45,7 +45,7 @@ $router->group([
         $router->post('brands', 'OlaHubItemController@getItemFiltersBrandData');
         $router->post('attributes', 'OlaHubItemController@getItemFiltersAttrsData');
         $router->post('classifications', 'OlaHubItemController@getItemFiltersClassessData');
-        $router->post('categories', 'OlaHubItemController@getRamiCatsData');
+        $router->post('categories', 'OlaHubItemController@getCatsData');
         // $router->post('categories', 'OlaHubItemController@getItemFiltersCatsData');
         $router->post('occasions', 'OlaHubItemController@getItemFiltersOccasionData');
         $router->post('mayAlsoLike', 'OlaHubItemController@getAlsoLikeItems');

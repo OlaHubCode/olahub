@@ -890,6 +890,11 @@ class OlaHubGeneralController extends BaseController
                 ->get();
             foreach ($nonSeenGifts as $gift) {
                 $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
+                $gift_sender = array(
+                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($gift_sender->profile_picture),
+                    'profile_url' => $gift_sender->profile_url,
+                    'username' => "$gift_sender->first_name $gift_sender->last_name"
+                );
                 $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
                 $nonSeenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
                 $all[] = [
@@ -899,6 +904,12 @@ class OlaHubGeneralController extends BaseController
                     'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
                     'items' => $nonSeenGiftsResponse['data']
                 ];
+            }
+            if ($nonSeenGifts) {
+                \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+                    ->where('gift_for', app('session')->get('tempID'))
+                    ->where('gift_date', $now)
+                    ->update(["seen" => 1]);
             }
             //posts
             try {

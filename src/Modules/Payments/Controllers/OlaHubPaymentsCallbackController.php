@@ -22,7 +22,7 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         if(!$requestAll['vpc_TransactionNo']){
             return redirect()->to(REDIRECT_FRONT . '/checkoutCallback?paymentFail&failMsg='.$requestAll['vpc_Message']);
         }
-       // print_r($requestAll); return "";
+        // print_r($requestAll); return "";
         if (isset($requestAll["TransactionId"])) {
             $billnumber = explode("_", $request["TransactionId"]);
         } else {

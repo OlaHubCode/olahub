@@ -13,16 +13,25 @@ class UserHelper extends OlaHubCommonHelper
         // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
-    function checkUnique($value = false, $country_id)
+    function checkUnique($value = false, $country_id, $is_phone)
     {
         if ($value && strlen($value) > 3) {
-            $exist = \OlaHub\UserPortal\Models\UserModel::where('country_id', $country_id)
-                ->whereRaw("(email = '$value' or 
-                mobile_no = '$value' or
-                facebook_id = '$value' or
-                google_id = '$value' or 
-                twitter_id = '$value')")
-                ->first();
+            if ($is_phone) {
+                $exist = \OlaHub\UserPortal\Models\UserModel::where('country_id', $country_id)
+                    ->whereRaw("(email = '$value' or 
+                    mobile_no = '$value' or
+                    facebook_id = '$value' or
+                    google_id = '$value' or 
+                    twitter_id = '$value')")
+                    ->first();
+            } else {
+                $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
+                    ->orWhere('mobile_no', $value)
+                    ->orWhere('facebook_id', $value)
+                    ->orWhere('google_id', $value)
+                    ->orWhere('twitter_id', $value)
+                    ->first();
+            }
             if (!$exist) {
                 return true;
             }
