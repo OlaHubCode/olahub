@@ -95,13 +95,13 @@ class UserShippingAddressModel extends Model {
         }
 
         $return['addressFullName'] = $address->shipping_address_full_name ? $address->shipping_address_full_name : $user->first_name . " " . $user->last_name;
+        $return['addressCity'] = $address->shipping_address_city ? $address->shipping_address_city : NULL;
+        $return['addressState'] = $address->shipping_address_state ? $address->shipping_address_state : NULL;
+        $return['addressEmail'] = $address->shipping_address_email ? $address->shipping_address_email : NULL;
+        $return['addressPhoneNumber'] = $address->shipping_address_phone_no ? $address->shipping_address_phone_no : NULL;
+        $return['addressAddress'] = $address->shipping_address_address_line1 ? $address->shipping_address_address_line1 : NULL;
+        $return['addressZipCode'] = $address->shipping_address_zip_code ? $address->shipping_address_zip_code : NULL;
         $return['addressCountryName'] = null;
-        $return['addressCity'] = null;
-        $return['addressState'] = null;
-        $return['addressEmail'] = null;
-        $return['addressPhoneNumber'] = null;
-        $return['addressAddress'] = null;
-        $return['addressZipCode'] = null;
         return $return;
     }
 

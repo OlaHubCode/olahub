@@ -118,12 +118,14 @@ class CartHelper extends OlaHubCommonHelper {
                 }
             }
             $subTotal += \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($total, false);
-            $shippingFees += \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->where('is_shipment_free', '1')->first() ? SHIPPING_FEES : 0;
+            // $shippingFees = \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->where('is_shipment_free', '1')->first() ? SHIPPING_FEES : 0;
             
         }
-        $totalVal = (double) $subTotal + $shippingFees;
+        $totalVal = (double) $subTotal;
+        // $totalVal = (double) $subTotal + $shippingFees;
+        $return[] = ['label' => 'shippingFees', 'value' => 'free', 'className' => "shippingFees"];
         $return[] = ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($subTotal, true), 'className' => "subtotal"];
-        $return[] = ['label' => 'shippingFees', 'value' => $shippingFees ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees) : 'free', 'className' => "shippingFees"];
+        // $return[] = ['label' => 'shippingFees', 'value' => $shippingFees ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees) : 'free', 'className' => "shippingFees"];
         $return[] = ['label' => 'total', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($totalVal), 'className' => "total"];
         return $return;
     }
