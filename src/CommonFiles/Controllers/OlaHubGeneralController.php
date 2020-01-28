@@ -910,7 +910,7 @@ class OlaHubGeneralController extends BaseController
                     ->where('gift_for', app('session')->get('tempID'))
                     ->where('gift_date', $now)
                     ->update(["seen" => 1]);
-            }
+           }
             //posts
             try {
                 $currentCountryID = (int) app('session')->get('def_country')->id;
