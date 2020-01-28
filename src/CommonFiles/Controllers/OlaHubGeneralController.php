@@ -883,7 +883,8 @@ class OlaHubGeneralController extends BaseController
         $user = \OlaHub\UserPortal\Models\UserMongo::find(app('session')->get('tempID'));
         if ($user) {
             $friends = is_array($user->friends) ? $user->friends : [];
-            $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+            // $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+            $nonSeenGifts = \DB::table('billing_history')->select("*")->where('is_gift', 1)
                 ->where('gift_for', app('session')->get('tempID'))
                 ->where('gift_date', $now)
                 ->where('seen', 0)
@@ -906,7 +907,8 @@ class OlaHubGeneralController extends BaseController
                 ];
             }
             if ($nonSeenGifts) {
-                \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+                // \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+                \DB::table('billing_history')->where('is_gift', 1)
                     ->where('gift_for', app('session')->get('tempID'))
                     ->where('gift_date', $now)
                     ->update(["seen" => 1]);
