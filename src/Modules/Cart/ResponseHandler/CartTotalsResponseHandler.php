@@ -40,7 +40,7 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $shippingFees = $this->data->cartDetails()->whereHas('itemsMainData', function ($q) {
             $q->where('is_shipment_free', '1');
         })->first() ? SHIPPING_FEES : 0;
-        $shippingFees += Cart::checkDesignersShipping($this->data);
+        $shippingFees += $shippingFees == 0 ? Cart::checkDesignersShipping($this->data) : 0;
         $cashOnDeliver = TRUE ? 0 : 3;
         $total = (float) $cartSubTotal + $shippingFees + $cashOnDeliver - $this->promoCodeSave;
 

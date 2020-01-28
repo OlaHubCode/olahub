@@ -75,8 +75,10 @@ class OlaHubGuestController extends BaseController
                 $userData->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(UserModel::$columnsMaping, $input)} = $value ? $value : null;
             }
         }
-        // $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-        // $userData->country_id = $country->id;
+        if (!isset($request['userCountry'])) {
+            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+            $userData->country_id = $country->id;
+        }
         $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
         // print_r($userData); return "";
         $userData->save();
@@ -307,14 +309,11 @@ class OlaHubGuestController extends BaseController
 
         $newUser = false;
         if (isset($this->requestData["userEmail"])) {
-            $userData = UserModel::where("email", $this->requestData["userEmail"])
-                ->first();
+            $userData = UserModel::where("email", $this->requestData["userEmail"])->first();
             if (!$userData) {
-                $userData = UserModel::Where('mobile_no', 'LIKE', "%" . $this->requestData["userEmail"])
-                    ->first();
+                $userData = UserModel::Where('mobile_no', $this->requestData["userEmail"])->first();
                 if (!$userData) {
-                    $userData = UserModel::where('facebook_id', $this->requestData["userFacebook"])
-                        ->first();
+                    $userData = UserModel::where('facebook_id', $this->requestData["userFacebook"])->first();
                     if (!$userData) {
                         $newUser = true;
                         $userData = new UserModel;
@@ -325,14 +324,16 @@ class OlaHubGuestController extends BaseController
                         }
                         if (isset($this->requestData['userCountry']) && $this->requestData['userCountry']) {
                             $userData->country_id = $this->requestData['userCountry'];
+                        } else {
+                            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+                            $userData->country_id = $country->id;
                         }
                         $userData->is_active = 1;
                     }
                 }
             }
         } else {
-            $userData = UserModel::where('facebook_id', $this->requestData["userFacebook"])
-                ->first();
+            $userData = UserModel::where('facebook_id', $this->requestData["userFacebook"])->first();
             if (!$userData) {
                 $newUser = true;
                 $userData = new UserModel;
@@ -343,6 +344,9 @@ class OlaHubGuestController extends BaseController
                 }
                 if (isset($this->requestData['userCountry']) && $this->requestData['userCountry']) {
                     $userData->country_id = $this->requestData['userCountry'];
+                } else {
+                    $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+                    $userData->country_id = $country->id;
                 }
                 $userData->is_active = 1;
             }
@@ -370,7 +374,7 @@ class OlaHubGuestController extends BaseController
             $userMongo->user_id = (int) $userData->id;
             $userMongo->username = "$userData->first_name $userData->last_name";
             $userMongo->avatar_url = $userData->profile_picture;
-            $userMongo->country_id = app('session')->get('def_country')->id;
+            $userMongo->country_id = $userData->country_id;
             $userMongo->gender = $userData->user_gender;
             $userMongo->profile_url = $userData->profile_url;
             $userMongo->cover_photo = $userData->cover_photo;
@@ -589,11 +593,15 @@ class OlaHubGuestController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "forgetPasswordUser"]);
 
         if (isset($this->requestData["userEmail"]) && $this->requestData["userEmail"]) {
-            $requestEmailData = str_replace("+", "00", $this->requestData["userEmail"]);
+            $requestEmailData = $this->requestData["userEmail"];
+            // $requestEmailData = str_replace("+", "00", $this->requestData["userEmail"]);
             $type = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
             $userData = false;
             $password = false;
             $tempCode = false;
+            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+            $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : $country->id;
+
             if ($type == 'email') {
                 $userData = UserModel::where(function ($q) use ($requestEmailData) {
                     $q->where('email', $requestEmailData);
@@ -602,32 +610,31 @@ class OlaHubGuestController extends BaseController
                         $query->orWhere("mobile_no", "!=", "");
                     });
                 })->first();
-                $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
-                $tempCode = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, "num");
             } elseif ($type == 'phoneNumber') {
-                $userData = UserModel::where(function ($q) use ($requestEmailData) {
+                $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where(function ($query) {
                         $query->whereNull("email");
                         $query->orWhere("email", "!=", "");
                     });
                     $q->where('mobile_no', $requestEmailData);
+                    $q->where('country_id', $country_id);
                 })->first();
-                $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
-                $tempCode = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, "num");
             }
+            $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
+            $tempCode = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, "num");
 
             if ($userData && $password && $tempCode) {
-                if (($userData->facebook_id || $userData->google_id) && empty($userData->password)) {
-                    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'socialAccount', 'code' => 500]]);
-                    $log->saveLogSessionData();
+                // if (($userData->facebook_id || $userData->google_id) && empty($userData->password)) {
+                //     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'socialAccount', 'code' => 500]]);
+                //     $log->saveLogSessionData();
 
-                    return response(['status' => false, 'msg' => 'socialAccount', 'code' => 500], 200);
-                }
+                //     return response(['status' => false, 'msg' => 'socialAccount', 'code' => 500], 200);
+                // }
                 $tokenCode = (new \OlaHub\UserPortal\Helpers\SecureHelper)->setPasswordHashing($password);
                 $userData->reset_pass_token = md5($tokenCode);
                 $userData->reset_pass_code = $tempCode;
-                $userData->is_first_login = '0';
-                $userData->password = md5($tokenCode);
+                // $userData->is_first_login = '0';
+                // $userData->password = md5($tokenCode);
                 $userData->save();
                 if ($type == "email") {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendForgetPassword($userData);
@@ -645,6 +652,13 @@ class OlaHubGuestController extends BaseController
             }
 
             if ($type == "phoneNumber") {
+                $usersData = UserModel::selectRaw('concat(first_name, " ", last_name) as full_name, country_id, mobile_no, phonecode,
+                concat("' . STORAGE_URL . '/", profile_picture) as avatar')
+                    ->leftJoin('shipping_countries', 'shipping_countries.olahub_country_id', 'users.country_id')
+                    ->where('mobile_no', $requestEmailData)->get();
+                if ($usersData->count()) {
+                    return ['status' => false, 'msg' => 'multiNumbers', 'code' => 204, 'users' => $usersData];
+                }
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'invalidPhonenumber', 'code' => 204]]);
                 $log->saveLogSessionData();
                 return ['status' => false, 'msg' => 'invalidPhonenumber', 'code' => 204];
@@ -665,43 +679,61 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resetGuestPassword"]);
 
-        $userData = UserModel::where("reset_pass_token", $this->requestData["resetPasswordToken"])
-            ->where("reset_pass_code", $this->requestData["userPassword"])->first();
+        $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
+        $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : $country->id;
+        $type = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
+        $userData = null;
+        $email = $this->requestData["userEmail"];
+        $code = $this->requestData["userPassword"];
+        
+        if ($type == 'email') {
+            $userData = UserModel::where(function ($q) use ($email, $code) {
+                $q->where('email', $email);
+                $q->where('reset_pass_code', $code);
+            })->first();
+        } elseif ($type == 'phoneNumber') {
+            $userData = UserModel::where(function ($q) use ($email, $code, $country_id) {
+                $q->where('mobile_no', $email);
+                $q->where('reset_pass_code', $code);
+                $q->where('country_id', $country_id);
+            })->first();
+        }
+        
         if (!$userData) {
-            $tempUser = UserModel::withOutGlobalScope('notTemp')
-                ->where("reset_pass_token", $this->requestData["resetPasswordToken"])
-                ->where("reset_pass_code", $this->requestData["userPassword"])
-                ->first();
-            if (!$tempUser) {
+            // $tempUser = UserModel::withOutGlobalScope('notTemp')
+            //     ->where("reset_pass_token", $this->requestData["resetPasswordToken"])
+            //     ->where("reset_pass_code", $this->requestData["userPassword"])
+            //     ->first();
+            // if (!$tempUser) {
                 return response(['status' => false, 'msg' => 'invalidResetCode', 'code' => 404], 200);
-            }
-            $userData = $tempUser;
-            $userData->invitation_accepted_date = date('Y-m-d');
-            $userData->save();
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
-            if (!$userMongo) {
-                $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-            }
+            // }
+            // $userData = $tempUser;
+            // $userData->invitation_accepted_date = date('Y-m-d');
+            // $userData->save();
+            // $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
+            // if (!$userMongo) {
+            //     $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
+            // }
 
-            $userMongo->user_id = (int) $userData->id;
-            $userMongo->username = "$userData->first_name $userData->last_name";
-            $userMongo->avatar_url = $userData->profile_picture;
-            $userMongo->country_id = app('session')->get('def_country')->id;
-            $userMongo->gender = $userData->user_gender;
-            $userMongo->profile_url = $userData->profile_url;
-            $userMongo->cover_photo = $userData->cover_photo;
-            $userMongo->my_groups = [];
-            $userMongo->groups = [];
-            $userMongo->celebrations = [];
-            $userMongo->friends = [];
-            $userMongo->requests = [];
-            $userMongo->responses = [];
-            $userMongo->intersts = [];
-            $userMongo->followed_brands = [];
-            $userMongo->followed_occassions = [];
-            $userMongo->followed_designers = [];
-            $userMongo->followed_interests = [];
-            $userMongo->save();
+            // $userMongo->user_id = (int) $userData->id;
+            // $userMongo->username = "$userData->first_name $userData->last_name";
+            // $userMongo->avatar_url = $userData->profile_picture;
+            // $userMongo->country_id = app('session')->get('def_country')->id;
+            // $userMongo->gender = $userData->user_gender;
+            // $userMongo->profile_url = $userData->profile_url;
+            // $userMongo->cover_photo = $userData->cover_photo;
+            // $userMongo->my_groups = [];
+            // $userMongo->groups = [];
+            // $userMongo->celebrations = [];
+            // $userMongo->friends = [];
+            // $userMongo->requests = [];
+            // $userMongo->responses = [];
+            // $userMongo->intersts = [];
+            // $userMongo->followed_brands = [];
+            // $userMongo->followed_occassions = [];
+            // $userMongo->followed_designers = [];
+            // $userMongo->followed_interests = [];
+            // $userMongo->save();
         }
 
         app("session")->put("tempData", $userData);

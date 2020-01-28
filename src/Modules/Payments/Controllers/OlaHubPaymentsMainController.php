@@ -6,6 +6,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\PaymentMethod;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
+use OlaHub\UserPortal\Models\UserModel;
 
 class OlaHubPaymentsMainController extends BaseController
 {
@@ -195,6 +196,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
                 $q->where('is_shipment_free', '1');
             })->first() ? SHIPPING_FEES : 0;
+            $this->shippingFees += $this->shippingFees == 0 ? \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart) : 0;
             // $this->shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart);
             if ($this->paymentMethodCountryData) {
                 $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
@@ -475,11 +477,13 @@ class OlaHubPaymentsMainController extends BaseController
         $this->billing->bill_token = $billingToken[0];
         $this->billing->paid_by = $paidBy;
         $this->billing->is_gift = $this->typeID == 2 ? 1 : 0;
+        $this->billing->gift_for = $this->cart->for_friend;
         $this->billing->gift_message = $this->typeID == 2 && isset($this->requestData['billCardGift']) ? $this->requestData['billCardGift'] : null;
         $this->billing->gift_video_ref = $this->typeID == 2 && isset($this->requestData['billCardGiftVideo']) ? str_replace(STORAGE_URL . '//', '', $this->requestData['billCardGiftVideo'])  : null;
         $this->billing->gift_date = $this->typeID == 2 && isset($this->requestData['billGiftDate']) ? $this->requestData['billGiftDate'] : null;
         $this->billing->billing_total = $this->total;
-        $this->billing->billing_fees = $this->shippingFees + $this->cashOnDeliver;
+        $this->billing->billing_fees = $this->cashOnDeliver;
+        // $this->billing->billing_fees = $this->shippingFees + $this->cashOnDeliver;
         $this->billing->voucher_used = $this->voucherUsed > 0 && $this->pointsUsedCurr > 0 ? ($this->voucherUsed - $this->pointsUsedCurr) : $this->voucherUsed;
         $this->billing->voucher_after_pay = $this->voucherAfterPay;
         $this->billing->points_used = $this->pointsUsedInt;
@@ -625,7 +629,7 @@ class OlaHubPaymentsMainController extends BaseController
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         $shipping = unserialize($this->billing->order_address);
         $targetID = isset($shipping['for_user']) ? $shipping['for_user'] : NULL;
-        $target = \OlaHub\UserPortal\Models\UserModel::withOutGlobalScope('notTemp')->find($targetID);
+        $target = UserModel::withOutGlobalScope('notTemp')->find($targetID);
         if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
             \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance($targetID, $this->grouppedMers['voucher'], $this->cart->country_id);
         }
@@ -757,6 +761,37 @@ class OlaHubPaymentsMainController extends BaseController
 
     protected function checkCart($type)
     {
+        if (!empty($this->requestData["isGift"])) {
+            $checkCart = $this->cartFilter($type);
+            $for_friend = NULL;
+            $this->cartModel = \OlaHub\UserPortal\Models\Cart::getUserCart(app('session')->get('tempID'));
+            $phone =  $this->requestData["billPhoneNo"];
+            $country_id = $checkCart->country_id;
+            $userData = UserModel::where(function ($q) use ($phone, $country_id) {
+                $q->where('mobile_no', $phone);
+                $q->where('country_id', $country_id);
+            })->first();
+            if ($userData) {
+                $for_friend = $userData->id;
+            } else {
+                $fullName = explode(" ", trim($this->requestData["billFullName"]));
+                $user = new \OlaHub\UserPortal\Models\UserModel;
+                // $secureHelper = new \OlaHub\UserPortal\Helpers\SecureHelper;
+                $user->country_id = $country_id;
+                $user->first_name = $fullName[0];
+                $user->last_name = isset($fullName[1]) ? $fullName[1] : "";
+                $user->last_name .= isset($fullName[2]) ? $fullName[2] : "";
+                $user->mobile_no = $phone;
+                $user->invited_by = app('session')->get('tempID');
+                $user->is_first_login = 1;
+                // $user->password = $secureHelper->setPasswordHashing(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6));
+                $user->save();
+                $for_friend = $user->id;
+            }
+            $this->cartModel->for_friend = $for_friend;
+            $this->cartModel->gift_date = $this->requestData["billGiftDate"];
+            $this->cartModel->save();
+        }
         $this->cart = null;
         $checkCart = $this->cartFilter($type);
 
@@ -772,6 +807,7 @@ class OlaHubPaymentsMainController extends BaseController
                 throw new NotAcceptableHttpException(404);
             }
         }
+        // print_r($this->cart); return "";
     }
 
     protected function creatCart($type)
