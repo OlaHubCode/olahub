@@ -30,10 +30,42 @@ class CelebrationController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create new celebration"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationModel::$columnsMaping, (array) $this->requestData);
+
         if (isset($validator['status']) && !$validator['status']) {
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
+            if ($validator['data']['celebrationOwner']) {
+                if (!empty($this->requestData['userFullName']) && !is_numeric($this->requestData['userFullName'])) {
+                    $user_id = NULL;
+                    $phone =  $this->requestData["shipping_address_phone_no"];
+                    $country_id = $this->requestData["celebrationCountry"];
+                    $userData = \OlaHub\UserPortal\Models\UserModel::where(function ($q) use ($phone, $country_id) {
+                        $q->where('mobile_no', $phone);
+                        $q->where('country_id', $country_id);
+                    })->first();
+                    if ($userData) {
+                        $user_id = $userData->id;
+                    } else {
+                        $fullName = explode(" ", trim($this->requestData["userFullName"]));
+                        $user = new \OlaHub\UserPortal\Models\UserModel;
+                        // $secureHelper = new \OlaHub\UserPortal\Helpers\SecureHelper;
+                        $user->country_id = $country_id;
+                        $user->first_name = $fullName[0];
+                        $user->last_name = isset($fullName[1]) ? $fullName[1] : "";
+                        $user->last_name .= isset($fullName[2]) ? $fullName[2] : "";
+                        $user->mobile_no = $phone;
+                        $user->invited_by = app('session')->get('tempID');
+                        $user->is_first_login = 1;
+                        // $user->password = $secureHelper->setPasswordHashing(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6));
+                        $user->save();
+                        $user_id = $user->id;
+                    }
+                    $this->requestData['celebrationOwner'] = $user_id;
+                }
+                unset($this->requestData["userFullName"]);
+            } else {
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
+            }
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start creating new celebration"]);
         $saved = $this->saveCelebrationData();
@@ -317,7 +349,6 @@ class CelebrationController extends BaseController
     {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Save celebration data"]);
-
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Save celebration Data"]);
 
         if (app('session')->get('tempID') == $this->requestData['celebrationOwner']) {
@@ -381,7 +412,6 @@ class CelebrationController extends BaseController
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get one celebration"]);
 
-
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
             $celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->first();
             $participant = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])->where('user_id', app('session')->get('tempID'))->first();
@@ -402,6 +432,16 @@ class CelebrationController extends BaseController
             if ($celebration) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Show details of selected celebration"]);
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');
+                $country = \OlaHub\UserPortal\Models\Country::where('id', $return['data']['celebrationCountry'])->first();
+                $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
+                $reg = [];
+                foreach ($regions as $region) {
+                    $reg[] = [
+                        'text' => $region->name,
+                        'value' => $region->id,
+                    ];
+                }
+                $return['cities'] = $reg;
                 $return['status'] = true;
                 $return['code'] = 200;
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
@@ -423,13 +463,22 @@ class CelebrationController extends BaseController
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get user shipping address"]);
 
+        $countryId = 0;
+        if (isset($this->requestData['countryId']) && $this->requestData['countryId']) {
+            $countryId = $this->requestData['countryId'];
+        } else {
+            $countryId = app('session')->get('def_country')->id;
+        }
+        $country = \OlaHub\UserPortal\Models\Country::where('id', $countryId)->first();
+        $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
+        $reg = [];
+        foreach ($regions as $region) {
+            $reg[] = [
+                'text' => $region->name,
+                'value' => $region->id,
+            ];
+        }
         if (isset($this->requestData['userId']) && $this->requestData['userId']) {
-            $countryId = 0;
-            if (isset($this->requestData['countryId']) && $this->requestData['countryId']) {
-                $countryId = $this->requestData['countryId'];
-            } else {
-                $countryId = app('session')->get('def_country')->id;
-            }
 
             $user = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->requestData['userId'])->first();
             $shippingAddress = \OlaHub\UserPortal\Models\UserShippingAddressModel::withoutGlobalScope('currentUser')->where('user_id', $this->requestData['userId'])->where('country_id', $countryId)->first();
@@ -451,7 +500,6 @@ class CelebrationController extends BaseController
                     "userPhoneNumber" => isset($user->mobile_no) ? (new \OlaHub\UserPortal\Helpers\UserHelper)->handleUserPhoneNumber($user->mobile_no) : NULL,
                 ];
             } else {
-                $country = \OlaHub\UserPortal\Models\Country::where('id', $countryId)->first();
                 $return["data"] = [
                     "shipping_address_city" => NULL,
                     "shipping_address_state" => NULL,
@@ -467,14 +515,6 @@ class CelebrationController extends BaseController
                 ];
             }
 
-            $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
-            $reg = [];
-            foreach ($regions as $region) {
-                $reg[] = [
-                    'text' => $region->name,
-                    'value' => $region->id,
-                ];
-            }
             $return['cities'] = $reg;
 
             $return['status'] = true;
@@ -485,7 +525,7 @@ class CelebrationController extends BaseController
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204, 'cities' => $reg], 200);
     }
 
     public function getCreatorShippingAddress()

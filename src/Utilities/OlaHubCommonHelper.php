@@ -323,9 +323,11 @@ abstract class OlaHubCommonHelper {
         $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", $currency->code)->first();
         if($exchangeRate){
             $newPrice = $price * $exchangeRate->exchange_rate;
-            $returnPrice = number_format($newPrice, 2);
+            // $returnPrice = number_format($newPrice, 2);
+            $returnPrice = number_format($newPrice, 2,'.','');
         }else{
-            $returnPrice = number_format($price, 2);
+            // $returnPrice = number_format($price, 2);
+            $returnPrice = number_format($price, 2,'.','');
         }
         
         if ($withCurr) {
