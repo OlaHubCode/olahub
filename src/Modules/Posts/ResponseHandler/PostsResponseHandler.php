@@ -34,6 +34,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract {
             'liked' => $liked,
             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($this->data->created_at),
             'post' => isset($this->data->_id) ? $this->data->_id : 0,
+            'color' => isset($this->data->color) ? $this->data->color : NULL,
             'groupId' => isset($this->data->group_id) ? $this->data->group_id : 0,
             'content' => isset($this->data->post) ? $this->data->post : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,

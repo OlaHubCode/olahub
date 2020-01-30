@@ -6,27 +6,30 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\Post;
 
-class OlaHubPostController extends BaseController {
+class OlaHubPostController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
     protected $userAgent;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
 
-    public function getPosts($type = false) {
+    public function getPosts($type = false)
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getPosts"]);
-        
+
         $return = ['status' => false, 'message' => 'NoData', 'code' => 204];
         if ($type && !in_array($type, ['group', 'friend'])) {
-           $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'likedProductBefore', 'code' => 204]]);
-           $log->saveLogSessionData();
+            $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'likedProductBefore', 'code' => 204]]);
+            $log->saveLogSessionData();
             return ['status' => false, 'message' => 'someData', 'code' => 406, 'errorData' => []];
         }
         if ($type == 'group') {
@@ -42,9 +45,9 @@ class OlaHubPostController extends BaseController {
                         $liked = 0;
                         if ($campaign) {
                             $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
-                                    ->where('country_id', app('session')->get('def_country')->id)
-                                    ->where('campign_id', $campaign->id)
-                                    ->first();
+                                ->where('country_id', app('session')->get('def_country')->id)
+                                ->where('campign_id', $campaign->id)
+                                ->first();
                             if ($oldLike) {
                                 $liked = 1;
                             }
@@ -65,7 +68,6 @@ class OlaHubPostController extends BaseController {
                     }
                 }
             } catch (Exception $ex) {
-                
             }
 
             if ($postsTemp->count() > 0) {
@@ -101,15 +103,16 @@ class OlaHubPostController extends BaseController {
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
-            $log->setLogSessionData(['response' => $return]);
-            $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
         return response($return, 200);
     }
 
-    public function getOnePost() {
+    public function getOnePost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getOnePost"]);
-        
+
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('_id', $this->requestData['postId'])->first();
@@ -120,15 +123,16 @@ class OlaHubPostController extends BaseController {
                 $return['code'] = 200;
             }
         }
-            $log->setLogSessionData(['response' => $return]);
-            $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
         return response($return, 200);
     }
 
-    public function addNewPost() {
+    public function addNewPost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
-        
+
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $postMongo = new Post;
@@ -157,6 +161,9 @@ class OlaHubPostController extends BaseController {
             $postMongo->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $postMongo->subject = isset($this->requestData['subject']) ? $this->requestData['subject'] : NULL;
             $postMongo->type = 'post';
+            $postMongo->color = isset($this->requestData['color']) ? $this->requestData['color'] : NULL;
+            // $postMongo->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
+            
             if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
                 $postImage = [];
                 foreach ($this->requestData['post_file'] as $image) {
@@ -222,15 +229,16 @@ class OlaHubPostController extends BaseController {
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
-            $log->setLogSessionData(['response' => $return]);
-            $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
         return response($return, 200);
     }
 
-    public function addNewComment() {
+    public function addNewComment()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewComment"]);
-        
+
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $postID = $this->requestData['post_id'];
@@ -276,10 +284,11 @@ class OlaHubPostController extends BaseController {
         return response($return, 200);
     }
 
-    public function getPostComments() {
+    public function getPostComments()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getPostComments"]);
-        
+
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('_id', $this->requestData['postId'])->first();
             if ($post) {
@@ -329,10 +338,11 @@ class OlaHubPostController extends BaseController {
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
     }
 
-    public function addNewReply() {
+    public function addNewReply()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
-        
+
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $postID = $this->requestData['post_id'];
@@ -398,13 +408,14 @@ class OlaHubPostController extends BaseController {
         return response($return, 200);
     }
 
-    public function deletePost() {
+    public function deletePost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
-        
+
         if (empty($this->requestData['postId'])) {
-             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-             $log->saveLogSessionData();
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
         $post = Post::find($this->requestData['postId']);
@@ -413,46 +424,47 @@ class OlaHubPostController extends BaseController {
                 if (isset($post->group_id) && $post->group_id > 0) {
                     $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($post->group_id);
                     if (!$group) {
-                         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400]]);
-                         $log->saveLogSessionData();
+                        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400]]);
+                        $log->saveLogSessionData();
                         return response(['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400], 200);
                     }
                 } else {
-                     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400]]);
-                     $log->saveLogSessionData();
+                    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400]]);
+                    $log->saveLogSessionData();
                     return response(['status' => false, 'msg' => 'Not allow to delete this post', 'code' => 400], 200);
                 }
             }
             $post->delete = 1;
             $post->save();
-             $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You delete post successfully', 'code' => 200]]);
-             $log->saveLogSessionData();
+            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You delete post successfully', 'code' => 200]]);
+            $log->saveLogSessionData();
             return response(['status' => true, 'msg' => 'You delete post successfully', 'code' => 200], 200);
         }
-         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-          $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function updatePost() {
+    public function updatePost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
-        
+
         if (empty($this->requestData['postId'])) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-          $log->saveLogSessionData();
+            $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
         if (isset($this->requestData['content']) && !$this->requestData['content'] && isset($this->requestData['subject']) && !$this->requestData['subject']) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]]]);
-          $log->saveLogSessionData();
+            $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]], 200);
         }
         $post = Post::find($this->requestData['postId']);
         if ($post) {
             if ($post->user_id != app('session')->get('tempID')) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400]]);
-          $log->saveLogSessionData();
+                $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
             }
             if ($post->post != $this->requestData['content']) {
@@ -469,12 +481,11 @@ class OlaHubPostController extends BaseController {
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
-          $log->saveLogSessionData();
+            $log->saveLogSessionData();
             return response($return, 200);
         }
-          $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-          $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
 }
