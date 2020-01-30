@@ -8,12 +8,12 @@ class CelebrationModel extends Model {
 
     protected $table = 'celebrations';
     static $columnsMaping = [
-        'celebrationTitle' => [
-            'column' => 'title',
-            'type' => 'string',
-            'relation' => false,
-            'validation' => 'required|max:200'
-        ],
+        // 'celebrationTitle' => [
+        //     'column' => 'title',
+        //     'type' => 'string',
+        //     'relation' => false,
+        //     'validation' => 'required|max:200'
+        // ],
         'celebrationOwner' => [
             'column' => 'user_id',
             'type' => 'number',
