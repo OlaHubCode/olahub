@@ -4,9 +4,11 @@ namespace OlaHub\UserPortal\Helpers;
 
 use Stichoza\GoogleTranslate\TranslateClient;
 
-abstract class OlaHubCommonHelper {
+abstract class OlaHubCommonHelper
+{
 
-    static function timeStampToDate($time, $format = 'D d F, Y') {
+    static function timeStampToDate($time, $format = 'D d F, Y')
+    {
         $return = $time;
         if ($time && $time > 0) {
             $return = date($format, $time);
@@ -16,7 +18,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function convertStringToDate($string, $format = 'D d F, Y') {
+    static function convertStringToDate($string, $format = 'D d F, Y')
+    {
         $return = $string;
         if ($string) {
             $time = strtotime($string);
@@ -29,7 +32,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function convertStringToDateTime($string, $format = 'D d F, Y H:i A') {
+    static function convertStringToDateTime($string, $format = 'D d F, Y H:i A')
+    {
         $return = $string;
         if ($string) {
             $time = strtotime($string);
@@ -42,7 +46,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function createSlugFromString($string, $delimiter = '-') {
+    static function createSlugFromString($string, $delimiter = '-')
+    {
         $return = $string;
         if ($string) {
             $return = str_replace(' ', '_', $string);
@@ -54,7 +59,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function checkSlug($model, $column, $originalName, $delimiter = '-') {
+    static function checkSlug($model, $column, $originalName, $delimiter = '-')
+    {
         $return = NULL;
         if ($model) {
             if ($model->$column) {
@@ -69,7 +75,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function returnCurrentLangField($objectData, $fieldName) {
+    static function returnCurrentLangField($objectData, $fieldName)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Return field depending on current language", "action_startData" => json_encode($objectData) . $fieldName]);
         $return = NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
@@ -92,7 +99,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function returnCurrentLangName($data) {
+    static function returnCurrentLangName($data)
+    {
         $return = NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $language = strtolower($languageArray[0]);
@@ -114,15 +122,18 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function defineRowCreator($data, $creatorColumn = 'created_by') {
+    static function defineRowCreator($data, $creatorColumn = 'created_by')
+    {
         return isset($data->$creatorColumn) && $data->$creatorColumn > 0 ? $data->$creatorColumn : NULL;
     }
 
-    static function defineRowUpdater($data, $updaterColumn = 'updated_by') {
+    static function defineRowUpdater($data, $updaterColumn = 'updated_by')
+    {
         return isset($data->$updaterColumn) && $data->$updaterColumn > 0 ? $data->$updaterColumn : NULL;
     }
 
-    public static function randomString($length = 8, $type = false) {
+    public static function randomString($length = 8, $type = false)
+    {
         switch ($type) {
             case 'str':
                 $seed = str_split('abdefghijkmnqrtyABDEFGHJKLMNQRTY');
@@ -142,7 +153,7 @@ abstract class OlaHubCommonHelper {
             case 'str_spc':
                 $seed = str_split('abdefghijkmnqrtyABDEFGHJKLMNQRTY!@$%^&*');
                 break;
-            default :
+            default:
                 $seed = str_split('abdefghijkmnqrtyABDEFGHJKLMNQRTY123456789!@$%^&*');
                 break;
         }
@@ -159,7 +170,8 @@ abstract class OlaHubCommonHelper {
         return $rand;
     }
 
-    static function translate($string) {
+    static function translate($string)
+    {
         $languages = \OlaHub\UserPortal\Models\Language::all();
         $return = [];
         $tr = new TranslateClient(null, 'ar');
@@ -176,7 +188,8 @@ abstract class OlaHubCommonHelper {
         return json_encode($return);
     }
 
-    static function setContentUrl($imageID, $type = 'image') {
+    static function setContentUrl($imageID, $type = 'image')
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Set Url for the content", "action_startData" => json_encode($imageID) . $type]);
         $return = null;
         if (STORAGE_URL) {
@@ -197,12 +210,12 @@ abstract class OlaHubCommonHelper {
             } elseif (in_array(strtolower($extension), IMAGE_EXT)) {
                 if ((strtolower($type) == "cover_photo" || strtolower($type) == 'shop_banner')) {
                     $ctx = stream_context_create(
-                            array(
-                                "ssl" => array(
-                                    "verify_peer" => false,
-                                    "verify_peer_name" => false,
-                                ),
-                            )
+                        array(
+                            "ssl" => array(
+                                "verify_peer" => false,
+                                "verify_peer_name" => false,
+                            ),
+                        )
                     );
 
                     $image = @file_get_contents($defult_url . "/$imageID", false, $ctx);
@@ -247,7 +260,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function checkContentUrl($imageID) {
+    static function checkContentUrl($imageID)
+    {
         $return = false;
         if (STORAGE_URL) {
             $defult_url = STORAGE_URL;
@@ -273,7 +287,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function setDefLang($country) {
+    static function setDefLang($country)
+    {
         $countryCode = $country;
         if ($countryCode && $countryCode > 0) {
             $country = \OlaHub\UserPortal\Models\Country::find($countryCode);
@@ -289,7 +304,8 @@ abstract class OlaHubCommonHelper {
         app('session')->put('def_lang', $defLang);
     }
 
-    static function getDefineConst($constName, $constVal = 'false') {
+    static function getDefineConst($constName, $constVal = 'false')
+    {
         if (defined($constName)) {
             if ($constVal !== 'false') {
                 runkit_constant_redefine($constName, $constVal);
@@ -300,15 +316,16 @@ abstract class OlaHubCommonHelper {
         return constant('self::' . $constName);
     }
 
-    static function setPrice($itemPrice, $withCurr = true, $countryID = false) {
-        $price = (double)$itemPrice;
+    static function setPrice($itemPrice, $withCurr = true, $countryID = false)
+    {
+        $price = (float) $itemPrice;
         if ($countryID) {
             $country = \OlaHub\UserPortal\Models\Country::find($countryID);
             $currency = $country->currencyData;
         } else {
             $currency = app('session')->get('def_currency');
         }
-        $returnPrice = number_format($price, 2,'.','');
+        $returnPrice = number_format($price, 2, '.', '');
         // $returnPrice = number_format($price, 2,'.',',');
         if ($withCurr) {
             $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
@@ -317,19 +334,20 @@ abstract class OlaHubCommonHelper {
         return $returnPrice;
     }
 
-    static function setDesignerPrice($itemPrice, $withCurr = true) {
-        $price = (double)$itemPrice;
+    static function setDesignerPrice($itemPrice, $withCurr = true)
+    {
+        $price = (float) $itemPrice;
         $currency = app('session')->get('def_currency');
         $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", $currency->code)->first();
-        if($exchangeRate){
+        if ($exchangeRate) {
             $newPrice = $price * $exchangeRate->exchange_rate;
             // $returnPrice = number_format($newPrice, 2);
-            $returnPrice = number_format($newPrice, 2,'.','');
-        }else{
+            $returnPrice = number_format($newPrice, 2, '.', '');
+        } else {
             // $returnPrice = number_format($price, 2);
-            $returnPrice = number_format($price, 2,'.','');
+            $returnPrice = number_format($price, 2, '.', '');
         }
-        
+
         if ($withCurr) {
             $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
             return "$returnPrice $returnCur";
@@ -337,21 +355,24 @@ abstract class OlaHubCommonHelper {
         return $returnPrice;
     }
 
-    static function handlingResponseCollection($data, $responseHandler) {
+    static function handlingResponseCollection($data, $responseHandler)
+    {
         $collection = $data;
         $fractal = new \League\Fractal\Manager();
         $resource = new \League\Fractal\Resource\Collection($collection, new $responseHandler);
         return $fractal->createData($resource)->toArray();
     }
 
-    static function handlingResponseItem($data, $responseHandler) {
+    static function handlingResponseItem($data, $responseHandler)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Handel response for item", "action_startData" => $data . $responseHandler]);
         $fractal = new \League\Fractal\Manager();
         $resource = new \League\Fractal\Resource\Item($data, new $responseHandler);
         return $fractal->createData($resource)->toArray();
     }
 
-    static function handlingResponseCollectionPginate($data, $responseHandler) {
+    static function handlingResponseCollectionPginate($data, $responseHandler)
+    {
 
         $collection = $data->getCollection();
         $fractal = new \League\Fractal\Manager();
@@ -360,14 +381,16 @@ abstract class OlaHubCommonHelper {
         return $fractal->createData($resource)->toArray();
     }
 
-    static function getColumnName($mapingColumns, $requestInput) {
+    static function getColumnName($mapingColumns, $requestInput)
+    {
         if (is_array($mapingColumns) && isset($mapingColumns[$requestInput]['column'])) {
             return $mapingColumns[$requestInput]['column'];
         }
         return $requestInput;
     }
 
-    static function validateData($mapingColumns, $requestData) {
+    static function validateData($mapingColumns, $requestData)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Validate data", "action_startData" => json_encode($mapingColumns) . json_encode($requestData)]);
         $requestValidationRules = [];
         $status = TRUE;
@@ -387,7 +410,8 @@ abstract class OlaHubCommonHelper {
         return ['status' => $status, 'data' => $data];
     }
 
-    static function validateUpdateUserData($mapingColumns, $requestData) {
+    static function validateUpdateUserData($mapingColumns, $requestData)
+    {
         $requestValidationRules = [];
         $status = TRUE;
         $data = [];
@@ -405,7 +429,8 @@ abstract class OlaHubCommonHelper {
 
             if (isset($requestData["userPhoneNumber"])) {
                 $checkPhone = \OlaHub\UserPortal\Models\UserModel::where("mobile_no", $requestData["userPhoneNumber"])
-                                ->where("id", "!=", app("session")->get("tempID"))->first();
+                    ->where("country_id", $requestData["userCountry"])
+                    ->where("id", "!=", app("session")->get("tempID"))->first();
                 if ($checkPhone) {
                     $status = FALSE;
                     $data["userPhoneNumber"][] = "validation.uniquePhone";
@@ -414,7 +439,7 @@ abstract class OlaHubCommonHelper {
 
             if (isset($requestData["userEmail"])) {
                 $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("email", $requestData["userEmail"])
-                                ->where("id", "!=", app("session")->get("tempID"))->first();
+                    ->where("id", "!=", app("session")->get("tempID"))->first();
                 if ($checkEmail) {
                     $status = FALSE;
                     $data["userEmail"][] = "validation.uniqueEmail";
@@ -424,7 +449,8 @@ abstract class OlaHubCommonHelper {
         return ['status' => $status, 'data' => $data];
     }
 
-    static function getRequest($request) {
+    static function getRequest($request)
+    {
         $return = [
             'requestData' => [],
             'requestFilter' => [],
@@ -450,7 +476,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function handlingRequestFilter($filters, $maping) {
+    static function handlingRequestFilter($filters, $maping)
+    {
         $return['main'] = [];
         $return['relations'] = [];
         if (isset($filters['categorySlug']) && strlen($filters['categorySlug']) > 0 && isset($filters['categories']) && count($filters['categories']) > 0) {
@@ -482,7 +509,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function handlingParentValues($column, $value, $filters) {
+    static function handlingParentValues($column, $value, $filters)
+    {
         if ($column == 'category_id' && $value > 0) {
             return \OlaHub\UserPortal\Models\ItemCategory::getIDsByID($value);
         } elseif ($column == "category_slug" && count($filters["categories"]) <= 0) {
@@ -492,7 +520,8 @@ abstract class OlaHubCommonHelper {
         return $value;
     }
 
-    static function createNumberPrefix($number, $count = 3, $prefix = '0') {
+    static function createNumberPrefix($number, $count = 3, $prefix = '0')
+    {
         $return = '';
         $numberLen = strlen((string) $number);
         $finalCount = $count - $numberLen;
@@ -502,7 +531,8 @@ abstract class OlaHubCommonHelper {
         return $return . $number;
     }
 
-    static function sendEmail($email, $replace, $with, $template) {
+    static function sendEmail($email, $replace, $with, $template)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Prepare sending Email", "action_startData" => json_encode($email) . json_encode($replace) . json_encode($with) . $template]);
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
@@ -515,7 +545,8 @@ abstract class OlaHubCommonHelper {
         }
     }
 
-    static function sendSms($email, $replace, $with, $template) {
+    static function sendSms($email, $replace, $with, $template)
+    {
         //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Prepare sending SMS", "action_startData" => json_encode($email) . json_encode($replace) . json_encode($with) . $template]);
         $sendSms = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendSms) {
@@ -529,7 +560,8 @@ abstract class OlaHubCommonHelper {
         }
     }
 
-    static function rightPhoneNoJO($phonenum) {
+    static function rightPhoneNoJO($phonenum)
+    {
         if (substr($phonenum, 0, 7) === "0096207") {
             return str_replace("0096207", "009627", $phonenum);
         } elseif (substr($phonenum, 0, 5) === "00962") {
@@ -550,7 +582,8 @@ abstract class OlaHubCommonHelper {
         }
     }
 
-    static function getWordsFromString($string, $count = 50) {
+    static function getWordsFromString($string, $count = 50)
+    {
         if (!is_string($string)) {
             return $string;
         }
@@ -570,7 +603,8 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-    static function getUserBrowserAndOS($userAgent) {
+    static function getUserBrowserAndOS($userAgent)
+    {
 
         if (preg_match('/linux/i', $userAgent)) {
             $platform = 'Linux';
@@ -580,7 +614,7 @@ abstract class OlaHubCommonHelper {
             $platform = 'Windows';
         } elseif (preg_match('/application/i', $userAgent)) {
             $platform = 'OlaHub application';
-        }else{
+        } else {
             $platform = 'unkwon platform';
         }
 
@@ -598,14 +632,15 @@ abstract class OlaHubCommonHelper {
             $bname = 'Netscape';
         } elseif (preg_match('/application/i', $userAgent)) {
             $bname = '';
-        }else{
+        } else {
             $bname = 'unkwon browser';
         }
 
         return "$platform - $bname";
     }
 
-    static function timeElapsedString($datetime, $full = false) {
+    static function timeElapsedString($datetime, $full = false)
+    {
 
         $now = new \DateTime;
         $ago = new \DateTime($datetime);
@@ -637,7 +672,8 @@ abstract class OlaHubCommonHelper {
         return $string ? implode(', ', $string) . ' ago' : 'just now';
     }
 
-    static function setPayUsed($bill) {
+    static function setPayUsed($bill)
+    {
         $payByData = $bill->paid_by;
         $return = [];
         $return["paidBy"] = "";
@@ -665,26 +701,27 @@ abstract class OlaHubCommonHelper {
         return $return;
     }
 
-//    static function setPayUsed($bill) {
-//        $payBy = $bill->paid_by;
-//        $return = [];
-//        $return["paidBy"] = "";
-//        if ($bill->voucher_used > 0) {
-//            
-//        }
-//        if ($bill->voucher_used != $bill->billing_total) {
-//            if (strlen($return["paidBy"]) > 0) {
-//                $return["paidBy"] .= " & ";
-//            }
-//            $payBy = preg_replace('/[0-9]+_/', '', $payBy);
-//            $return["orderPayByGate"] = OlaHubCommonHelper::getpaymentName($payBy);
-//            $return["paidBy"] .= OlaHubCommonHelper::getpaymentName($payBy);
-//            $return["orderPayByGateAmount"] = $bill->billing_total - $bill->voucher_used;
-//        }
-//        return $return;
-//    }
+    //    static function setPayUsed($bill) {
+    //        $payBy = $bill->paid_by;
+    //        $return = [];
+    //        $return["paidBy"] = "";
+    //        if ($bill->voucher_used > 0) {
+    //            
+    //        }
+    //        if ($bill->voucher_used != $bill->billing_total) {
+    //            if (strlen($return["paidBy"]) > 0) {
+    //                $return["paidBy"] .= " & ";
+    //            }
+    //            $payBy = preg_replace('/[0-9]+_/', '', $payBy);
+    //            $return["orderPayByGate"] = OlaHubCommonHelper::getpaymentName($payBy);
+    //            $return["paidBy"] .= OlaHubCommonHelper::getpaymentName($payBy);
+    //            $return["orderPayByGateAmount"] = $bill->billing_total - $bill->voucher_used;
+    //        }
+    //        return $return;
+    //    }
 
-    static function getpaymentName($pay) {
+    static function getpaymentName($pay)
+    {
         $payDecoded = (array) json_decode(str_replace("\u", "", $pay));
         $payment = isset($payDecoded["en"]) ? str_replace(["_"], " ", $payDecoded["en"]) : str_replace(["_"], " ", $pay);
         $paymentName = \OlaHub\UserPortal\Models\PaymentMethod::where('name', 'LIKE', "%$payment%")->first();
@@ -694,7 +731,8 @@ abstract class OlaHubCommonHelper {
         return $payment;
     }
 
-    static function getTranslatedCurrency($currency) {
+    static function getTranslatedCurrency($currency)
+    {
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $language = strtolower($languageArray[0]);
         if ($language == "ar") {
@@ -704,7 +742,8 @@ abstract class OlaHubCommonHelper {
         }
     }
 
-    static function checkHolidaysDatesNumber($totalDays) {
+    static function checkHolidaysDatesNumber($totalDays)
+    {
         $returnDates = $totalDays;
         for ($i = 2; $i <= $totalDays + 1; $i++) {
             $timeStamp = strtotime("+$i Days");
@@ -715,12 +754,11 @@ abstract class OlaHubCommonHelper {
         }
         $checkTotal = strtotime("+$returnDates Days");
         $day = date("N", $checkTotal);
-        if($day == 6){
+        if ($day == 6) {
             $returnDates += 2;
-        }elseif($day == 7){
-            $returnDates ++;
+        } elseif ($day == 7) {
+            $returnDates++;
         }
         return $returnDates;
     }
-
 }
