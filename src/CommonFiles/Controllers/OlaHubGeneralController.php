@@ -1410,6 +1410,7 @@ class OlaHubGeneralController extends BaseController
                                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
                                             'post' => isset($post->_id) ? $post->_id : 0,
                                             'content' => isset($post->post) ? $post->post : NULL,
+                                            'color' => isset($post->color) ? $post->color : NULL,
                                             'subject' => isset($post->subject) ? $post->subject : NULL,
                                             'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
                                             'comments_count' => isset($post->comments) ? count($post->comments) : 0,
@@ -1510,6 +1511,7 @@ class OlaHubGeneralController extends BaseController
                         $timeline[] = [
                             "type" => 'group',
                             'post' => isset($groupPost->_id) ? $groupPost->_id : 0,
+                            'color' => isset($post->color) ? $post->color : NULL,
                             'total_share_count' => isset($groupPost->shares) ? count($groupPost->shares) : 0,
                             'comments_count' => isset($groupPost->comments) ? count($groupPost->comments) : 0,
                             'comments' => [],
