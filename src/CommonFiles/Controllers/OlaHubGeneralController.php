@@ -706,49 +706,48 @@ class OlaHubGeneralController extends BaseController
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
-        $user = FALSE;
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start invite new user"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check email existance of new user"]);
-        if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
-            $checkExist = \OlaHub\UserPortal\Models\UserModel::where("email", $this->requestData->userEmail)->first();
-            if ($checkExist) {
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-                return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]], 200);
-            }
-            $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("email", $this->requestData->userEmail)->first();
-            if ($checkTemp) {
-                $user = $checkTemp;
-            }
-        }
+        // if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
+        //     $checkExist = \OlaHub\UserPortal\Models\UserModel::where("email", $this->requestData->userEmail)->first();
+        //     if ($checkExist) {
+        //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]]]);
+        //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+        //         return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]], 200);
+        //     }
+        //     $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("email", $this->requestData->userEmail)->first();
+        //     if ($checkTemp) {
+        //         $user = $checkTemp;
+        //     }
+        // }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check phoneNumber existance of new user"]);
         if (isset($this->requestData->userPhoneNumber) && strlen($this->requestData->userPhoneNumber) > 3) {
-            $checkExist = \OlaHub\UserPortal\Models\UserModel::where("mobile_no", $this->requestData->userPhoneNumber)->first();
+            $checkExist = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")
+                ->where("mobile_no", $this->requestData->userPhoneNumber)
+                ->where("country_id", $this->requestData->userCountry)->first();
             if ($checkExist) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
             }
-            $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("mobile_no", $this->requestData->userPhoneNumber)->first();
-            if ($checkTemp) {
-                if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
-                    if ($user) {
-                        if ($user->id != $checkTemp->id) {
-                            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]]]);
-                            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-                            return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
-                        }
-                    } else {
-                        $user = $checkTemp;
-                    }
-                } else {
-                    $user = $checkTemp;
-                }
-            }
+            // $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("mobile_no", $this->requestData->userPhoneNumber)->first();
+            // if ($checkTemp) {
+            //     if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
+            //         if ($user) {
+            //             if ($user->id != $checkTemp->id) {
+            //                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]]]);
+            //                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+            //                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
+            //             }
+            //         } else {
+            //             $user = $checkTemp;
+            //         }
+            //     } else {
+            //         $user = $checkTemp;
+            //     }
+            // }
         }
-        if (!$user) {
-            $user = new \OlaHub\UserPortal\Models\UserModel;
-        }
+        $user = new \OlaHub\UserPortal\Models\UserModel;
         foreach ($this->requestData as $input => $value) {
             if (isset(\OlaHub\UserPortal\Models\UserModel::$columnsMaping[$input])) {
                 $user->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\UserModel::$columnsMaping, $input)} = $value;
@@ -758,7 +757,7 @@ class OlaHubGeneralController extends BaseController
         $user->password = $secureHelper->setPasswordHashing(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6));
         $user->invited_by = app('session')->get('tempID');
         $user->is_first_login = 1;
-        $user->country_id = app('session')->get('def_country')->id;
+        $user->country_id = $this->requestData->userCountry;
         if ($user->save()) {
             $userMongo = \OlaHub\UserPortal\Models\UserMongo::where("user_id", $user->id)->first();
             if (!$userMongo) {
@@ -774,7 +773,7 @@ class OlaHubGeneralController extends BaseController
             }
             $userMongo->username = "$user->first_name $user->last_name";
             $userMongo->avatar_url = $user->profile_picture;
-            $userMongo->country_id = app('session')->get('def_country')->id;
+            $userMongo->country_id = $this->requestData->userCountry;
             $userMongo->gender = $user->user_gender;
             $userMongo->profile_url = $user->profile_url;
             $userMongo->cover_photo = $user->cover_photo;
