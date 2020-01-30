@@ -885,7 +885,7 @@ class OlaHubGeneralController extends BaseController
             $friends = is_array($user->friends) ? $user->friends : [];
             // $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
             $nonSeenGifts = \DB::table('billing_history')->select("*")->where('is_gift', 1)
-                ->where('gift_for', app('session')->get('tempID'))
+                ->where('gift_for', $user->user_id)
                 ->where('gift_date', $now)
                 ->where('seen', 0)
                 ->get();
