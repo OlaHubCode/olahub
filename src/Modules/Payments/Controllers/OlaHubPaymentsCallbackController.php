@@ -19,8 +19,9 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
     {
         $this->request = $request;
         $requestAll = $request->all();
-        if(!$requestAll['vpc_TransactionNo']){
-            return redirect()->to(REDIRECT_FRONT . '/checkoutCallback?paymentFail&failMsg='.$requestAll['vpc_Message']);
+        if (!$requestAll['vpc_TransactionNo']) {
+            return redirect()->to(REDIRECT_FRONT . "/payment-status/" . $requestAll['vpc_Message']);
+            // return redirect()->to(REDIRECT_FRONT . '/payment-fail?{paymentFail:true,failMsg:"' . $requestAll['vpc_Message'] . '"}');
         }
         // print_r($requestAll); return "";
         if (isset($requestAll["TransactionId"])) {
@@ -123,24 +124,25 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
             $cscResultCodeDesc = \OlaHub\UserPortal\PaymentGates\Helpers\PaymentCodesHelper::getCSCResultDescription($cscResultCode);
         }
 
-        $this->return = REDIRECT_FRONT . '/checkoutCallback?';
+        $this->return = REDIRECT_FRONT . "/payment-status/";
+
         if ($txnResponseCode != "0" || $errorExists) {
             $this->finalizeFailPayment($txnResponseCodeDesc);
-            $this->return .= 'paymentFail';
+            $this->return .= 'fail';
             // $this->return = ['status' => true, 'action' => 'fail', 'msg' => 'paymentFail', 'code' => 200];
             // if ($this->celebrationID) {
             //     $this->return['celebration'] = $this->celebrationID;
             // }
         } else {
             $this->finalizeSuccessPayment(true, 2);
-            $this->return .= 'paidSuccessfully';
+            $this->return .= 'paid';
             // $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
             // if ($this->celebrationID) {
             //     $this->return['celebration'] = $this->celebrationID;
             // }
         }
         if ($this->celebrationID)
-            $this->return .= '&celebration=' . $this->celebrationID;
+            $this->return .= '/' . $this->celebrationID;
     }
 
     function callbackZainCashSystem()
