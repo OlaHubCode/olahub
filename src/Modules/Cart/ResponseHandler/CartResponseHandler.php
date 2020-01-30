@@ -5,7 +5,8 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 use OlaHub\UserPortal\Models\Cart;
 use League\Fractal;
 
-class CartResponseHandler extends Fractal\TransformerAbstract {
+class CartResponseHandler extends Fractal\TransformerAbstract
+{
 
     private $return;
     private $data;
@@ -13,7 +14,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
     private $minShipDate = 0;
     private $maxShipDate = 0;
 
-    public function transform(Cart $data) {
+    public function transform(Cart $data)
+    {
         $this->data = $data;
         $this->items = $this->data->cartDetails;
         $this->setDefaultData();
@@ -22,7 +24,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         return $this->return;
     }
 
-    private function setDefaultData() {
+    private function setDefaultData()
+    {
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($this->data->country_id);
         $change_country = \OlaHub\UserPortal\Models\CartItems::where("shopping_cart_id", $this->data->id)->where("item_type", "store")->count() > 0 ? false : true;
         $this->return = [
@@ -36,7 +39,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         ];
     }
 
-    private function setItemMainData() {
+    private function setItemMainData()
+    {
         $this->return['products'] = [];
         if ($this->items) {
             foreach ($this->items as $cartItem) {
@@ -69,7 +73,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function getDesignerItem($item, $cartItem, $itemMain) {
+    private function getDesignerItem($item, $cartItem, $itemMain)
+    {
         $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item);
         $itemOwner = $this->setDesignerItemOwnerData($itemMain);
         $this->return['products'][] = array(
@@ -84,7 +89,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
             "productDiscountedPrice" => $itemPrice['productDiscountedPrice'],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => $cartItem->quantity,
-            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((double) \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, true, false) * $cartItem->quantity),
+            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, true, false) * $cartItem->quantity),
             "productImage" => $this->setDesignerItemImageData($item),
             "productOwner" => $itemOwner['productOwner'],
             "productOwnerName" => $itemOwner['productOwnerName'],
@@ -100,7 +105,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setDesignerItemImageData($item) {
+    private function setDesignerItemImageData($item)
+    {
         $images = isset($item->item_image) ? $item->item_image : (isset($item->item_images) ? $item->item_images : false);
         if ($images && is_array($images) && count($images) > 0) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]);
@@ -109,7 +115,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setDesignerItemSelectedAttrData($oneItem) {
+    private function setDesignerItemSelectedAttrData($oneItem)
+    {
         $return = [];
         if (isset($oneItem->item_attr) && is_array($oneItem->item_attr) && count($oneItem->item_attr)) {
             $valuesData = \OlaHub\UserPortal\Models\AttrValue::whereIn("id", $oneItem->item_attr)->get();
@@ -125,7 +132,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         return $return;
     }
 
-    private function setDesignerItemOwnerData($item) {
+    private function setDesignerItemOwnerData($item)
+    {
         $designer = \OlaHub\UserPortal\Models\Designer::find($item->designer_id);
         $return["productOwner"] = isset($designer->id) ? $designer->id : NULL;
         $return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($designer, 'designer_name');
@@ -134,19 +142,39 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         return $return;
     }
 
-    private function setShippingDatesData() {
+    private function setShippingDatesData()
+    {
         if ($this->minShipDate > 0) {
             $dateFrom = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->minShipDate);
-            $this->return["shippingDateFrom"] = date("D d F, Y", strtotime("+$dateFrom Days"));
+            if (app('session')->get('def_lang')->default_locale == 'ar') {
+                $date = ARABIC_DAYS[date("j", strtotime("+$dateFrom Days")) - 1] . " " .
+                    date("d", strtotime("+$dateFrom Days")) . " " .
+                    ARABIC_MONTHS[date("n", strtotime("+$dateFrom Days")) - 1] . "، " . date("Y", strtotime("+$dateFrom Days"));
+            } else {
+                $date = date("D d F, Y", strtotime("+$dateFrom Days"));
+            }
+            $this->return["shippingDateFrom"] = $date;
+            // $this->return["shippingDateFrom"] = date("D d F, Y", strtotime("+$dateFrom Days"));
         }
 
         if ($this->maxShipDate > 0) {
             $dateTo = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->maxShipDate);
-            $this->return["shippingDateTo"] = date("D d F, Y", strtotime("+$dateTo Days"));
+            if ($dateFrom != $dateTo) {
+                if (app('session')->get('def_lang')->default_locale == 'ar') {
+                    $date = ARABIC_DAYS[date("j", strtotime("+$dateTo Days")) - 1] . " " .
+                        date("d", strtotime("+$dateTo Days")) . " " .
+                        ARABIC_MONTHS[date("n", strtotime("+$dateTo Days")) - 1] . ", " . date("Y", strtotime("+$dateTo Days"));
+                } else {
+                    $date = date("D d F, Y", strtotime("+$dateTo Days"));
+                }
+                $this->return["shippingDateTo"] = $date;
+                // $this->return["shippingDateTo"] = date("D d F, Y", strtotime("+$dateTo Days"));
+            }
         }
     }
 
-    private function getStoreItem($item, $cartItem) {
+    private function getStoreItem($item, $cartItem)
+    {
         $itemPrice = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item);
         $itemOwner = $this->setItemOwnerData($item);
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($item['country_id']);
@@ -161,7 +189,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
             "productDiscountedPrice" => $itemPrice["productHasDiscount"] ? $itemPrice['productDiscountedPrice'] : $itemPrice["productPrice"],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => $cartItem->quantity,
-            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((double) \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false) * $cartItem->quantity),
+            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false) * $cartItem->quantity),
             "productImage" => $this->setItemImageData($item),
             "productOwner" => $itemOwner['productOwner'],
             "productOwnerName" => $itemOwner['productOwnerName'],
@@ -180,7 +208,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setItemImageData($item) {
+    private function setItemImageData($item)
+    {
         $images = isset($item->images) ? $item->images : [];
         if (count($images) > 0 && $images->count() > 0) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
@@ -189,7 +218,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setItemSelectedAttrData($item) {
+    private function setItemSelectedAttrData($item)
+    {
         $return = [];
         $values = $item->valuesData;
         if ($values->count() > 0) {
@@ -206,7 +236,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         return $return;
     }
 
-    private function setItemOwnerData($item) {
+    private function setItemOwnerData($item)
+    {
         $merchant = $item->merchant;
         $return["productOwner"] = isset($merchant->id) ? $merchant->id : NULL;
         $return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($merchant, 'company_legal_name');
@@ -215,7 +246,8 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
         return $return;
     }
 
-    private function setItemCustomData($item) {
+    private function setItemCustomData($item)
+    {
         $return = [];
         if ($item != null) {
             $customItem = unserialize($item);
@@ -225,5 +257,4 @@ class CartResponseHandler extends Fractal\TransformerAbstract {
 
         return $return;
     }
-
 }

@@ -1463,6 +1463,7 @@ class OlaHubGeneralController extends BaseController
                                 }
                                 $celebrations[] = [
                                     "type" => 'celebration',
+                                    "id" => $celebrationContent->celebration_id,
                                     "mediaType" => $type,
                                     "content" => isset($celebrationContent->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($celebrationContent->reference) : NULL,
                                     'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($celebrationContent->created_at),
@@ -1572,26 +1573,26 @@ class OlaHubGeneralController extends BaseController
             }
         } catch (Exception $ex) {
         }
-        try {
-            $seenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
-                ->where('gift_for', app('session')->get('tempID'))
-                ->where('gift_date', $now)
-                ->where('seen', 1)
-                ->paginate(5);
-            foreach ($seenGifts as $gift) {
-                $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
-                $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
-                $seenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
-                $timeline[] = [
-                    'type' => 'gift',
-                    'gift_sender' => $gift_sender,
-                    'message' => isset($gift->gift_message) ? $gift->gift_message : "",
-                    'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
-                    'items' => $seenGiftsResponse['data']
-                ];
-            }
-        } catch (Exception $ex) {
-        }
+        // try {
+        //     $seenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
+        //         ->where('gift_for', app('session')->get('tempID'))
+        //         ->where('gift_date', $now)
+        //         ->where('seen', 1)
+        //         ->paginate(5);
+        //     foreach ($seenGifts as $gift) {
+        //         $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
+        //         $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
+        //         $seenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
+        //         $timeline[] = [
+        //             'type' => 'gift',
+        //             'gift_sender' => $gift_sender,
+        //             'message' => isset($gift->gift_message) ? $gift->gift_message : "",
+        //             'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
+        //             'items' => $seenGiftsResponse['data']
+        //         ];
+        //     }
+        // } catch (Exception $ex) {
+        // }
         if (count($timeline) > 0) {
             // shuffle($timeline);
 
