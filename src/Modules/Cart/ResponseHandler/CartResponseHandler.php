@@ -155,6 +155,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
             }
             $this->return["shippingDateFrom"] = $date;
             // $this->return["shippingDateFrom"] = date("D d F, Y", strtotime("+$dateFrom Days"));
+            $this->return["dateFrom"] = date("Y-m-d", strtotime("+$dateFrom Days"));
         }
 
         if ($this->maxShipDate > 0) {
@@ -169,6 +170,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
                 }
                 $this->return["shippingDateTo"] = $date;
                 // $this->return["shippingDateTo"] = date("D d F, Y", strtotime("+$dateTo Days"));
+                $this->return["dateTo"] = date("Y-m-d", strtotime("+$dateTo Days"));
             }
         }
     }
