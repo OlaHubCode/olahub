@@ -9,8 +9,8 @@ class UserHelper extends OlaHubCommonHelper
     function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        // return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
-        return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+        return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
+        // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
     function checkUnique($value = false, $country_id, $is_phone)

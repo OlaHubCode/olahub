@@ -816,7 +816,7 @@ class OlaHubGuestController extends BaseController
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
-                    $q->where('country_id', $country_id);
+                    // $q->where('country_id', $country_id);
                 })->first();
             } elseif ($emailType == 'phoneNumber') {
                 $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {
@@ -834,7 +834,7 @@ class OlaHubGuestController extends BaseController
                         $query->whereNull("mobile_no");
                         $query->orWhere("mobile_no", "!=", "");
                     });
-                    $q->where('country_id', $country_id);
+                    // $q->where('country_id', $country_id);
                 })->first();
             } elseif ($phoneType == 'phoneNumber') {
                 $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
