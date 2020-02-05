@@ -1545,7 +1545,7 @@ class OlaHubGeneralController extends BaseController
             if ($timelinePosts->count() > 0) {
                 foreach ($timelinePosts as $onePost) {
                     $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->paginate(5);
-                    foreach ($sponsers as $one) {
+		 foreach ($sponsers as $one) {
                         $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
                         $liked = 0;
                         if ($campaign) {
@@ -1557,6 +1557,7 @@ class OlaHubGeneralController extends BaseController
                                 $liked = 1;
                             }
                         }
+
 
                         $sponsers_arr[] = [
                             'type' => 'sponser',
