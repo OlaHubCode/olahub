@@ -226,6 +226,7 @@ class OlaHubPaymentsMainController extends BaseController
             // }
         }
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
+        // echo $this->total;
     }
 
     protected function getPaymentMethodsDetails($country)
@@ -374,7 +375,8 @@ class OlaHubPaymentsMainController extends BaseController
                             $price = $itemPrice['productDiscountedPrice'];
                             $originalPrice = $itemDes->item_price;
                         } else {
-                            $price = $itemDes->item_price;
+                            $price = $itemPrice['productPrice'];
+                            // $price = $itemDes->item_price;
                             $originalPrice = $itemDes->item_price;
                         }
                         $billingDetails->billing_id = $this->billing->id;
@@ -619,7 +621,8 @@ class OlaHubPaymentsMainController extends BaseController
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (app('session')->get('tempData')->email) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
-        } elseif (app('session')->get('tempData')->mobile_no) {
+        }
+        if (app('session')->get('tempData')->mobile_no) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
         }
     }

@@ -50,7 +50,8 @@ class SmsHelper extends OlaHubCommonHelper {
         $this->getCountryCode($userData->country_id);
         $template = 'USR004';
         $username = "$userData->first_name $userData->last_name";
-        $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
+        $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
+        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]'];
         $with = [$username, $code, $agent];
         $to = $this->countryCode.(int)$userData->mobile_no;
@@ -73,7 +74,8 @@ class SmsHelper extends OlaHubCommonHelper {
         $this->getCountryCode($userData->country_id);
         $template = 'USR006';
         $username = "$userData->first_name $userData->last_name";
-        $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
+        $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
+        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $replace = ['[UserName]', '[UserSessionAgent]'];
         $with = [$username, $agent];
         $to = $this->countryCode.(int)$userData->mobile_no;

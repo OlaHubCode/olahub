@@ -340,16 +340,21 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Read notification"]);
 
         if (isset($this->requestData->notificationId) && $this->requestData->notificationId) {
-            $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->find($this->requestData->notificationId);
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start making notification read"]);
-            if ($notification) {
-                $notification->read = 1;
-                $notification->save();
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Notification has been read', 'code' => 200]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+            if ($this->requestData->notificationId == 'all') {
+                \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->update(['read' => 1]);
+                return ['status' => true, 'msg' => 'Notifications has been read', 'code' => 200];
+            } else {
+                $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->find($this->requestData->notificationId);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start making notification read"]);
+                if ($notification) {
+                    $notification->read = 1;
+                    $notification->save();
+                    (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Notification has been read', 'code' => 200]]);
+                    (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
-                return ['status' => true, 'msg' => 'Notification has been read', 'code' => 200];
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End making notification read"]);
+                    return ['status' => true, 'msg' => 'Notification has been read', 'code' => 200];
+                    (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End making notification read"]);
+                }
             }
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
@@ -919,6 +924,10 @@ class OlaHubGeneralController extends BaseController
                 $posts = \OlaHub\UserPortal\Models\Post::where(function ($q) use ($currentCountryID, $friends) {
                     $q->where(function ($userPost) use ($friends) {
                         $userPost->whereIn('user_id', $friends);
+                        $userPost->where('friend_id', NULL);
+                    });
+                    $q->orWhere(function ($userPost) use ($friends) {
+                        $userPost->where('friend_id', (int) app('session')->get('tempID'));
                     });
                     $q->orWhere(function ($storePosts) use ($currentCountryID) {
                         $storePosts->whereNull('user_id');
@@ -964,6 +973,7 @@ class OlaHubGeneralController extends BaseController
                                         'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                         'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                         'user_info' => [
+                                            'user_id' => $author->id,
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                             'username' => $authorName,
@@ -1003,6 +1013,7 @@ class OlaHubGeneralController extends BaseController
                                         'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                         'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                         'user_info' => [
+                                            'user_id' => $author->id,
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                             'username' => $authorName,
@@ -1108,6 +1119,7 @@ class OlaHubGeneralController extends BaseController
                                             'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                         ],
                                         'user_info' => [
+                                            'user_id' => $author->id,
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                             'username' => $authorName,
@@ -1213,6 +1225,7 @@ class OlaHubGeneralController extends BaseController
                                             'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                         ],
                                         'user_info' => [
+                                            'user_id' => $author->id,
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                             'username' => $authorName,
@@ -1274,6 +1287,7 @@ class OlaHubGeneralController extends BaseController
                                                 'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                             ],
                                             'user_info' => [
+                                                'user_id' => $author->id,
                                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                                 'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                                 'username' => $authorName,
@@ -1347,6 +1361,7 @@ class OlaHubGeneralController extends BaseController
                                                 'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
                                             ],
                                             'user_info' => [
+                                                'user_id' => $author->id,
                                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                                 'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                                 'username' => $authorName,
@@ -1367,6 +1382,7 @@ class OlaHubGeneralController extends BaseController
                                     break;
                                 case 'post':
                                     $author = \OlaHub\UserPortal\Models\UserModel::find($post->user_id);
+                                    $friend = \OlaHub\UserPortal\Models\UserModel::find($post->friend_id);
                                     if ($author) {
                                         $authorName = "$author->first_name $author->last_name";
                                         $liked = 0;
@@ -1404,7 +1420,6 @@ class OlaHubGeneralController extends BaseController
                                             $videos[] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->post_video);
                                         }
 
-
                                         $timeline[] = [
                                             'type' => 'post',
                                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
@@ -1421,11 +1436,19 @@ class OlaHubGeneralController extends BaseController
                                             'likersData' => $likerData,
                                             'post_img' => $images,
                                             'post_video' => $videos,
+                                            'friendId' => isset($post->friend_id) ? $post->friend_id : NULL,
                                             'user_info' => [
+                                                'user_id' => $author->id,
                                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                                 'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                                 'username' => $authorName,
-                                            ]
+                                            ],
+                                            'friend_info' => ($friend ? [
+                                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
+                                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($friend, 'profile_url', "$friend->first_name $friend->last_name", '.'),
+                                                'username' => "$friend->first_name $friend->last_name",
+                                                'user_id' => $friend->id
+                                            ] : NULL)
                                         ];
                                         break;
                                     }
@@ -1469,6 +1492,7 @@ class OlaHubGeneralController extends BaseController
                                     "content" => isset($celebrationContent->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($celebrationContent->reference) : NULL,
                                     'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($celebrationContent->created_at),
                                     'user_info' => [
+                                        'user_id' => $author->id,
                                         'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                         'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                         'username' => $authorName,
@@ -1527,6 +1551,7 @@ class OlaHubGeneralController extends BaseController
                             "groupName" => isset($groupPost->group_title) ? $groupPost->group_title : NULL,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($groupPost->created_at),
                             'user_info' => [
+                                'user_id' => $author->id,
                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                                 'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                                 'username' => $authorName,
