@@ -147,17 +147,21 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
 
     function callbackZainCashSystem()
     {
+        $this->return = REDIRECT_FRONT . "/payment-status/";
         $data = $this->request->all();
         $returnResult = (new \OlaHub\UserPortal\PaymentGates\Helpers\ZainConnector)->getTokenStatus($data["Token"]);
         $result = (new \OlaHub\UserPortal\PaymentGates\Helpers\ZainConnector)->paymentDone($returnResult);
         $resultJson = json_decode($result);
         if (array_key_exists("error", $resultJson)) {
+            $this->return .= 'fail';
             $this->finalizeFailPayment("Unkown error");
         } else {
             $this->finalizeSuccessPayment(true, 2);
-            $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
+            $this->return .= 'paid';
+            // $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
             if ($this->celebrationID) {
-                $this->return['celebration'] = $this->celebrationID;
+                $this->return .= '/' . $this->celebrationID;
+                // $this->return['celebration'] = $this->celebrationID;
             }
         }
     }

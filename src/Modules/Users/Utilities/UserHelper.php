@@ -5,12 +5,64 @@ namespace OlaHub\UserPortal\Helpers;
 class UserHelper extends OlaHubCommonHelper
 {
 
-    //get user data by IP address by Rami
+    private $ipInfo;
+
+    public function __construct()
+    {
+        $this->ipInfo = $this->getIPInfo();
+    }
+    //get user data by IP address
     function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
         // return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
         return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+    }
+
+    // check user login device
+    function checkUserLogin($userId, $deviceId)
+    {
+        return \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $userId)->where('device_id', $deviceId)->first();
+    }
+    function checkUserLoginCode($userId, $code)
+    {
+        return \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $userId)->where('code', $code)->first();
+    }
+
+    function addUserLogin($data, $user_id, $status, $code = null)
+    {
+        $row = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->first();
+
+        if (!$row) {
+            $userLogin = new \OlaHub\UserPortal\Models\UserLoginsModel;
+            $userLogin->device_id = $data['deviceID'];
+            $userLogin->device_model = $data['deviceModel'];
+            $userLogin->device_platform = $data['platform'];
+            $userLogin->user_id = $user_id;
+            $userLogin->location = $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city;
+            $userLogin->ip = $this->ipInfo->ip;
+            $userLogin->geolocation = $this->ipInfo->loc;
+            $userLogin->status = $status;
+            $userLogin->code = $code;
+            $userLogin->save();
+        } else {
+            // \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->update(['read' => 1]);
+            \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->update(
+                array(
+                    'device_id' => $data['deviceID'],
+                    'device_platform' => $data['platform'],
+                    'device_model' => $data['deviceModel'],
+                    'user_id' => $user_id,
+                    'location' => $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city,
+                    'ip' => $this->ipInfo->ip,
+                    'geolocation' => $this->ipInfo->loc,
+                    'status' => $status,
+                    'code' => $code
+                )
+            );
+        }
+        // $code = parent::randomString(6, 'num');
+        // return $userLogin;
     }
 
     function checkUnique($value = false, $country_id, $is_phone)

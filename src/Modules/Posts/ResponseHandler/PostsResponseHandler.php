@@ -36,6 +36,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract {
             'post' => isset($this->data->_id) ? $this->data->_id : 0,
             'color' => isset($this->data->color) ? $this->data->color : NULL,
             'groupId' => isset($this->data->group_id) ? $this->data->group_id : 0,
+            'friendId' => isset($this->data->friend_id) ? $this->data->friend_id : NULL,
             'content' => isset($this->data->post) ? $this->data->post : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'privacy' => isset($this->data->privacy) ? $this->data->privacy : NULL,
@@ -88,6 +89,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract {
         $author = $this->data->author;
         $authorName = "$author->first_name $author->last_name";
         $this->return['user_info'] = [
+            'user_id' => $author->id,
             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
             'username' => $authorName,
