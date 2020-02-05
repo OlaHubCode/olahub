@@ -40,6 +40,7 @@ class Brand extends Model {
         $brand = Brand::where('store_slug', $slug)->first();
         if ($brand) {
             $user = app('session')->get('tempID') ? \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first() : false;
+            $return['id'] = $brand->id;
             $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->banner_ref, 'shop_banner')];
             $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name');
             $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref);

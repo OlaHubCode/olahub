@@ -31,7 +31,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
         $this->return = [
             "cartID" => isset($this->data->id) ? $this->data->id : 0,
             "cartIsGift" => isset($this->data->for_friend) && $this->data->for_friend > 0 ? true : false,
-            "cartCountry" => isset($this->data->country_id) && $this->data->country_id > 0 ? (string) $this->data->country_id : false,
+            "cartCountry" => isset($this->data->country_id) && $this->data->country_id > 0 ? $this->data->country_id : false,
             "cartCountryName" => isset($country->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, "name") : false,
             "cartCountryCode" => isset($country->two_letter_iso_code) ? $country->two_letter_iso_code : NULL,
             "cartEnableCountry" => $change_country,
@@ -147,7 +147,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
         if ($this->minShipDate > 0) {
             $dateFrom = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->minShipDate);
             if (app('session')->get('def_lang')->default_locale == 'ar') {
-                $date = ARABIC_DAYS[date("j", strtotime("+$dateFrom Days")) - 1] . " " .
+                $date = ARABIC_DAYS[date("w", strtotime("+$dateFrom Days")) - 1] . " " .
                     date("d", strtotime("+$dateFrom Days")) . " " .
                     ARABIC_MONTHS[date("n", strtotime("+$dateFrom Days")) - 1] . "، " . date("Y", strtotime("+$dateFrom Days"));
             } else {
@@ -162,7 +162,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
             $dateTo = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->maxShipDate);
             if ($dateFrom != $dateTo) {
                 if (app('session')->get('def_lang')->default_locale == 'ar') {
-                    $date = ARABIC_DAYS[date("j", strtotime("+$dateTo Days")) - 1] . " " .
+                    $date = ARABIC_DAYS[date("w", strtotime("+$dateTo Days")) - 1] . " " .
                         date("d", strtotime("+$dateTo Days")) . " " .
                         ARABIC_MONTHS[date("n", strtotime("+$dateTo Days")) - 1] . ", " . date("Y", strtotime("+$dateTo Days"));
                 } else {

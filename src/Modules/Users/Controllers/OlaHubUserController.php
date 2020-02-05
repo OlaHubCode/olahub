@@ -7,7 +7,8 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Models\UserShippingAddressModel;
 
-class OlaHubUserController extends BaseController {
+class OlaHubUserController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
@@ -15,7 +16,8 @@ class OlaHubUserController extends BaseController {
     protected $authorization;
     protected $uploadData;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
@@ -28,16 +30,17 @@ class OlaHubUserController extends BaseController {
      * Get user data
      */
 
-    public function getHeaderInfo() {
+    public function getHeaderInfo()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
-        
+
         $user = app('session')->get('tempData');
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
             $return['status'] = true;
             $return['code'] = 200;
-            $log->setLogSessionData(['response' =>$return]);
+            $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
             return response($return, 200);
         }
@@ -46,10 +49,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getProfileInfo() {
+    public function getProfileInfo()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getProfileInfo"]);
-        
+
         $user = app('session')->get('tempData');
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\ProfileInfoResponseHandler');
@@ -64,10 +68,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUserInfo() {
+    public function getUserInfo()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserInfo"]);
-        
+
         $user = app('session')->get('tempData');
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
@@ -82,10 +87,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUservoucherData() {
+    public function getUservoucherData()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUservoucherData"]);
-        
+
         $user = app('session')->get('tempData');
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\UserBalanceDetailsResponseHandler');
@@ -100,10 +106,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUserFriends() {
+    public function getUserFriends()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserFriends"]);
-        
+
         $userID = app('session')->get('tempID');
         $celebrationId = null;
         if (isset($this->requestFilter['celebration'])) {
@@ -125,15 +132,15 @@ class OlaHubUserController extends BaseController {
                                 "username" => isset($friend->username) ? $friend->username : NULL,
                                 "profile_url" => isset($friend->profile_url) ? $friend->profile_url : NULL,
                                 "user_gender" => isset($friend->gender) ? $friend->gender : NULL,
-//                            "country" => isset($country) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name') : NULL,
+                                //                            "country" => isset($country) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name') : NULL,
                                 "avatar_url" => isset($friend->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->avatar_url),
                                 "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
                             ];
                         }
                     }
                 }
-//                $friends = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::WhereNotIn('user_id', $friends)->paginate(10);
-//                dd($friends);
+                //                $friends = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::WhereNotIn('user_id', $friends)->paginate(10);
+                //                dd($friends);
             } else {
                 $friends = \OlaHub\UserPortal\Models\UserMongo::whereIn('user_id', $userMongo->friends)->paginate(10);
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($friends, '\OlaHub\UserPortal\ResponseHandlers\MyFriendsResponseHandler');
@@ -150,10 +157,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUserRequests() {
+    public function getUserRequests()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserRequests"]);
-        
+
         $userID = app('session')->get('tempID');
         $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userID)->first();
         if ($userMongo->requests && count($userMongo->requests) > 0) {
@@ -166,14 +174,15 @@ class OlaHubUserController extends BaseController {
             return response($return, 200);
         }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-            $log->saveLogSessionData();
+        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getUserResponses() {
+    public function getUserResponses()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserResponses"]);
-        
+
         $userID = app('session')->get('tempID');
         $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userID)->first();
         if ($userMongo->responses && count($userMongo->responses) > 0) {
@@ -186,14 +195,15 @@ class OlaHubUserController extends BaseController {
             return response($return, 200);
         }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-            $log->saveLogSessionData();
+        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function updateUserData() {
+    public function updateUserData()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "updateUserData"]);
-        
+
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']]]);
@@ -212,20 +222,91 @@ class OlaHubUserController extends BaseController {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
         }
         $userData = app('session')->get('tempData');
-        $checkChanges = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailPhoneChange($userData, $this->requestData);
-        if (!$checkChanges) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'some data send wrong']]);
-            $log->saveLogSessionData();
-            return response(['status' => false, 'msg' => 'some data send wrong'], 200);
-        }
-        $isFirstLogin = false;
-        foreach ($this->requestData as $input => $value) {
 
+        /*** check changes ***/
+        if (!empty($this->requestData["userNewPassword"]) && !empty($this->requestData["confirmPassword"])) {
+            $confirm = (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($this->requestData["confirmPassword"], $userData->password);
+            if (!$confirm) {
+                return response(['status' => false, 'msg' => 'password_incorrect'], 200);
+            }
+        }
+
+        if ((!empty($this->requestData['userPhoneNumber']) && $userData->mobile_no != $this->requestData['userPhoneNumber']) ||
+            (!empty($this->requestData['userCountry']) && $userData->country_id != $this->requestData['userCountry'])
+        ) {
+            $phone = $this->requestData['userPhoneNumber'];
+            $country_id = $this->requestData["userCountry"];
+            $u = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $country_id) {
+                $q->where('mobile_no', $phone);
+                $q->where('country_id', $country_id);
+            })->first();
+            if ($u) {
+                return response(['status' => false, 'msg' => 'Phone number is alrady taken'], 200);
+            }
+            if (!empty($this->requestData["active_code"])) {
+                $phone = $userData->mobile_no;
+                $country_id = $userData->country_id;
+                $code = $this->requestData["active_code"];
+                $uc = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $code, $country_id) {
+                    $q->where('mobile_no', $phone);
+                    $q->where('country_id', $country_id);
+                    $q->where('activation_code', $code);
+                })->first();
+                if (!$uc) {
+                    return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+                }
+            } else {
+                $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+                $userData->save();
+                $userData->country_id = $country_id;
+                $userData->mobile_no = $this->requestData['userPhoneNumber'];
+                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
+            }
+        }
+
+        if (!empty($this->requestData['userEmail']) && $userData->email != $this->requestData['userEmail']) {
+            $email = $this->requestData['userEmail'];
+            $e = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($email) {
+                $q->where('email', $email);
+            })->first();
+            if ($e) {
+                return response(['status' => false, 'msg' => 'email_exist'], 200);
+            }
+            if (!empty($this->requestData["active_code"])) {
+                $email = $userData->email;
+                $code = $this->requestData["active_code"];
+                $ec = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($email, $code) {
+                    $q->where('email', $email);
+                    $q->where('activation_code', $code);
+                })->first();
+                if (!$ec) {
+                    return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+                }
+            } else {
+                $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+                $userData->save();
+                $userData->email = $this->requestData['userEmail'];
+                (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                return response(['status' => true, 'msg' => 'confirm_email_sent'], 200);
+            }
+        }
+
+        /********************/
+
+        // $checkChanges = (new \OlaHub\UserPortal\Helpers\UserHelper)->checkEmailPhoneChange($userData, $this->requestData);
+        // if (!$checkChanges) {
+        //     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'some data send wrong']]);
+        //     $log->saveLogSessionData();
+        //     return response(['status' => false, 'msg' => 'some data send wrong'], 200);
+        // }
+        // $isFirstLogin = false;
+        foreach ($this->requestData as $input => $value) {
             if (isset($this->requestData['userNewPassword']) && $this->requestData['userNewPassword'] != "") {
                 $userData->password = $this->requestData['userNewPassword'];
                 if ($userData->is_first_login == "1") {
                     $userData->is_first_login = "0";
-                    $isFirstLogin = TRUE;
+                    // $isFirstLogin = TRUE;
                 }
             }
             if (isset(UserModel::$columnsMaping[$input])) {
@@ -234,37 +315,38 @@ class OlaHubUserController extends BaseController {
         }
         $userData->save();
         $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
-        
+
         $userMongo->username = "$userData->first_name $userData->last_name";
         $userMongo->country_id = $userData->country_id;
         $userMongo->gender = $userData->user_gender;
         $userMongo->profile_url = $userData->profile_url;
-        
+
         $userMongo->intersts = $this->requestData['userInterests'];
         $userMongo->save();
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
-        $checkUpdateActivation = (new \OlaHub\UserPortal\Helpers\UserHelper)->sendUpdateActivationCode($userData, $checkChanges);
-        if ($checkUpdateActivation) {
-            if ($isFirstLogin) {
-                $checkUpdateActivation["userFirstLogin"] = "0";
-            }
-            $log->setLogSessionData(['response' => $checkUpdateActivation]);
-            $log->saveLogSessionData();
-            return response($checkUpdateActivation, 200);
-        }
+        // $checkUpdateActivation = (new \OlaHub\UserPortal\Helpers\UserHelper)->sendUpdateActivationCode($userData, $checkChanges);
+        // if ($checkUpdateActivation) {
+        //     if ($isFirstLogin) {
+        //         $checkUpdateActivation["userFirstLogin"] = "0";
+        //     }
+        //     $log->setLogSessionData(['response' => $checkUpdateActivation]);
+        //     $log->saveLogSessionData();
+        //     return response($checkUpdateActivation, 200);
+        // }
         $return = ['status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
-        if ($isFirstLogin) {
-            $return["userFirstLogin"] = "0";
-        }
+        // if ($isFirstLogin) {
+        //     $return["userFirstLogin"] = "0";
+        // }
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
         return response($return, 200);
     }
 
-    function logoutUser() {
+    function logoutUser()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "logoutUser"]);
-        
+
         $sessionData = app('session')->get('tempSession');
         if (isset($sessionData->activation_code) && isset($sessionData->hash_token)) {
             $sessionData->activation_code = null;
@@ -279,10 +361,11 @@ class OlaHubUserController extends BaseController {
         return ['status' => false, 'msg' => 'Wrong data sent', 'code' => 406, 'errorData' => []];
     }
 
-    public function uploadUserProfilePhoto() {
+    public function uploadUserProfilePhoto()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserProfilePhoto"]);
-        
+
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
             $user = app('session')->get('tempData');
@@ -306,10 +389,11 @@ class OlaHubUserController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function uploadUserCoverPhoto() {
+    public function uploadUserCoverPhoto()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserCoverPhoto"]);
-        
+
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userCoverPhoto']) {
             $user = app('session')->get('tempData');
@@ -332,8 +416,9 @@ class OlaHubUserController extends BaseController {
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-    
-    public function getAllInterests(){
+
+    public function getAllInterests()
+    {
         $interests = \OlaHub\UserPortal\Models\Interests::withoutGlobalScope('interestsCountry')->get();
         if ($interests->count() < 1) {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
@@ -345,5 +430,4 @@ class OlaHubUserController extends BaseController {
         $logHelper->setLog("", $return, 'getAllInterests', $this->userAgent);
         return response($return, 200);
     }
-
 }

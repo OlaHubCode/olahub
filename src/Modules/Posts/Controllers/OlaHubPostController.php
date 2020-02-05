@@ -93,10 +93,35 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response($return, 200);
         } elseif ($type == 'friend') {
-            $posts = Post::where('user_id', (int) $this->requestData['userId'])->where('privacy', 3)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
+            $friednId = (int) $this->requestData['userId'];
+            $posts = Post::where(function ($q) use ($friednId) {
+                $q->where(function ($userPost) use ($friednId) {
+                    $userPost->where('user_id', $friednId);
+                    $userPost->where('friend_id', NULL);
+                });
+                $q->orWhere(function ($userPost) use ($friednId) {
+                    $userPost->where('friend_id', $friednId);
+                });
+            })->where('privacy', 3)
+                ->where('isApprove', 1)
+                ->orderBy('created_at', 'desc')
+                ->whereNull('group_id')
+                ->paginate(20);
+            // $posts = Post::where('user_id', (int) $this->requestData['userId'])->orWhere('friend_id', (int) $this->requestData['userId'])->where('privacy', 3)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
         } else {
             $userID = app('session')->get('tempID');
-            $posts = Post::where('user_id', $userID)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
+            $posts = Post::where(function ($q) use ($userID) {
+                $q->where(function ($userPost) use ($userID) {
+                    $userPost->where('user_id', $userID);
+                    $userPost->where('friend_id', NULL);
+                });
+                $q->orWhere(function ($userPost) use ($userID) {
+                    $userPost->where('friend_id', $userID);
+                });
+            })->where('isApprove', 1)
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+            // $posts = Post::where('user_id', $userID)->orWhere('friend_id', $userID)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
         }
         if ($posts->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
@@ -159,11 +184,10 @@ class OlaHubPostController extends BaseController
             $postMongo->comments = [];
             $postMongo->commenters = [app('session')->get('tempID')];
             $postMongo->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            $postMongo->subject = isset($this->requestData['subject']) ? $this->requestData['subject'] : NULL;
             $postMongo->type = 'post';
             $postMongo->color = isset($this->requestData['color']) ? $this->requestData['color'] : NULL;
-            // $postMongo->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
-            
+            $postMongo->friend_id = $this->requestData['friend'];
+
             if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
                 $postImage = [];
                 foreach ($this->requestData['post_file'] as $image) {
@@ -258,6 +282,7 @@ class OlaHubPostController extends BaseController
                 $commentData['post'] = $postID;
                 $commentData['time'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($commentData['created_at']);
                 $commentData['user_info'] = [
+                    'user_id' => $author->id,
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                     'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                     'username' => $authorName,
@@ -306,6 +331,7 @@ class OlaHubPostController extends BaseController
                                     'reply' => $reply['reply'],
                                     'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($reply['created_at']),
                                     'user_info' => [
+                                        'user_id' => $userReplyData->id,
                                         'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userReplyData->avatar_url),
                                         'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($userReplyData, 'profile_url', $userReplyData->username, '.'),
                                         'username' => $userReplyData->username,
@@ -319,6 +345,7 @@ class OlaHubPostController extends BaseController
                             'comment' => $comment['comment'],
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment['created_at']),
                             'user_info' => [
+                                'user_id' => $userData->id,
                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url),
                                 'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($userData, 'profile_url', $userData->username, '.'),
                                 'username' => $userData->username,
@@ -394,6 +421,7 @@ class OlaHubPostController extends BaseController
                 $replyData['post'] = $postID;
                 $replyData['time'] = date('Y-m-d H:i:s');
                 $replyData['user_info'] = [
+                    'user_id' => $author->id,
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
                     'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
                     'username' => $authorName,
@@ -455,7 +483,7 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
-        if (isset($this->requestData['content']) && !$this->requestData['content'] && isset($this->requestData['subject']) && !$this->requestData['subject']) {
+        if (isset($this->requestData['content']) && !$this->requestData['content']) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]]]);
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]], 200);
@@ -470,12 +498,8 @@ class OlaHubPostController extends BaseController
             if ($post->post != $this->requestData['content']) {
                 $post->push('history', [date("Y-m-d H:i:s") => $post->post], true);
             }
-            if ($post->subject != $this->requestData['subject']) {
-                $post->push('history', [date("Y-m-d H:i:s") => $post->subject], true);
-            }
 
             $post->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            $post->subject = isset($this->requestData['subject']) ? $this->requestData['subject'] : NULL;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
