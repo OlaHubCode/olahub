@@ -23,6 +23,7 @@ class UpcomingEventsResponseHandler extends Fractal\TransformerAbstract {
             "calendar" => isset($this->data->id) ? $this->data->id : 0,
             "calendarDate" => isset($this->data->calender_date) ? $this->data->calender_date : NULL,
             "calendarOccassion" => isset($this->data->occasion_id) ? $this->data->occasion_id : NULL,
+            "calendarOccassionLogo" => isset($occassion->logo_ref) && $occassion->logo_ref ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occassion->logo_ref) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
             "calendarOccassionName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name'),
             "calendarTitle" => isset($this->data->title) ? $this->data->title : NULL,
         ];
@@ -35,6 +36,7 @@ class UpcomingEventsResponseHandler extends Fractal\TransformerAbstract {
         } else {
             $this->return['userPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
+        $this->return["username"] = "$user->first_name $user->last_name";
     }
     
 
