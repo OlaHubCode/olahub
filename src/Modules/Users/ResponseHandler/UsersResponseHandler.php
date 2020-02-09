@@ -33,7 +33,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract {
             "userSocial" => $this->data->facebook_id || $this->data->google_id || $this->data->twitter_id ? 1 : 0,
             "userCountry" => isset($this->data->country_id) ? $this->data->country_id : NULL,
             "userCountryName" => isset($country->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name') : NULL,
-            
+            "userTwoStep" => $this->data->two_step,
         ];
     }
     
@@ -67,10 +67,11 @@ class UsersResponseHandler extends Fractal\TransformerAbstract {
        if(isset($userMongo->intersts) && $userMongo->intersts){
            $interests = \OlaHub\UserPortal\Models\Interests::withoutGlobalScope('interestsCountry')->whereIn('interest_id',$userMongo->intersts)->get();
            foreach ($interests as $interest){
-               $interestsData [] = [
-                   "value" => isset($interest->interest_id) ?  $interest->interest_id : 0,
-                   "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, 'name'),
-               ];
+               $interestsData [] = isset($interest->interest_id) ?  $interest->interest_id : 0;
+            //    $interestsData [] = [
+            //        "value" => isset($interest->interest_id) ?  $interest->interest_id : 0,
+            //        "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, 'name'),
+            //    ];
            }
        }
        $this->return["userInterests"] = $interestsData;
