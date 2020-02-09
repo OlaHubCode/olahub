@@ -71,7 +71,7 @@ class OlaHubGeneralController extends BaseController
             throw new NotAcceptableHttpException(404);
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
-        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, code")
+        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as code")
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
@@ -887,9 +887,17 @@ class OlaHubGeneralController extends BaseController
         $friends = [];
         $now = date('Y-m-d');
         $all = [];
+        $upcoming = [];
         $user = \OlaHub\UserPortal\Models\UserMongo::find(app('session')->get('tempID'));
         if ($user) {
             $friends = is_array($user->friends) ? $user->friends : [];
+            if (count($friends) > 0) {
+                $friendsCalendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn('user_id', $friends)->where('calender_date', "<=", date("Y-m-d H:i:s", strtotime("+7 days")))->where('calender_date', ">", date("Y-m-d H:i:s"))->orderBy('calender_date', 'desc')->get();
+                if (count($friendsCalendar) > 0) {
+                    $upcomingData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($friendsCalendar, '\OlaHub\UserPortal\ResponseHandlers\UpcomingEventsResponseHandler');
+                    $upcoming = $upcomingData['data'];
+                }
+            }
             // $nonSeenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
             $nonSeenGifts = \DB::table('billing_history')->select("*")->where('is_gift', 1)
                 ->where('gift_for', $user->user_id)
@@ -1644,7 +1652,7 @@ class OlaHubGeneralController extends BaseController
                 }
             }
 
-            $return = ['status' => true, 'data' => $all, 'celebrations' => $celebrations, 'code' => 200];
+            $return = ['status' => true, 'data' => $all, 'celebrations' => $celebrations, 'upcoming' => $upcoming, 'code' => 200];
         }
         //        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
         //        $logHelper->setLog("", $return, 'getUserTimeline', $this->userAgent);
