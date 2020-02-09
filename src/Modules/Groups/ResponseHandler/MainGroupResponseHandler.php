@@ -71,10 +71,12 @@ class MainGroupResponseHandler extends Fractal\TransformerAbstract {
         foreach ($interests as $interest) {
             $interestData[] = [
                 "id" => isset($interest->interest_id) ? $interest->interest_id : 0,
-                "name" => isset($interest->name) ? $interest->name : NULL
+                "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, 'name'),
+                // "name" => isset($interest->name) ? $interest->name : NULL
             ];
         }
         $this->return['interests'] = $interestData;
     }
+    
 
 }

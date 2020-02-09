@@ -71,7 +71,7 @@ class OlaHubGeneralController extends BaseController
             throw new NotAcceptableHttpException(404);
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
-        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode")
+        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, code")
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
@@ -727,8 +727,9 @@ class OlaHubGeneralController extends BaseController
         // }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check phoneNumber existance of new user"]);
         if (isset($this->requestData->userPhoneNumber) && strlen($this->requestData->userPhoneNumber) > 3) {
+            $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData->userPhoneNumber);
             $checkExist = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")
-                ->where("mobile_no", $this->requestData->userPhoneNumber)
+                ->where("mobile_no", $phone)
                 ->where("country_id", $this->requestData->userCountry)->first();
             if ($checkExist) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]]]);
@@ -753,6 +754,8 @@ class OlaHubGeneralController extends BaseController
             // }
         }
         $user = new \OlaHub\UserPortal\Models\UserModel;
+        if (!empty($this->requestData['userPhoneNumber']))
+            $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
         foreach ($this->requestData as $input => $value) {
             if (isset(\OlaHub\UserPortal\Models\UserModel::$columnsMaping[$input])) {
                 $user->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\UserModel::$columnsMaping, $input)} = $value;
@@ -1114,6 +1117,7 @@ class OlaHubGeneralController extends BaseController
                                         'item_title' => isset($post->item_name) ? $post->item_name : NULL,
                                         'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
                                         'merchant_info' => [
+                                            'type' => 'brand',
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                             'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
                                             'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
@@ -1220,6 +1224,7 @@ class OlaHubGeneralController extends BaseController
                                         'item_title' => isset($post->item_name) ? $post->item_name : NULL,
                                         'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
                                         'merchant_info' => [
+                                            'type' => 'designer',
                                             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                             'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
                                             'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
@@ -1282,6 +1287,7 @@ class OlaHubGeneralController extends BaseController
                                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
                                             'items' => $items,
                                             'merchant_info' => [
+                                                'type' => 'brand',
                                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                                 'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
                                                 'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
@@ -1356,6 +1362,7 @@ class OlaHubGeneralController extends BaseController
                                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
                                             'items' => $items,
                                             'merchant_info' => [
+                                                'type' => 'designer',
                                                 'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
                                                 'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
                                                 'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
