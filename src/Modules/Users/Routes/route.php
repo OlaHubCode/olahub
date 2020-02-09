@@ -25,6 +25,9 @@ $router->group([
     $router->post('uploadProfilePhoto', 'OlaHubUserController@uploadUserProfilePhoto');
     $router->post('uploadCoverPhoto', 'OlaHubUserController@uploadUserCoverPhoto');
     $router->post('interests', 'OlaHubUserController@getAllInterests');
+    $router->post('setupTwoStep', 'OlaHubUserController@setupTwoStep');
+    $router->post('authorizedLogins', 'OlaHubUserController@authorizedLogins');
+    $router->post('authorizedRemove', 'OlaHubUserController@authorizedRemove');
 });
 
 $router->post('registration', 'OlaHubGuestController@registerUser');
