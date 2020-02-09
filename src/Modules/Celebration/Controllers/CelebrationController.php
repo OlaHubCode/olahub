@@ -68,6 +68,9 @@ class CelebrationController extends BaseController
             }
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start creating new celebration"]);
+        if (app('session')->get('tempID') == $this->requestData['celebrationOwner']) {
+            return response(['status' => false, 'msg' => 'yourself', 'code' => 406], 200);
+        }
         $saved = $this->saveCelebrationData();
         if ($saved) {
             //$this->firstParticipant();

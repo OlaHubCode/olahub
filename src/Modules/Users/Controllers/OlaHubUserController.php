@@ -234,14 +234,14 @@ class OlaHubUserController extends BaseController
         if ((!empty($this->requestData['userPhoneNumber']) && $userData->mobile_no != $this->requestData['userPhoneNumber']) ||
             (!empty($this->requestData['userCountry']) && $userData->country_id != $this->requestData['userCountry'])
         ) {
-            $phone = $this->requestData['userPhoneNumber'];
+            $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
             $country_id = $this->requestData["userCountry"];
             $u = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $country_id) {
                 $q->where('mobile_no', $phone);
                 $q->where('country_id', $country_id);
             })->first();
             if ($u) {
-                return response(['status' => false, 'msg' => 'Phone number is alrady taken'], 200);
+                return response(['status' => false, 'msg' => 'phone_exist', 'code' => 406], 200);
             }
             if (!empty($this->requestData["active_code"])) {
                 $phone = $userData->mobile_no;
@@ -259,7 +259,7 @@ class OlaHubUserController extends BaseController
                 $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
                 $userData->save();
                 $userData->country_id = $country_id;
-                $userData->mobile_no = $this->requestData['userPhoneNumber'];
+                $userData->mobile_no = $phone;
                 (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                 return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
             }
@@ -271,7 +271,7 @@ class OlaHubUserController extends BaseController
                 $q->where('email', $email);
             })->first();
             if ($e) {
-                return response(['status' => false, 'msg' => 'email_exist'], 200);
+                return response(['status' => false, 'msg' => 'email_exist', 'code' => 406], 200);
             }
             if (!empty($this->requestData["active_code"])) {
                 $email = $userData->email;
@@ -301,6 +301,8 @@ class OlaHubUserController extends BaseController
         //     return response(['status' => false, 'msg' => 'some data send wrong'], 200);
         // }
         // $isFirstLogin = false;
+        if (!empty($this->requestData['userPhoneNumber']))
+            $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
         foreach ($this->requestData as $input => $value) {
             if (isset($this->requestData['userNewPassword']) && $this->requestData['userNewPassword'] != "") {
                 $userData->password = $this->requestData['userNewPassword'];
@@ -428,6 +430,100 @@ class OlaHubUserController extends BaseController
         $return['code'] = 200;
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
         $logHelper->setLog("", $return, 'getAllInterests', $this->userAgent);
+        return response($return, 200);
+    }
+
+    public function setupTwoStep()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "setupTwoStep"]);
+        $method = $this->requestData["method"];
+        $status = $this->requestData["status"];
+        $code = isset($this->requestData["userCode"]) ? $this->requestData["userCode"] : NULL;
+        $userData = app('session')->get('tempData');
+        $two_step = $this->getTwoStep($method, $status, $userData->two_step);
+
+        if (empty($method)) {
+            return response(['status' => false, 'msg' => 'invalid_method'], 200);
+        }
+
+        if (empty($status)) {
+            $userData->two_step = $two_step;
+            $userData->save();
+            return response(['status' => true, 'two_step' => $two_step, 'msg' => 'twostep_' . $method . '_disabled'], 200);
+        } else {
+            if (!empty($code)) {
+                if ($userData->activation_code != $code)
+                    return response(['status' => false, 'msg' => 'invalidCode'], 200);
+                else {
+                    $userData->two_step = $two_step;
+                    $userData->save();
+                    return response(['status' => true, 'two_step' => $two_step, 'msg' => 'twostep_' . $method . '_enabled'], 200);
+                }
+            }
+            $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+            $userData->save();
+            if ($method == 'phone') {
+                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
+            } else if ($method == 'email') {
+                (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                return response(['status' => true, 'msg' => 'confirm_email_sent'], 200);
+            }
+        }
+    }
+
+    function getTwoStep($method, $status = false, $twostep)
+    {
+        if ($status) {
+            if ($method == 'phone' && !$twostep) {
+                return 1;
+            } else if ($method == 'phone' && $twostep) {
+                return 3;
+            }
+            if ($method == 'email' && !$twostep) {
+                return 2;
+            } else if ($method == 'email' && $twostep) {
+                return 3;
+            }
+        } else {
+            if ($method == 'phone' && $twostep == 1) {
+                return 0;
+            } else if ($method == 'phone' && $twostep == 3) {
+                return 2;
+            }
+            if ($method == 'email' && $twostep == 2) {
+                return 0;
+            } else if ($method == 'email' && $twostep == 3) {
+                return 1;
+            }
+        }
+    }
+
+    public function authorizedLogins()
+    {
+        $return['data'] =  \OlaHub\UserPortal\Models\UserLoginsModel::selectRaw('device_id, datetime, location, device_platform, device_model, status')
+            ->where('user_id', app('session')->get('tempID'))->where('deleted', 0)->get();
+        $return['status'] = true;
+        $return['code'] = 200;
+        return response($return, 200);
+    }
+
+    public function authorizedRemove()
+    {
+        $deviceId = $this->requestData["deviceId"];
+        if (empty($deviceId))
+            return response(['status' => false, 'msg' => 'invalid_devide_id'], 200);
+        $deleted = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', app('session')->get('tempID'))->where('device_id', $deviceId)
+            ->update(
+                array(
+                    'code' => NULL,
+                    'status' => 0,
+                    'deleted' => 1
+                )
+            );
+        $return['status'] = $deleted;
+        $return['code'] = 200;
         return response($return, 200);
     }
 }

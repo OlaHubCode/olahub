@@ -12,11 +12,16 @@ class UserHelper extends OlaHubCommonHelper
         $this->ipInfo = $this->getIPInfo();
     }
     //get user data by IP address
-    function getIPInfo()
+    static function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
         // return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
         return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+    }
+
+    function fullPhone($phone)
+    {
+        return $phone = "0" . (int) $phone;
     }
 
     // check user login device
@@ -69,13 +74,9 @@ class UserHelper extends OlaHubCommonHelper
     {
         if ($value && strlen($value) > 3) {
             if ($is_phone) {
+                $value = $this->fullPhone($value);
                 $exist = \OlaHub\UserPortal\Models\UserModel::where('country_id', $country_id)
-                    ->whereRaw("(email = '$value' or 
-                    mobile_no = '$value' or
-                    facebook_id = '$value' or
-                    google_id = '$value' or 
-                    twitter_id = '$value')")
-                    ->first();
+                    ->where("mobile_no", $value)->first();
             } else {
                 $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
                     ->orWhere('mobile_no', $value)

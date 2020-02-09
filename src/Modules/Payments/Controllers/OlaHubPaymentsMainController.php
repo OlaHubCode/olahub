@@ -425,7 +425,7 @@ class OlaHubPaymentsMainController extends BaseController
                 'full_name' => isset($this->requestData['billFullName']) ? $this->requestData['billFullName'] : null,
                 'city' => "",
                 'state' => $regionName,
-                'phone' => isset($this->requestData['billPhoneNo']) ? $this->requestData['billPhoneNo'] : null,
+                'phone' => isset($this->requestData['billPhoneNo']) ? (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['billPhoneNo']) : null,
                 'address' => isset($this->requestData['billAddress']) ? $this->requestData['billAddress'] : null,
                 'zipcode' => isset($this->requestData['billZipCode']) ? $this->requestData['billZipCode'] : null,
                 'typeID' => isset($this->typeID) ? $this->typeID : null,
@@ -769,7 +769,7 @@ class OlaHubPaymentsMainController extends BaseController
             $checkCart = $this->cartFilter($type);
             $for_friend = NULL;
             $this->cartModel = \OlaHub\UserPortal\Models\Cart::getUserCart(app('session')->get('tempID'));
-            $phone =  $this->requestData["billPhoneNo"];
+            $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['billPhoneNo']);
             $country_id = $checkCart->country_id;
             $userData = UserModel::where(function ($q) use ($phone, $country_id) {
                 $q->where('mobile_no', $phone);
