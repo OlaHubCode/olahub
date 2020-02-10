@@ -250,23 +250,27 @@ class OlaHubCartController extends BaseController
             return response($checkPermission, 200);
         }
         $this->checkCart($type);
-        $data = false;
-        $data = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
-        if ($data) {
-            if ($this->celebration) {
-                if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {
-                    return response(['status' => false, 'msg' => 'NotAllowToDeleteThisGift', 'code' => 400], 200);
+        if ($this->requestData->itemID == 'all') {
+            $this->cart->cartDetails()->where('shopping_cart_id', $this->cart->id)->delete();
+        } else {
+            $data = false;
+            $data = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
+            if ($data) {
+                if ($this->celebration) {
+                    if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {
+                        return response(['status' => false, 'msg' => 'NotAllowToDeleteThisGift', 'code' => 400], 200);
+                    }
                 }
+                $data->delete();
             }
-            $data->delete();
-            $totalPrice = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
-            $this->cart->total_price = $totalPrice;
-            $this->cart->save();
-            $this->handleRemoveItemFromCelebration($totalPrice);
-            $return = [];
-            $return['status'] = TRUE;
-            $return['code'] = 200;
         }
+        $totalPrice = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
+        $this->cart->total_price = $totalPrice;
+        $this->cart->save();
+        $this->handleRemoveItemFromCelebration($totalPrice);
+        $return = [];
+        $return['status'] = TRUE;
+        $return['code'] = 200;
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
         $logHelper->setLog($this->requestData, $return, 'removeCartItem', $this->userAgent);
         return response($return, 200);
