@@ -90,16 +90,22 @@ class OlaHubPaymentsMainController extends BaseController
         }
         $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $this->cart->country_id)->first();
 
-        $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->get();
-        $reg = [];
-        foreach ($regions as $region) {
-            $reg[] = [
-                'key' => $region->id,
-                'text' => $region->name,
-                'value' => $region->id,
-            ];
-        }
-        $this->return['regions'] = $reg;
+        // $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->get();
+        // $reg = [];
+        // foreach ($regions as $region) {
+        //     $reg[] = [
+        //         'key' => $region->id,
+        //         'text' => $region->name,
+        //         'value' => $region->id,
+        //     ];
+        // }
+        // $this->return['regions'] = $reg;
+
+        $shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+            $q->where('is_shipment_free', '1');
+        })->first() ? SHIPPING_FEES : 0;
+        $shippingFees += $shippingFees == 0 ? \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart) : 0;
+        $this->return['shippingFees'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees);
 
         return response($this->return, 200);
     }
