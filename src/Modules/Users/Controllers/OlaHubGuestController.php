@@ -143,6 +143,7 @@ class OlaHubGuestController extends BaseController
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
+        
         $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
         $country_id = $this->requestData["userCountry"];
         $emailPhone = $this->requestData["userEmail"];
