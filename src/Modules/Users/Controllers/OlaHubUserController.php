@@ -239,6 +239,7 @@ class OlaHubUserController extends BaseController
             $u = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $country_id) {
                 $q->where('mobile_no', $phone);
                 $q->where('country_id', $country_id);
+                $q->where('for_merchant', 0);
             })->first();
             if ($u) {
                 return response(['status' => false, 'msg' => 'phone_exist', 'code' => 406], 200);
