@@ -780,6 +780,7 @@ class OlaHubPaymentsMainController extends BaseController
             $userData = UserModel::where(function ($q) use ($phone, $country_id) {
                 $q->where('mobile_no', $phone);
                 $q->where('country_id', $country_id);
+                $q->where('for_merchant', 0);
             })->first();
             if ($userData) {
                 $for_friend = $userData->id;
