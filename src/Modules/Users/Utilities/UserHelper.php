@@ -36,7 +36,7 @@ class UserHelper extends OlaHubCommonHelper
                 $macAddr = $cols[1];
             }
         }
-        return  $ipAddress;
+        return empty($macAddr) ? md5($ipAddress) : $macAddr;
     }
 
     // check user login device
