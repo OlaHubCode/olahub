@@ -15,7 +15,7 @@ class UserHelper extends OlaHubCommonHelper
     static function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
+       return json_decode(file_get_contents("http://api.ipapi.com/{$ip}?access_key=52d6f557dd6faf1dbeaa8601450321b6"));
         // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
@@ -36,7 +36,7 @@ class UserHelper extends OlaHubCommonHelper
                 $macAddr = $cols[1];
             }
         }
-        return $macAddr;
+        return  $ipAddress;
     }
 
     // check user login device
@@ -58,9 +58,9 @@ class UserHelper extends OlaHubCommonHelper
             $userLogin->device_model = $data['deviceModel'];
             $userLogin->device_platform = $data['platform'];
             $userLogin->user_id = $user_id;
-            $userLogin->location = $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city;
+            $userLogin->location = $this->ipInfo->country_name . ", " . $this->ipInfo->region_name . ", " . $this->ipInfo->city;
             $userLogin->ip = $this->ipInfo->ip;
-            $userLogin->geolocation = $this->ipInfo->loc;
+            $userLogin->geolocation = $this->ipInfo->latitude . "," .$this->ipInfo->longitude;
             $userLogin->status = $status;
             $userLogin->code = $code;
             $userLogin->save();
@@ -72,9 +72,9 @@ class UserHelper extends OlaHubCommonHelper
                     'device_platform' => $data['platform'],
                     'device_model' => $data['deviceModel'],
                     'user_id' => $user_id,
-                    'location' => $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city,
+                    'location' => $this->ipInfo->country_name . ", " . $this->ipInfo->region_name . ", " . $this->ipInfo->city,
                     'ip' => $this->ipInfo->ip,
-                    'geolocation' => $this->ipInfo->loc,
+                    'geolocation' => $this->ipInfo->latitude . "," . $this->ipInfo->longitude,
                     'status' => $status,
                     'code' => $code
                 )

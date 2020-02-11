@@ -29,7 +29,7 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         } else {
             $billnumber = explode('_', $this->request->{config('paymentGateway.vpc_MerchTxnRef')});
         }
-        // print_r($requestAll); return "";
+       //  print_r($requestAll); return "";
         $this->billnumber = $billnumber[0];
         $this->billtoken = $billnumber[1];
         $this->getBillMainData($requestAll);
@@ -37,7 +37,7 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         $this->getPaymentMethodID();
         $this->getPaymentMethodDetails();
         $this->{'callback' . ucfirst($this->paymentMethodData->call_back_func)}();
-        return redirect()->to($this->return);
+ 	return redirect()->to($this->return);
         // return response($this->return, 200);
     }
 

@@ -3,7 +3,6 @@
 namespace OlaHub\UserPortal\Helpers;
 
 class EmailHelper extends OlaHubCommonHelper {
-
     function sendNewUser($userData, $code) {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send new user Email","action_startData" => json_encode($userData) . $code]);
         $template = 'USR001';
