@@ -109,6 +109,7 @@ class OlaHubGuestController extends BaseController
         $userMongo->save();
 
         $log->setLogSessionData(['user_id' => $userData->id]);
+        $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $this->userHelper->addUserLogin($this->requestData, $userData->id, true);
 
         \OlaHub\UserPortal\Models\Interests::whereIn('interest_id', $this->requestData['userInterests'])->push('users', $userData->id, true);
@@ -143,8 +144,9 @@ class OlaHubGuestController extends BaseController
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
-        
+
         $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
+        $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $country_id = $this->requestData["userCountry"];
         $emailPhone = $this->requestData["userEmail"];
         $userData = NULL;
@@ -166,6 +168,7 @@ class OlaHubGuestController extends BaseController
             $userData = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($emailPhone, $country_id) {
                 $q->where('mobile_no', $emailPhone);
                 $q->where('country_id', $country_id);
+                $q->where('for_merchant', 0);
             })->first();
         }
 
@@ -435,6 +438,7 @@ class OlaHubGuestController extends BaseController
             );
 
             // two-step
+            $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
             $logged = $this->userHelper->checkUserLogin($userData->id, $this->requestData['deviceID']);
             $twostep = false;
             $status = 1;
@@ -562,6 +566,7 @@ class OlaHubGuestController extends BaseController
                     });
                     $q->where('mobile_no', $email);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->first();
             } elseif ($phoneType == 'email') {
                 $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
@@ -580,6 +585,7 @@ class OlaHubGuestController extends BaseController
                     });
                     $q->where('mobile_no', $mobile);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->first();
             }
 
@@ -633,6 +639,7 @@ class OlaHubGuestController extends BaseController
                 $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where('mobile_no', $requestEmailData);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->where('is_active', '1')->first();
             }
 
@@ -693,6 +700,7 @@ class OlaHubGuestController extends BaseController
                     });
                     $q->where('mobile_no', $requestEmailData);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->first();
             }
             $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
@@ -871,6 +879,7 @@ class OlaHubGuestController extends BaseController
                     });
                     $q->where('mobile_no', $email);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->first();
             } elseif ($phoneType == 'email') {
                 $userData = UserModel::where('is_active', '0')->where(function ($q) use ($mobile, $country_id) {
@@ -890,6 +899,7 @@ class OlaHubGuestController extends BaseController
                     });
                     $q->where('mobile_no', $mobile);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->first();
             }
             if ($userData && $this->userHelper->checExpireCode($userData)) {
@@ -944,6 +954,7 @@ class OlaHubGuestController extends BaseController
                 $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
                     $q->where('mobile_no', $requestEmailData);
                     $q->where('country_id', $country_id);
+                    $q->where('for_merchant', 0);
                 })->where('is_active', '1')->first();
             }
 
