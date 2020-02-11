@@ -15,13 +15,28 @@ class UserHelper extends OlaHubCommonHelper
     static function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        // return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
-        return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+        return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
+        // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
     function fullPhone($phone)
     {
         return $phone = "0" . (int) $phone;
+    }
+
+    function getDeviceID()
+    {
+        $ipAddress = $_SERVER['REMOTE_ADDR'];
+        $macAddr = "";
+        $arp = `arp -a $ipAddress`;
+        $lines = explode("\n", $arp);
+        foreach ($lines as $line) {
+            $cols = preg_split('/\s+/', trim($line));
+            if ($cols[0] == $ipAddress) {
+                $macAddr = $cols[1];
+            }
+        }
+        return $macAddr;
     }
 
     // check user login device
@@ -37,7 +52,6 @@ class UserHelper extends OlaHubCommonHelper
     function addUserLogin($data, $user_id, $status, $code = null)
     {
         $row = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->first();
-
         if (!$row) {
             $userLogin = new \OlaHub\UserPortal\Models\UserLoginsModel;
             $userLogin->device_id = $data['deviceID'];
@@ -76,7 +90,8 @@ class UserHelper extends OlaHubCommonHelper
             if ($is_phone) {
                 $value = $this->fullPhone($value);
                 $exist = \OlaHub\UserPortal\Models\UserModel::where('country_id', $country_id)
-                    ->where("mobile_no", $value)->first();
+                    ->where("mobile_no", $value)
+                    ->where("for_merchant", 0)->first();
             } else {
                 $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
                     ->orWhere('mobile_no', $value)
