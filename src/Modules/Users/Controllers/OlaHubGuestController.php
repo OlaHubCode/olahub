@@ -975,6 +975,7 @@ class OlaHubGuestController extends BaseController
                 $userSession = $this->userHelper->createActiveSession($checkUserSession, $userData, $this->userAgent, $this->requestCart);
                 $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
                 app('session')->put('tempData', $userData);
+                $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
                 $this->userHelper->addUserLogin($this->requestData, $userData->id, true);
                 $logHelper->setLog($this->requestData, ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 'checkSecureActive', $this->userAgent);
 
