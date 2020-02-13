@@ -25,7 +25,7 @@ class CalendarForCelebrationResponseHandler extends Fractal\TransformerAbstract 
             "celebrationDate" => isset($this->data->calender_date) ? $this->data->calender_date : NULL,
             "celebrationOccassion" => isset($this->data->occasion_id) ? $this->data->occasion_id : NULL,
             "celebrationOccassionName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name'),
-            "celebrationTitle" => isset($this->data->title) ? $this->data->title : NULL,
+            // "celebrationTitle" => isset($this->data->title) ? $this->data->title : NULL,
             "celebrationOwner" => isset($this->data->user_id) ? $this->data->user_id : NULL,
             
         ];
@@ -36,6 +36,7 @@ class CalendarForCelebrationResponseHandler extends Fractal\TransformerAbstract 
         $this->return["celebrationOwnerName"] = isset($user) ? $user->first_name . ' ' . $user->last_name : NULL;
         if (isset($user->profile_picture)) {
             $this->return['celebrationOwnerPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture);
+            $this->return['ownerPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture);
             $this->return['celebrationOwnerSlug'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($user,"profile_url", $user->first_name." ".$user->last_name, ".");
         } else {
             $this->return['celebrationOwnerPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
@@ -54,7 +55,7 @@ class CalendarForCelebrationResponseHandler extends Fractal\TransformerAbstract 
         $this->return["shipping_address_address_line1"] = isset($shippingAddress->shipping_address_address_line1) ? $shippingAddress->shipping_address_address_line1 : NULL;
         $this->return["shipping_address_address_line2"] = isset($shippingAddress->shipping_address_address_line2) ? $shippingAddress->shipping_address_address_line2 : NULL;
         $this->return["shipping_address_zip_code"] = isset($shippingAddress->shipping_address_zip_code) ? $shippingAddress->shipping_address_zip_code : NULL;
-        $this->return["celebrationCountry"] = isset($shippingAddress->country_id) ? $shippingAddress->country_id : NULL;
+        $this->return["celebrationCountry"] = isset($shippingAddress->country_id) ? (string) $shippingAddress->country_id : NULL;
         
     }
 

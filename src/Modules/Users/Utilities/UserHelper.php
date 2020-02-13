@@ -4,13 +4,6 @@ namespace OlaHub\UserPortal\Helpers;
 
 class UserHelper extends OlaHubCommonHelper
 {
-
-    private $ipInfo;
-
-    public function __construct()
-    {
-        $this->ipInfo = $this->getIPInfo();
-    }
     //get user data by IP address
     static function getIPInfo()
     {
@@ -51,6 +44,7 @@ class UserHelper extends OlaHubCommonHelper
 
     function addUserLogin($data, $user_id, $status, $code = null)
     {
+        $ipInfo = $this->getIPInfo();
         $row = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->first();
         if (!$row) {
             $userLogin = new \OlaHub\UserPortal\Models\UserLoginsModel;
@@ -58,9 +52,9 @@ class UserHelper extends OlaHubCommonHelper
             $userLogin->device_model = $data['deviceModel'];
             $userLogin->device_platform = $data['platform'];
             $userLogin->user_id = $user_id;
-            $userLogin->location = $this->ipInfo->country_name . ", " . $this->ipInfo->region_name . ", " . $this->ipInfo->city;
-            $userLogin->ip = $this->ipInfo->ip;
-            $userLogin->geolocation = $this->ipInfo->latitude . "," .$this->ipInfo->longitude;
+            $userLogin->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
+            $userLogin->ip = $ipInfo->ip;
+            $userLogin->geolocation = $ipInfo->latitude . "," .$ipInfo->longitude;
             $userLogin->status = $status;
             $userLogin->code = $code;
             $userLogin->save();
@@ -72,9 +66,9 @@ class UserHelper extends OlaHubCommonHelper
                     'device_platform' => $data['platform'],
                     'device_model' => $data['deviceModel'],
                     'user_id' => $user_id,
-                    'location' => $this->ipInfo->country_name . ", " . $this->ipInfo->region_name . ", " . $this->ipInfo->city,
-                    'ip' => $this->ipInfo->ip,
-                    'geolocation' => $this->ipInfo->latitude . "," . $this->ipInfo->longitude,
+                    'location' => $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city,
+                    'ip' => $ipInfo->ip,
+                    'geolocation' => $ipInfo->latitude . "," . $ipInfo->longitude,
                     'status' => $status,
                     'code' => $code
                 )

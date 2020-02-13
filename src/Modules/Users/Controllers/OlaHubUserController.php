@@ -336,7 +336,8 @@ class OlaHubUserController extends BaseController
         //     $log->saveLogSessionData();
         //     return response($checkUpdateActivation, 200);
         // }
-        $return = ['status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
+        $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
+        $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
         // if ($isFirstLogin) {
         //     $return["userFirstLogin"] = "0";
         // }
