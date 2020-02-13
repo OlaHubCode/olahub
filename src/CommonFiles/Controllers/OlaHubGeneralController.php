@@ -754,8 +754,8 @@ class OlaHubGeneralController extends BaseController
             // }
         }
         $user = new \OlaHub\UserPortal\Models\UserModel;
-        if (!empty($this->requestData['userPhoneNumber']))
-            $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
+        if (!empty($this->requestData->userPhoneNumber))
+            $this->requestData->userPhoneNumber = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData->userPhoneNumber);
         foreach ($this->requestData as $input => $value) {
             if (isset(\OlaHub\UserPortal\Models\UserModel::$columnsMaping[$input])) {
                 $user->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\UserModel::$columnsMaping, $input)} = $value;
