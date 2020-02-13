@@ -4,18 +4,11 @@ namespace OlaHub\UserPortal\Helpers;
 
 class UserHelper extends OlaHubCommonHelper
 {
-
-    private $ipInfo;
-
-    public function __construct()
-    {
-        $this->ipInfo = $this->getIPInfo();
-    }
     //get user data by IP address
     static function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-        return json_decode(file_get_contents("http://ipinfo.io/92.253.22.73/json"));
+       return json_decode(file_get_contents("http://api.ipapi.com/{$ip}?access_key=52d6f557dd6faf1dbeaa8601450321b6"));
         // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
@@ -36,7 +29,7 @@ class UserHelper extends OlaHubCommonHelper
                 $macAddr = $cols[1];
             }
         }
-        return $macAddr;
+        return empty($macAddr) ? md5($ipAddress) : $macAddr;
     }
 
     // check user login device
@@ -51,6 +44,7 @@ class UserHelper extends OlaHubCommonHelper
 
     function addUserLogin($data, $user_id, $status, $code = null)
     {
+        $ipInfo = $this->getIPInfo();
         $row = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->first();
         if (!$row) {
             $userLogin = new \OlaHub\UserPortal\Models\UserLoginsModel;
@@ -58,9 +52,9 @@ class UserHelper extends OlaHubCommonHelper
             $userLogin->device_model = $data['deviceModel'];
             $userLogin->device_platform = $data['platform'];
             $userLogin->user_id = $user_id;
-            $userLogin->location = $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city;
-            $userLogin->ip = $this->ipInfo->ip;
-            $userLogin->geolocation = $this->ipInfo->loc;
+            $userLogin->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
+            $userLogin->ip = $ipInfo->ip;
+            $userLogin->geolocation = $ipInfo->latitude . "," .$ipInfo->longitude;
             $userLogin->status = $status;
             $userLogin->code = $code;
             $userLogin->save();
@@ -72,9 +66,9 @@ class UserHelper extends OlaHubCommonHelper
                     'device_platform' => $data['platform'],
                     'device_model' => $data['deviceModel'],
                     'user_id' => $user_id,
-                    'location' => $this->ipInfo->country . ", " . $this->ipInfo->region . ", " . $this->ipInfo->city,
-                    'ip' => $this->ipInfo->ip,
-                    'geolocation' => $this->ipInfo->loc,
+                    'location' => $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city,
+                    'ip' => $ipInfo->ip,
+                    'geolocation' => $ipInfo->latitude . "," . $ipInfo->longitude,
                     'status' => $status,
                     'code' => $code
                 )

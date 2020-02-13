@@ -754,8 +754,8 @@ class OlaHubGeneralController extends BaseController
             // }
         }
         $user = new \OlaHub\UserPortal\Models\UserModel;
-        if (!empty($this->requestData['userPhoneNumber']))
-            $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
+        if (!empty($this->requestData->userPhoneNumber))
+            $this->requestData->userPhoneNumber = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData->userPhoneNumber);
         foreach ($this->requestData as $input => $value) {
             if (isset(\OlaHub\UserPortal\Models\UserModel::$columnsMaping[$input])) {
                 $user->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\UserModel::$columnsMaping, $input)} = $value;
@@ -1585,7 +1585,7 @@ class OlaHubGeneralController extends BaseController
             if ($timelinePosts->count() > 0) {
                 foreach ($timelinePosts as $onePost) {
                     $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->paginate(5);
-                    foreach ($sponsers as $one) {
+		 foreach ($sponsers as $one) {
                         $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
                         $liked = 0;
                         if ($campaign) {
@@ -1597,6 +1597,7 @@ class OlaHubGeneralController extends BaseController
                                 $liked = 1;
                             }
                         }
+
 
                         $sponsers_arr[] = [
                             'type' => 'sponser',

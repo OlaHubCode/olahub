@@ -186,7 +186,7 @@ class OlaHubPostController extends BaseController
             $postMongo->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $postMongo->type = 'post';
             $postMongo->color = isset($this->requestData['color']) ? $this->requestData['color'] : NULL;
-            $postMongo->friend_id = $this->requestData['friend'];
+            $postMongo->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
 
             if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
                 $postImage = [];
@@ -198,7 +198,7 @@ class OlaHubPostController extends BaseController
                     }
                     array_push($postImage, $file);
                 }
-                $postMongo->post_image = $postImage;
+                $postMongo->post_image = !count($postImage) ? NULL : $postImage;
             }
             if ($this->requestData['post_video'] && count($this->requestData['post_video']) > 0) {
                 $postVideo = [];
@@ -210,7 +210,7 @@ class OlaHubPostController extends BaseController
                     }
                     array_push($postVideo, $fileVideo);
                 }
-                $postMongo->post_video = $postVideo;
+                $postMongo->post_video = !count($postVideo) ? NULL : $postVideo;
             }
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $group = $groupData;

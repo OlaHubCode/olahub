@@ -64,10 +64,12 @@ class UsersResponseHandler extends Fractal\TransformerAbstract {
     private function setUserInterests() {
        $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $this->data->id)->first();
        $interestsData = [];
+       $interestsText = [];
        if(isset($userMongo->intersts) && $userMongo->intersts){
            $interests = \OlaHub\UserPortal\Models\Interests::withoutGlobalScope('interestsCountry')->whereIn('interest_id',$userMongo->intersts)->get();
            foreach ($interests as $interest){
                $interestsData [] = isset($interest->interest_id) ?  $interest->interest_id : 0;
+               $interestsText [] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, 'name');
             //    $interestsData [] = [
             //        "value" => isset($interest->interest_id) ?  $interest->interest_id : 0,
             //        "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, 'name'),
@@ -75,6 +77,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract {
            }
        }
        $this->return["userInterests"] = $interestsData;
+       $this->return["userInterestsText"] = implode(", ", $interestsText);
     }
 
 }
