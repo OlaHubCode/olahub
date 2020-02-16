@@ -71,7 +71,7 @@ class OlaHubGeneralController extends BaseController
             throw new NotAcceptableHttpException(404);
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
-        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as code")
+        $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as flag, LOWER(code) as code")
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
@@ -400,7 +400,13 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'country' => strtoupper($country->two_letter_iso_code), 'code' => 200]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End set user country"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-        return response(['status' => true, 'country' => strtoupper($country->two_letter_iso_code), 'code' => 200], 200);
+        return response([
+            'status' => true, 
+            'country' => strtolower($country->two_letter_iso_code), 
+            'country_id' => $country->id, 
+            'countryName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name'), 
+            'code' => 200
+        ], 200);
     }
 
     public function checkUserMerchant()

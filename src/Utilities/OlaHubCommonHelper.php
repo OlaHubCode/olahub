@@ -639,39 +639,60 @@ abstract class OlaHubCommonHelper
         return "$platform - $bname";
     }
 
-    static function timeElapsedString($datetime, $full = false)
+    static function timeElapsedString($datetime)
     {
+        $lang = app('session')->get('def_lang')->default_locale;
+        $elapsed = strtotime($datetime);
+        $newDate = strtotime(date("y-m-d h:i:s"));
+        $diff = round($newDate - $elapsed);
 
-        $now = new \DateTime;
-        $ago = new \DateTime($datetime);
-        $diff = $now->diff($ago);
-        $diff->w = floor($diff->d / 7);
-        $diff->d -= $diff->w * 7;
-        $string = array(
-            'y' => 'year',
-            'm' => 'month',
-            'w' => 'week',
-            'd' => 'day',
-            'h' => 'hour',
-            'i' => 'minute',
-            's' => 'second',
-        );
+        // $elapsed = new \DateTime($datetime);
+        // $newDate = new \DateTime;
+        // $diff = $newDate->diff($elapsed);
+        // $y = $diff->format('%y');
+        // $m = $diff->format('%m');
+        // $d = $diff->format('%d');
+        // $h = $diff->format('%h');
+        // $i = $diff->format('%i');
+        // $s = $diff->format('%s');
 
-        foreach ($string as $k => &$v) {
-            if ($diff->$k) {
-                $v = $diff->$k . ' ' . $v . ($diff->$k > 1 ? 's' : '');
-            } else {
-                unset($string[$k]);
-            }
-        }
+        $d = floor($diff / (24 * 60 * 60));
+        $diff = $diff - ($d * 24 * 60 * 60);
+        $h = floor($diff / (60 * 60));
+        $diff = $diff - ($h * 60 * 60);
+        $m = floor($diff / (60));
+        $diff = $diff - ($m * 60);
+        $s = $diff;
 
-        if (!$full) {
-            $string = array_slice($string, 0, 1);
-        }
+        if ($d > 0)
+            return OlaHubCommonHelper::translation($lang, 'chat_days', (int) $d);
+        if ($h > 0)
+            return OlaHubCommonHelper::translation($lang, 'chat_hours', (int) $h);
+        if ($m > 0)
+            return OlaHubCommonHelper::translation($lang, 'chat_minutes', (int) $m);
+        if ($s > 0)
+            return OlaHubCommonHelper::translation($lang, 'chat_seconds', (int) $s);
 
-        return $string ? implode(', ', $string) . ' ago' : 'just now';
+        return OlaHubCommonHelper::translation($lang, 'chat_seconds', 0);
     }
 
+    static function translation($lang, $key, $word)
+    {
+        $langs = new \StdClass;
+        $langs->en = [
+            "chat_days" => $word . ($word > 1 ? " Days" : " Day") . " ago",
+            "chat_hours" => $word . ($word > 1 ? " Hours" : " Hour") . " ago",
+            "chat_minutes" => $word . ($word > 1 ? " Minutes" : " Minute") . " ago",
+            "chat_seconds" => ($word > 5 ? $word . " Seconds ago" : "Just now")
+        ];
+        $langs->ar = [
+            "chat_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
+            "chat_hours" => "منذ " . ($word > 10 ? $word . " ساعة" : ($word > 1 ? $word . " ساعات" : " ساعة")),
+            "chat_minutes" => "منذ " . ($word > 10 ? $word . " دقيقة" : ($word > 1 ? $word . " دقائق" : " دقيقة")),
+            "chat_seconds" => "منذ " . ($word > 10 ? $word . " ثانية" : ($word > 5 ? $word . " ثوان" : " لحظات"))
+        ];
+        return $langs->{$lang}[$key];
+    }
     static function setPayUsed($bill)
     {
         $payByData = $bill->paid_by;

@@ -51,6 +51,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract {
        $shippingAddress =  $this->data->shippingAddress()->where('country_id', app('session')->get('def_country')->id)->first();
         
             $this->return["shippingAddress"] = isset($shippingAddress->id) ? $shippingAddress->id : 0;
+            $this->return["shippingCountry"] = isset($shippingAddress->country_id) ? $shippingAddress->country_id : 0;
             $this->return["userState"] = isset($shippingAddress->shipping_address_state) ? $shippingAddress->shipping_address_state : NULL;
             $this->return["userCity"] = isset($shippingAddress->shipping_address_city) ? $shippingAddress->shipping_address_city : NULL;
             $this->return["userAddressLine1"] = isset($shippingAddress->shipping_address_address_line1) ? $shippingAddress->shipping_address_address_line1 : NULL;

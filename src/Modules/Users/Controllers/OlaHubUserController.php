@@ -216,7 +216,7 @@ class OlaHubUserController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-        if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) > 2 && count($this->requestData['userInterests']) <= 0) {
+        if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) <= 0) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]]]);
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
