@@ -427,7 +427,7 @@ abstract class OlaHubCommonHelper
                 $data = $validator->errors()->toArray();
             }
 
-            if (isset($requestData["userPhoneNumber"])) {
+            if (!empty($requestData["userPhoneNumber"])) {
                 $checkPhone = \OlaHub\UserPortal\Models\UserModel::where("mobile_no", $requestData["userPhoneNumber"])
                     ->where("country_id", $requestData["userCountry"])
                     ->where("id", "!=", app("session")->get("tempID"))->first();
@@ -437,7 +437,7 @@ abstract class OlaHubCommonHelper
                 }
             }
 
-            if (isset($requestData["userEmail"])) {
+            if (!empty($requestData["userEmail"])) {
                 $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("email", $requestData["userEmail"])
                     ->where("id", "!=", app("session")->get("tempID"))->first();
                 if ($checkEmail) {
