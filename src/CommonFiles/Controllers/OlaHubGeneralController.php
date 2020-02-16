@@ -1491,7 +1491,8 @@ class OlaHubGeneralController extends BaseController
 
             if ($participants->count() > 0) {
                 foreach ($participants as $participant) {
-                    $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->orderBy('created_at', 'DESC')->paginate(5);
+                    $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->where('created_at', ">=", date("Y-m-d H:i:s", strtotime("-7 days")))->orderBy('created_at', 'desc')->get();
+                    // $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->orderBy('created_at', 'DESC')->paginate(5);
                     $type = '';
                     if ($celebrationContents->count() > 0) {
                         foreach ($celebrationContents as $celebrationContent) {

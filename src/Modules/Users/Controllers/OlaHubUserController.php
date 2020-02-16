@@ -203,6 +203,9 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "updateUserData"]);
+        if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' =>['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
+        }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
