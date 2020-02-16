@@ -122,6 +122,8 @@ class OlaHubPaymentsMainController extends BaseController
             $userInsert->points_collected = $this->billing->points_used;
             $userInsert->collect_date = date("Y-m-d");
             $userInsert->save();
+	    $this->billing->points_used = 0;
+$this->billing->save();
         }
         if ($this->pointsUsedInt > 0) {
             $exchangeRate = \DB::table('points_exchange_rates')->where('country_id', app('session')->get('def_country')->id)->first();
