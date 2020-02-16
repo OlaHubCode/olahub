@@ -287,7 +287,7 @@ $this->billing->save();
         foreach ($pendingStatusIDs as $one) {
             $pendingIds[] = $one->id;
         }
-        $this->billing = \OlaHub\UserPortal\Models\UserBill::where('temp_cart_id', $this->cart->id)->where('country_id', $this->cart->country_id)->whereIn('pay_status', $pendingIds)->first();
+        $this->billing = \OlaHub\UserPortal\Models\UserBill::where('temp_cart_id', $this->cart->id)->where('country_id', $this->cart->country_id)->where('pay_for',0)->whereIn('pay_status', $pendingIds)->first();
     }
 
     protected function getUserVoucher($userID = false, $newVoucher = 0)
@@ -469,7 +469,7 @@ $this->billing->save();
             $this->billing = new \OlaHub\UserPortal\Models\UserBill;
             $this->billing->billing_number = $billingNum;
             // $this->billing->country_id = 5;
-            $this->billing->country_id = $this->cart->country_id;
+            $this->billing->country_id =  app('session')->get('def_country')->id;
             $this->billing->user_id = app('session')->get('tempID');
             $this->billing->pay_for = $this->cart->celebration_id > 0 ? $this->cart->celebration_id : 0;
             $this->billing->calendar_id = $this->cart->calendar_id > 0 ? $this->cart->calendar_id : 0;
