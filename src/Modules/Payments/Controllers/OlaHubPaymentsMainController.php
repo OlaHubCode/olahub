@@ -76,7 +76,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->return["proceed"] = 1;
         } else {
             $this->checkCrossCountries();
-            $this->getPaymentMethodsDetails($this->cart->country_id);
+            $this->getPaymentMethodsDetails($this->cart->country_id, $this->cart->shipped_to);
             $this->return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($this->paymentMethodCountryData, '\OlaHub\UserPortal\ResponseHandlers\PaymentResponseHandler');
         }
         $this->return['status'] = true;
@@ -88,23 +88,13 @@ class OlaHubPaymentsMainController extends BaseController
         } else {
             $this->return['shippingAddress'] = [];
         }
-        $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $this->cart->country_id)->first();
 
-        // $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->get();
-        // $reg = [];
-        // foreach ($regions as $region) {
-        //     $reg[] = [
-        //         'key' => $region->id,
-        //         'text' => $region->name,
-        //         'value' => $region->id,
-        //     ];
-        // }
-        // $this->return['regions'] = $reg;
-
-        $shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+        $ifShiping = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
             $q->where('is_shipment_free', '1');
-        })->first() ? SHIPPING_FEES : 0;
-        $shippingFees += $shippingFees == 0 ? \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart) : 0;
+        })->first();
+        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id) : 0;
+        $shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart, $shippingFees);
+
         $this->return['shippingFees'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees);
 
         return response($this->return, 200);
@@ -122,8 +112,8 @@ class OlaHubPaymentsMainController extends BaseController
             $userInsert->points_collected = $this->billing->points_used;
             $userInsert->collect_date = date("Y-m-d");
             $userInsert->save();
-	    $this->billing->points_used = 0;
-$this->billing->save();
+            $this->billing->points_used = 0;
+            $this->billing->save();
         }
         if ($this->pointsUsedInt > 0) {
             $exchangeRate = \DB::table('points_exchange_rates')->where('country_id', app('session')->get('def_country')->id)->first();
@@ -200,12 +190,12 @@ $this->billing->save();
     {
         $this->cartTotal = (float) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
         $this->checkPromoCode($this->cartTotal, $withExtra);
+        $this->shippingFees = $this->cart->shipment_fees;
         if ($withExtra) {
-            $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-                $q->where('is_shipment_free', '1');
-            })->first() ? SHIPPING_FEES : 0;
-            $this->shippingFees += $this->shippingFees == 0 ? \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart) : 0;
-            // $this->shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart);
+            // $this->shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+            //     $q->where('is_shipment_free', '1');
+            // })->first() ? SHIPPING_FEES : 0;
+            // $this->shippingFees += $this->shippingFees == 0 ? \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart) : 0;
             if ($this->paymentMethodCountryData) {
                 $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
             }
@@ -213,7 +203,7 @@ $this->billing->save();
         if ($this->celebration) {
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
-            $this->shippingFees = SHIPPING_FEES;
+            // $this->shippingFees = SHIPPING_FEES;
             $pp = $this->celebration->celebrationParticipants->count();
             $debt = ($this->shippingFees / $pp);
             $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2, ".", "");
@@ -237,15 +227,17 @@ $this->billing->save();
         // echo $this->total;
     }
 
-    protected function getPaymentMethodsDetails($country)
+    protected function getPaymentMethodsDetails($country, $shipped_to = NULL)
     {
         $typeID = $this->typeID;
         if ($this->crossCountry) {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
-                ->whereHas('PaymentData', function ($q) use ($typeID) {
+                ->whereHas('PaymentData', function ($q) use ($typeID, $shipped_to) {
                     $q->whereHas('typeDataSync', function ($query) use ($typeID) {
                         $query->where('lkp_payment_method_types.id', $typeID);
                     });
+                    if ($shipped_to)
+                        $q->where('prepare_func', '<>', 'cashOnDeliverySystem');
                 })
                 ->where('is_cross', '1')
                 ->get();
@@ -264,7 +256,7 @@ $this->billing->save();
                 $q->whereHas('typeDataSync', function ($query) use ($typeID) {
                     $query->where('lkp_payment_method_types.id', $typeID);
                 });
-            })->get();
+            })->groupBy('payment_method_id')->get();
         }
     }
 
@@ -287,7 +279,7 @@ $this->billing->save();
         foreach ($pendingStatusIDs as $one) {
             $pendingIds[] = $one->id;
         }
-        $this->billing = \OlaHub\UserPortal\Models\UserBill::where('temp_cart_id', $this->cart->id)->where('country_id', $this->cart->country_id)->where('pay_for',0)->whereIn('pay_status', $pendingIds)->first();
+        $this->billing = \OlaHub\UserPortal\Models\UserBill::where('temp_cart_id', $this->cart->id)->where('country_id', $this->cart->country_id)->where('pay_for', 0)->whereIn('pay_status', $pendingIds)->first();
     }
 
     protected function getUserVoucher($userID = false, $newVoucher = 0)
@@ -383,8 +375,8 @@ $this->billing->save();
                             $price = $itemPrice['productDiscountedPrice'];
                             $originalPrice = $itemDes->item_price;
                         } else {
-                            $price = $itemPrice['productPrice'];
-                            // $price = $itemDes->item_price;
+                            // $price = $itemPrice['productPrice'];
+                            $price = $itemDes->item_price;
                             $originalPrice = $itemDes->item_price;
                         }
                         $billingDetails->billing_id = $this->billing->id;
@@ -419,20 +411,22 @@ $this->billing->save();
         $return = [];
         $cityName = "";
         $regionName = "";
+        $countryID = $this->cart->shipped_to ? $this->cart->shipped_to : $this->cart->country_id;
+        $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $countryID)->first();
         if ($this->typeID != 3) {
-            if (isset($this->requestData['billState'])) {
-                if ($this->requestData['billState'] > 0) {
-                    $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $this->cart->country_id)->first();
-                    $region = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->where('id', $this->requestData['billState'])->first();
-                    $regionName = isset($region->name) ? $region->name : null;
-                } else {
-                    $regionName = $this->requestData['billState'];
-                }
-            }
+            // if (isset($this->requestData['billState'])) {
+            //     if ($this->requestData['billState'] > 0) {
+            //         $region = \OlaHub\UserPortal\Models\ShippingRegions::where('country_id', $country->id)->where('id', $this->requestData['billState'])->first();
+            //         $regionName = isset($region->name) ? $region->name : null;
+            //     } else {
+            //         $regionName = $this->requestData['billState'];
+            //     }
+            // }
             $return = [
+                'country' => $country->name,
                 'full_name' => isset($this->requestData['billFullName']) ? $this->requestData['billFullName'] : null,
-                'city' => "",
-                'state' => $regionName,
+                'city' => isset($this->requestData['billCity']) ? $this->requestData['billCity'] : null,
+                // 'state' => $regionName,
                 'phone' => isset($this->requestData['billPhoneNo']) ? (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['billPhoneNo']) : null,
                 'address' => isset($this->requestData['billAddress']) ? $this->requestData['billAddress'] : null,
                 'zipcode' => isset($this->requestData['billZipCode']) ? $this->requestData['billZipCode'] : null,
@@ -610,7 +604,7 @@ $this->billing->save();
         if ($this->billing->voucher_used && $this->billing->voucher_used > 0) {
             \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->billing->voucher_used, $this->billing->country_id);
         }
-        if (app('session')->get('tempData')->email){
+        if (app('session')->get('tempData')->email) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
         } elseif (app('session')->get('tempData')->mobile_no) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);

@@ -4,11 +4,13 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Cart extends Model {
+class Cart extends Model
+{
 
     protected $table = 'shopping_carts';
 
-    protected static function boot() {
+    protected static function boot()
+    {
         parent::boot();
 
         static::addGlobalScope('countryUser', function (\Illuminate\Database\Eloquent\Builder $builder) {
@@ -19,10 +21,10 @@ class Cart extends Model {
             if ($query->country_id == 0) {
                 if (isset($query->celebration_id) && $query->celebration_id > 0) {
                     $celebration = CelebrationModel::find($query->celebration_id);
-                    if($celebration){
+                    if ($celebration) {
                         $query->country_id = $celebration->country_id;
                     }
-                }else{
+                } else {
                     $query->country_id = app("session")->get("def_country")->id;
                 }
             }
@@ -49,19 +51,23 @@ class Cart extends Model {
         ],
     ];
 
-    public function cartDetails() {
+    public function cartDetails()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CartItems', 'shopping_cart_id');
     }
 
-    public function celebration() {
+    public function celebration()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\CelebrationModel', 'celebration_id');
     }
 
-    public function calendar() {
+    public function calendar()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\CalendarModel', 'calendar_id');
     }
 
-    static function getCartSubTotal(Cart $cart, $withCurr = true) {
+    static function getCartSubTotal(Cart $cart, $withCurr = true)
+    {
         $total = 0;
         if (!$withCurr) {
             $items = CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $cart->id)->get();
@@ -88,7 +94,7 @@ class Cart extends Model {
                         }
                         break;
                     case "designer":
-                        $mainItem = DesginerItems::whereIn('item_ids', [(string) $item->item_id, (int)$item->item_id])->first();
+                        $mainItem = DesginerItems::whereIn('item_ids', [(string) $item->item_id, (int) $item->item_id])->first();
                         if ($mainItem) {
                             $itemDes = false;
                             if (isset($mainItem->items) && count($mainItem->items) > 0) {
@@ -121,7 +127,8 @@ class Cart extends Model {
         return $return;
     }
 
-    static function getUserCart($userID = false) {
+    static function getUserCart($userID = false)
+    {
         if ($userID > 0) {
             $cart = Cart::withoutGlobalScope('countryUser')->where('user_id', $userID)->first();
         } else {
@@ -142,7 +149,8 @@ class Cart extends Model {
         return $cart;
     }
 
-    static function getCelebrationCart($celebration = false) {
+    static function getCelebrationCart($celebration = false)
+    {
         if ($celebration) {
             $cart = Cart::withoutGlobalScope('countryUser')->where('celebration_id', $celebration->id)->where('country_id', $celebration->country_id)->first();
 
@@ -162,15 +170,16 @@ class Cart extends Model {
         return false;
     }
 
-    static function checkDesignersShipping($cart) {
+    static function checkDesignersShipping($cart, $shippingFees)
+    {
         $return = 0;
-        $country = $cart->country_id;
+        $country = $cart->shipped_to ? $cart->shipped_to : $cart->country_id;
         $addedCountries = [];
         $designerItems = CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $cart->id)->get();
         foreach ($designerItems as $item) {
             if ($item->item_type == "designer") {
                 $designer = Designer::find($item->merchant_id);
-                if ($designer && !in_array($designer->country_id, $addedCountries)) {
+                if ($designer && !in_array($designer->country_id, $addedCountries) && ($country != $designer->country_id || $shippingFees == 0)) {
                     $designerCountry = $designer->country_id;
                     $shippingFees = CountriesShipping::getShippingFees($designerCountry, $country);
                     $return += $shippingFees;
@@ -180,9 +189,9 @@ class Cart extends Model {
                 }
             }
         }
-        $cart->shipment_fees = $return;
+        if ($return)
+            $cart->shipment_fees = $return;
         $cart->save();
         return $return;
     }
-
 }

@@ -234,9 +234,9 @@ class PaymentHelper extends OlaHubCommonHelper {
                         $return[$itemStorePickup->store_id]['items'][] = [
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
-                            'itemPrice' => $item->item_price,
+                            'itemPrice' => number_format($item->item_price, 2),
                             'itemQuantity' => $item->quantity,
-                            'itemTotal' => $item->item_price * $item->quantity,
+                            'itemTotal' => number_format($item->item_price * $item->quantity, 2),
                             'itemAttributes' => $details['attributes'],
                             'fromPickupAddress' => isset($pickup->street_address) ? $pickup->street_address : '',
                             'fromPickupCity' => isset($pickup->city) ? $pickup->city : '',
@@ -277,12 +277,14 @@ class PaymentHelper extends OlaHubCommonHelper {
                         if ($item->customize_data != null) {
                             $customItem = unserialize($item->customize_data);
                         }
+                        $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price);
+                        $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price * $item->quantity);
                         $return[$item->store_id]['items'][] = [
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
-                            'itemPrice' => $item->item_price,
+                            'itemPrice' => $newPrice,
                             'itemQuantity' => $item->quantity,
-                            'itemTotal' => $item->item_price * $item->quantity,
+                            'itemTotal' => $newTotal,
                             'itemAttributes' => $details['attributes'],
                             'fromPickupAddress' => isset($designer->full_address) ? $designer->full_address : '',
                             'fromPickupCity' => isset($designer->city) ? $designer->city : '',
