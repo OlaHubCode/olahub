@@ -29,17 +29,26 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
 
     static function getShippingFees($from, $to = NULL)
     {
+        $country = \OlaHub\UserPortal\Models\Country::find($from);
+        $currency = $country->currencyData;
+
         if (!$to)
             $to = $from;
-            // echo $to. " - " . $from;
+        // echo $to. " - " . $from;
         $return = 0;
         $shipping = CountriesShipping::where("country_from", $from)
             ->where("country_to", $to)
+            ->where("is_shipping", 1)
             ->first();
-        if ($shipping) {
-            $shippingFees = $shipping->total_shipping;
-            $return = CurrnciesExchange::getCurrncy("USD", app("session")->get("def_currency") ? app("session")->get("def_currency")->code : "JOD", $shippingFees);
+        if (!$shipping) {
+            $shipping = CountriesShipping::where("country_from", $from)
+                ->where("country_to", 0)
+                ->where("is_shipping", 1)
+                ->first();
         }
+        $shippingFees = $shipping->total_shipping;
+        $return = CurrnciesExchange::getCurrncy("USD", $currency->code, $shippingFees);
+        // $return = CurrnciesExchange::getCurrncy("USD", app("session")->get("def_currency") ? app("session")->get("def_currency")->code : "JOD", $shippingFees);
 
         return $return;
     }

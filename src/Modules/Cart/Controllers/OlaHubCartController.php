@@ -367,10 +367,7 @@ class OlaHubCartController extends BaseController
     {
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
         $countryID = $this->celebration ? $this->celebration->country_id : $countryData->id;
-        $ifShiping = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-            $q->where('is_shipment_free', '1');
-        })->first();
-        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryID) : 0;
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryID);
         $shippingFees += Cart::checkDesignersShipping($this->cart, $shippingFees);
         if ($this->celebration) {
             $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();

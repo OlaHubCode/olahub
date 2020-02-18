@@ -38,10 +38,7 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $userReedem = $userPoints * $exchangeRate->sell_price;
         $userVoucher += $userReedem;
 
-        $ifShiping = $this->data->cartDetails()->whereHas('itemsMainData', function ($q) {
-            $q->where('is_shipment_free', '1');
-        })->first();
-        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->data->country_id) : 0;
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->data->country_id);
         $shippingFees += Cart::checkDesignersShipping($this->data, $shippingFees);
 
         // $shippingFees += $shippingFees == 0 ? Cart::checkDesignersShipping($this->data) : 0;
