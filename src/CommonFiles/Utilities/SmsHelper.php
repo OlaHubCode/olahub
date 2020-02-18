@@ -352,7 +352,7 @@ class SmsHelper extends OlaHubCommonHelper {
         $template = 'USR031';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[itemAmmount]', "[itemName]"];
-        $with = [$username, $billing->billing_number, number_format($item->item_price * $item->quantity, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $item->item_name];
+        $with = [$username, $billing->billing_number, $item->newPrice, $item->item_name];
         $to = $this->countryCode.(int)$userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }
@@ -363,7 +363,7 @@ class SmsHelper extends OlaHubCommonHelper {
         $template = 'USR032';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[itemAmmount]', "[itemName]"];
-        $with = [$username, $billing->billing_number, number_format($item->item_price * $item->quantity, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $item->item_name];
+        $with = [$username, $billing->billing_number, $item->newPrice, $item->item_name];
         $to = $this->countryCode.(int)$userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }

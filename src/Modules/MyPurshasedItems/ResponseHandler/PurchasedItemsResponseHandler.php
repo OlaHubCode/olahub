@@ -33,12 +33,14 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             "billPaidFor" => isset($this->data->pay_for) ? $this->data->pay_for : 0,
             "celebration" => $this->setCelebration(),
             "billIsGift" => isset($this->data->is_gift) ? $this->data->is_gift : 0,
-            "billTotal" => isset($this->data->billing_total) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->data->billing_total) : NULL,
-            "billFees" => isset($this->data->billing_fees) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->data->billing_fees) : NULL,
-            "billVoucher" => isset($this->data->voucher_used) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->data->voucher_used) : 0,
-            "billVoucherAfter" => isset($this->data->voucher_after_pay) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->data->voucher_after_pay) : 0,
+            "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees, 2),
+            "billShippingFees" => number_format($this->data->shipping_fees, 2),
+            "billTotal" => isset($this->data->billing_total) ? number_format($this->data->billing_total, 2) : NULL,
+            "billFees" => isset($this->data->billing_fees) ? number_format($this->data->billing_fees, 2) : NULL,
+            "billVoucher" => isset($this->data->voucher_used) ? number_format($this->data->voucher_used, 2) : 0,
+            "billVoucherAfter" => isset($this->data->voucher_after_pay) ? number_format($this->data->voucher_after_pay, 2) : 0,
             "orderAddress" => isset($this->data->order_address) ? unserialize($this->data->order_address) : [],
-            "billCountryName" => isset($country) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name') : NULL,
+            "billCountryName" => isset(unserialize($this->data->order_address)['country']) ? unserialize($this->data->order_address)['country'] : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name'),
             "billDate" => isset($this->data->billing_date) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDateTime($this->data->billing_date) : NULL,
             "billStatus" => isset($payStatus["name"]) ? $payStatus["name"] : "Fail",
             "billShippingEnabled" => isset($payStatus["shipping"]) ? $payStatus["shipping"] : 0,
@@ -121,7 +123,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         $itemsDetails = [];
         foreach ($userBillDetails as $userBillDetail) {
             if ($userBillDetail->item_type == 'designer') {
-                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($userBillDetail->item_price);
+                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($userBillDetail->item_price, true, $this->data->billing_currency);
             } else {
                 $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userBillDetail->item_price);
             }

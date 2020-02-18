@@ -251,7 +251,7 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR031';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[itemAmmount]', "[itemName]"];
-        $with = [$username, $billing->billing_number, number_format($item->item_price * $item->quantity, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $item->item_name];
+        $with = [$username, $billing->billing_number, $item->newPrice, $item->item_name];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -262,7 +262,7 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR032';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[itemAmmount]', "[itemName]"];
-        $with = [$username, $billing->billing_number, number_format($item->item_price * $item->quantity, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $item->item_name];
+        $with = [$username, $billing->billing_number, $item->newPrice, $item->item_name];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -567,9 +567,9 @@ class EmailHelper extends OlaHubCommonHelper
                 $return .= '<li>';
                 $return .= '<div><b>Order Number: </b>' . $billing->billing_number . '</div>';
                 $return .= '<div><b>Item Name: </b>' . $item['itemName'] . '</div>';
-                $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+                $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . '</div>';
                 $return .= '<div><b>Item Quantity: </b>' . $item['itemQuantity'] . '</div>';
-                $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+                $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . '</div>';
                 $return .= '<div><b>Item Image Link: </b>' . $item['itemImage'] . '</div>';
                 if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
                     $return .= '<ul>';
@@ -611,9 +611,9 @@ class EmailHelper extends OlaHubCommonHelper
         $return .= '<li>';
         $return .= '<div><b>Order Number: </b>' . $billing->billing_number . '</div>';
         $return .= '<div><b>Item Name: </b>' . $item['itemName'] . '</div>';
-        $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+        $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . '</div>';
         $return .= '<div><b>Item Quantity: </b>' . $item['itemQuantity'] . '</div>';
-        $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+        $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . '</div>';
         $return .= '<div><b>Item Image Link: </b>' . $item['itemImage'] . '</div>';
         if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
             $return .= '<ul>';
@@ -647,9 +647,9 @@ class EmailHelper extends OlaHubCommonHelper
             $return .= '<li>';
             $return .= '<div><b>Order Number: </b>' . $billing->billing_number . '</div>';
             $return .= '<div><b>Item Name: </b>' . $item['itemName'] . '</div>';
-            $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+            $return .= '<div><b>Item Price: </b>' . $item['itemPrice']. '</div>';
             $return .= '<div><b>Item Quantity: </b>' . $item['itemQuantity'] . '</div>';
-            $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . '</div>';
+            $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . '</div>';
             $return .= '<div><b>Item Image Link: </b>' . $item['itemImage'] . '</div>';
             if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
                 $return .= '<ul>';

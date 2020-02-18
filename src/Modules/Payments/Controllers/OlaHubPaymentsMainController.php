@@ -89,10 +89,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->return['shippingAddress'] = [];
         }
 
-        $ifShiping = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-            $q->where('is_shipment_free', '1');
-        })->first();
-        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id) : 0;
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id);
         $shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart, $shippingFees);
 
         $this->return['shippingFees'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees);
@@ -486,6 +483,7 @@ class OlaHubPaymentsMainController extends BaseController
         $this->billing->gift_video_ref = $this->typeID == 2 && isset($this->requestData['billCardGiftVideo']) ? str_replace(STORAGE_URL . '//', '', $this->requestData['billCardGiftVideo'])  : null;
         $this->billing->gift_date = $this->typeID == 2 && isset($this->requestData['billGiftDate']) ? $this->requestData['billGiftDate'] : null;
         $this->billing->billing_total = $this->total;
+        $this->billing->shipping_fees = $this->shippingFees;
         $this->billing->billing_fees = $this->cashOnDeliver;
         // $this->billing->billing_fees = $this->shippingFees + $this->cashOnDeliver;
         $this->billing->voucher_used = $this->voucherUsed > 0 && $this->pointsUsedCurr > 0 ? ($this->voucherUsed - $this->pointsUsedCurr) : $this->voucherUsed;
@@ -604,9 +602,10 @@ class OlaHubPaymentsMainController extends BaseController
         if ($this->billing->voucher_used && $this->billing->voucher_used > 0) {
             \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->billing->voucher_used, $this->billing->country_id);
         }
-        if (app('session')->get('tempData')->email) {
+        if (!empty(app('session')->get('tempData')->email)) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
-        } elseif (app('session')->get('tempData')->mobile_no) {
+        } 
+        if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
         }
     }
@@ -620,10 +619,10 @@ class OlaHubPaymentsMainController extends BaseController
         }
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
-        if (app('session')->get('tempData')->email) {
+        if (!empty(app('session')->get('tempData')->email)) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
         }
-        if (app('session')->get('tempData')->mobile_no) {
+        if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
         }
     }
@@ -640,9 +639,10 @@ class OlaHubPaymentsMainController extends BaseController
         }
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
-        if (app('session')->get('tempData')->email) {
+        if (!empty(app('session')->get('tempData')->email)) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing, $target);
-        } elseif (app('session')->get('tempData')->mobile_no) {
+        }
+        if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing, $target);
         }
     }
@@ -651,7 +651,12 @@ class OlaHubPaymentsMainController extends BaseController
     {
         $this->participant->payment_status = 3;
         $this->participant->save();
-        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserPaymentCelebration(app('session')->get('tempData'), $this->billing);
+        if (!empty(app('session')->get('tempData')->email)) {
+            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserPaymentCelebration(app('session')->get('tempData'), $this->billing);
+        }
+        if (!empty(app('session')->get('tempData')->mobile_no)) {
+            (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
+        }
         $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->where('payment_status', 3)->get();
         if (count($participant) == 1) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderCelebration($this->grouppedMers, $this->billing, app('session')->get('tempData'));

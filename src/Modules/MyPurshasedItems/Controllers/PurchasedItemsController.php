@@ -7,14 +7,16 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserBill;
 use OlaHub\UserPortal\Models\UserBillDetails;
 
-class PurchasedItemsController extends BaseController {
+class PurchasedItemsController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
     protected $userAgent;
     protected $paymenStatus;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
 
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
@@ -29,14 +31,15 @@ class PurchasedItemsController extends BaseController {
      * @param  Request  $request constant of Illuminate\Http\Request
      * @return Response
      */
-    public function getUserPurchasedItems() {
+    public function getUserPurchasedItems()
+    {
         $payStatusesData = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("is_success", "1")
-                ->orWhere("action_id", "255")->get();
+            ->orWhere("action_id", "255")->get();
         $payStatusesId = [];
-        foreach ($payStatusesData as $statusId){
+        foreach ($payStatusesData as $statusId) {
             $payStatusesId[] = $statusId->id;
         }
-        $purchasedItem = UserBill::whereIn("pay_status",$payStatusesId)->orderBy('billing_number', 'DESC')->paginate(10);
+        $purchasedItem = UserBill::whereIn("pay_status", $payStatusesId)->orderBy('billing_number', 'DESC')->paginate(10);
         if ($purchasedItem->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($purchasedItem, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemsResponseHandler');
             $return['status'] = TRUE;
@@ -50,11 +53,12 @@ class PurchasedItemsController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function cancelPurshasedItem($id) {
+    public function cancelPurshasedItem($id)
+    {
         $user = app('session')->get('tempID');
-        $purchasedItem = UserBillDetails::whereHas("mainBill", function ($q) use($user) {
-                    $q->where("user_id", $user);
-                })->find($id);
+        $purchasedItem = UserBillDetails::whereHas("mainBill", function ($q) use ($user) {
+            $q->where("user_id", $user);
+        })->find($id);
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
@@ -62,6 +66,12 @@ class PurchasedItemsController extends BaseController {
                 $purchasedItem->is_canceled = 1;
                 $purchasedItem->cancel_date = date("Y-m-d");
                 $purchasedItem->save();
+                if ($purchasedItem->item_type == 'designer') {
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                } else {
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                }
+
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesCancelItem($purchasedItem, $bill, app('session')->get('tempData'));
                 if (app('session')->get('tempData')->email) {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserCancelConfirmation(app('session')->get('tempData'), $purchasedItem, $bill);
@@ -83,11 +93,12 @@ class PurchasedItemsController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function refundPurshasedItem($id) {
+    public function refundPurshasedItem($id)
+    {
         $user = app('session')->get('tempID');
-        $purchasedItem = UserBillDetails::whereHas("mainBill", function ($q) use($user) {
-                    $q->where("user_id", $user);
-                })->find($id);
+        $purchasedItem = UserBillDetails::whereHas("mainBill", function ($q) use ($user) {
+            $q->where("user_id", $user);
+        })->find($id);
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
@@ -95,6 +106,11 @@ class PurchasedItemsController extends BaseController {
                 $purchasedItem->is_refund = 1;
                 $purchasedItem->refund_date = date("Y-m-d");
                 $purchasedItem->save();
+                if ($purchasedItem->item_type == 'designer') {
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                } else {
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                }
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesRefundItem($purchasedItem, $bill, app('session')->get('tempData'));
                 if (app('session')->get('tempData')->email) {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserRefundConfirmation(app('session')->get('tempData'), $purchasedItem, $bill);
@@ -116,7 +132,8 @@ class PurchasedItemsController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    private function setPayStatusData($bill) {
+    private function setPayStatusData($bill)
+    {
         $paymentStatusID = $bill->pay_status;
         if ($paymentStatusID > 0) {
             $this->paymenStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::where('id', $paymentStatusID)->first();
@@ -129,5 +146,4 @@ class PurchasedItemsController extends BaseController {
 
         return false;
     }
-
 }

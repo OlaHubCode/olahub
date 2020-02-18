@@ -334,10 +334,10 @@ abstract class OlaHubCommonHelper
         return $returnPrice;
     }
 
-    static function setDesignerPrice($itemPrice, $withCurr = true)
+    static function setDesignerPrice($itemPrice, $withCurr = true, $currencyID = null)
     {
         $price = (float) $itemPrice;
-        $currency = app('session')->get('def_currency');
+        $currency = $currencyID ? \OlaHub\UserPortal\Models\Currency::where('code', $currencyID)->first() : app('session')->get('def_currency');
         $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", $currency->code)->first();
         if ($exchangeRate) {
             $newPrice = $price * $exchangeRate->exchange_rate;

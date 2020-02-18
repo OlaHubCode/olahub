@@ -16,10 +16,7 @@ class CelebrationHelper extends OlaHubCommonHelper
             $celebrationCart = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebrationCart->id)->get();
 
-            $ifShiping = $cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-                $q->where('is_shipment_free', '1');
-            })->first();
-            $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($cart->country_id) : 0;
+            $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($cart->country_id);
             $shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($cart, $shippingFees);
 
             $pp = count($participants);
