@@ -90,7 +90,8 @@ class OlaHubCartController extends BaseController
             throw new NotAcceptableHttpException(404);
         }
         $this->checkCart($type);
-        $this->cart->country_id = $country;
+        $this->cart->shipped_to = $this->cart->shipped_to == $this->cart->country_id ? NULL : $country;
+        // $this->cart->shipment_fees = 44.90;
         $this->cart->save();
         $return["status"] = true;
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
@@ -364,10 +365,14 @@ class OlaHubCartController extends BaseController
 
     private function handleCartReturn($first = false)
     {
+        $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
+        $countryID = $this->celebration ? $this->celebration->country_id : $countryData->id;
+        $ifShiping = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
+            $q->where('is_shipment_free', '1');
+        })->first();
+        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryID) : 0;
+        $shippingFees += Cart::checkDesignersShipping($this->cart, $shippingFees);
         if ($this->celebration) {
-            $shippingFees = $this->cart->cartDetails()->whereHas('itemsMainData', function ($q) {
-                $q->where('is_shipment_free', '1');
-            })->first() ? SHIPPING_FEES : 0;
             $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
             $return['total'] = $this->cart->total_price > 0 ? array(
@@ -377,9 +382,10 @@ class OlaHubCartController extends BaseController
             ) : null;
         } else {
             if ($first) {
-                $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
+                $this->cart->shipped_to = null;
                 $this->cart->for_friend = null;
                 $this->cart->gift_date = null;
+                $this->cart->shipment_fees = $shippingFees;
                 $this->cart->country_id = $countryData->id;
                 $this->cart->save();
             }

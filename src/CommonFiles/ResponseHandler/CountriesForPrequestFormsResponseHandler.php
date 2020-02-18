@@ -19,6 +19,7 @@ class CountriesForPrequestFormsResponseHandler extends Fractal\TransformerAbstra
     private function setDefaultData() {
         $this->return = [
             "value" => isset($this->data->id) ? (string) $this->data->id : 0,
+            "flag" => isset($this->data->two_letter_iso_code) ? strtolower($this->data->two_letter_iso_code) : 0,
             "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data, 'name'),
         ];
     }

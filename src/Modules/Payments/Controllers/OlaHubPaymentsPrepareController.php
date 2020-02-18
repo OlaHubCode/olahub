@@ -44,7 +44,7 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
             $this->prepareBilingActions();
             $this->{'prepare' . ucfirst($this->paymentMethodData->prepare_func)}();
         }
-
+        
         return response($this->return, 200);
     }
 

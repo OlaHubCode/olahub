@@ -37,10 +37,14 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $exchangeRate = \DB::table('points_exchange_rates')->where('country_id', app('session')->get('def_country')->id)->first();
         $userReedem = $userPoints * $exchangeRate->sell_price;
         $userVoucher += $userReedem;
-        $shippingFees = $this->data->cartDetails()->whereHas('itemsMainData', function ($q) {
+
+        $ifShiping = $this->data->cartDetails()->whereHas('itemsMainData', function ($q) {
             $q->where('is_shipment_free', '1');
-        })->first() ? SHIPPING_FEES : 0;
-        $shippingFees += $shippingFees == 0 ? Cart::checkDesignersShipping($this->data) : 0;
+        })->first();
+        $shippingFees = $ifShiping ? \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->data->country_id) : 0;
+        $shippingFees += Cart::checkDesignersShipping($this->data, $shippingFees);
+
+        // $shippingFees += $shippingFees == 0 ? Cart::checkDesignersShipping($this->data) : 0;
         $cashOnDeliver = TRUE ? 0 : 3;
         $total = (float) $cartSubTotal + $shippingFees + $cashOnDeliver - $this->promoCodeSave;
 

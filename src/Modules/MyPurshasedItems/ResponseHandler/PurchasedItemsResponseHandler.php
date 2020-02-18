@@ -5,21 +5,24 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 use OlaHub\UserPortal\Models\UserBill;
 use League\Fractal;
 
-class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
+class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
+{
 
     private $return;
     private $data;
     private $shippingStatus = [];
     private $paymenStatus;
 
-    public function transform(UserBill $data) {
+    public function transform(UserBill $data)
+    {
         $this->data = $data;
         $this->setDefaultData();
         $this->setBillItems();
         return $this->return;
     }
 
-    private function setDefaultData() {
+    private function setDefaultData()
+    {
         $country = \OlaHub\UserPortal\Models\Country::where('id', $this->data->country_id)->first();
         $payData = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPayUsed($this->data);
         $payStatus = $this->setPayStatusData();
@@ -42,7 +45,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         ];
     }
 
-    private function setPayStatusData() {
+    private function setPayStatusData()
+    {
         $return = ["name" => "", "shipping" => 0];
         $paymentStatusID = $this->data->pay_status;
         if ($paymentStatusID > 0) {
@@ -60,7 +64,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         return $return;
     }
 
-    private function setItemImageData($image) {
+    private function setItemImageData($image)
+    {
         if ($image) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($image);
         } else {
@@ -68,7 +73,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setCelebration() {
+    private function setCelebration()
+    {
         $celebrationName = null;
         if ($this->data->pay_for > 0) {
             $celebration = \OlaHub\UserPortal\Models\CelebrationModel::find($this->data->pay_for);
@@ -79,7 +85,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         return $celebrationName;
     }
 
-    private function setItemStatus($userBillDetail) {
+    private function setItemStatus($userBillDetail)
+    {
         $orderStatus = '';
         if (($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)  && isset($this->shippingStatus[$userBillDetail->id]) && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
             $this->shippingStatus[$userBillDetail->id] = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($userBillDetail->shipping_status);
@@ -90,7 +97,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         return $orderStatus;
     }
 
-    private function setItemCancelStatus($userBillDetail) {
+    private function setItemCancelStatus($userBillDetail)
+    {
         $cancelStatus = 0;
         if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->cancel_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
             $cancelStatus = 1;
@@ -98,7 +106,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         return $cancelStatus;
     }
 
-    private function setItemRefundStatus($userBillDetail) {
+    private function setItemRefundStatus($userBillDetail)
+    {
         $refundStatus = 0;
         if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
             $refundStatus = 1;
@@ -106,10 +115,16 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
         return $refundStatus;
     }
 
-    private function setBillItems() {
+    private function setBillItems()
+    {
         $userBillDetails = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $this->data->id)->get();
         $itemsDetails = [];
         foreach ($userBillDetails as $userBillDetail) {
+            if ($userBillDetail->item_type == 'designer') {
+                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($userBillDetail->item_price);
+            } else {
+                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userBillDetail->item_price);
+            }
             $attr = @unserialize($userBillDetail->item_details);
             $shipping = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("review_enabled", "1")->find($userBillDetail->shipping_status);
             $existReview = \OlaHub\UserPortal\Models\ItemReviews::where('item_id', $userBillDetail->item_id)->where('item_type', $userBillDetail->item_type)->first();
@@ -117,7 +132,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
                 'itemOrderNumber' => $userBillDetail->id,
                 'itemName' => $userBillDetail->item_name,
                 'itemQuantity' => $userBillDetail->quantity,
-                'itemPrice' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userBillDetail->item_price),
+                'itemPrice' => $newPrice,
                 'itemImage' => $this->setItemImageData($userBillDetail->item_image),
                 'itemAttribute' => isset($attr['attributes']) ? $attr['attributes'] : [],
                 'itemShippingStatus' => $this->setItemStatus($userBillDetail),
@@ -135,14 +150,14 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract {
 
         $this->return["ItemsDetails"] = $itemsDetails;
     }
-    
-    private function setReviewInfo($review) {
+
+    private function setReviewInfo($review)
+    {
         $info = [
             "userRate" => isset($review->rating) ? $review->rating : 0,
             "userReview" => isset($review->review) ? $review->review : '',
         ];
-        
+
         return $info;
     }
-
 }

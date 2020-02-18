@@ -714,7 +714,7 @@ abstract class OlaHubCommonHelper
                         }
                         $return["orderPayByGate"] = OlaHubCommonHelper::returnCurrentLangField($payData, "name");
                         $return["paidBy"] .= OlaHubCommonHelper::returnCurrentLangField($payData, "name");
-                        $return["orderPayByGateAmount"] = $bill->billing_total - $bill->voucher_used;
+                        $return["orderPayByGateAmount"] = number_format($bill->billing_total - $bill->voucher_used, 2);
                     }
                 }
             }

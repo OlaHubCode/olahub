@@ -11,24 +11,31 @@
 
 namespace OlaHub\UserPortal\Models;
 
-class CountriesShipping extends \Illuminate\Database\Eloquent\Model {
+class CountriesShipping extends \Illuminate\Database\Eloquent\Model
+{
 
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
     }
 
     protected $table = 'countries_shipping_fees';
     protected $guarded = array('created_at', 'updated_at', 'deleted_at', 'id', 'name', 'two_letter_iso_code', 'three_letter_iso_code', 'language_id', 'currency_id', 'is_published', 'is_supported');
 
-    protected static function boot() {
+    protected static function boot()
+    {
         parent::boot();
     }
 
-    static function getShippingFees($from, $to) {
+    static function getShippingFees($from, $to = NULL)
+    {
+        if (!$to)
+            $to = $from;
+            // echo $to. " - " . $from;
         $return = 0;
         $shipping = CountriesShipping::where("country_from", $from)
-                ->where("country_to", $to)
-                ->first();
+            ->where("country_to", $to)
+            ->first();
         if ($shipping) {
             $shippingFees = $shipping->total_shipping;
             $return = CurrnciesExchange::getCurrncy("USD", app("session")->get("def_currency") ? app("session")->get("def_currency")->code : "JOD", $shippingFees);
@@ -36,5 +43,4 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model {
 
         return $return;
     }
-
 }
