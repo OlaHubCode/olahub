@@ -4,7 +4,6 @@ namespace OlaHub\UserPortal\Helpers;
 
 class CartHelper extends OlaHubCommonHelper
 {
-
     function setSessionCartData($userID, $cartRequest, $returnCart = false)
     {
         if ($cartRequest) {
@@ -86,9 +85,51 @@ class CartHelper extends OlaHubCommonHelper
                             }
                             break;
                         case "designer":
-
+                            // $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$item->item_id])->first();
+                            // if ($itemMain) {
+                            //     $itemData = false;
+                            //     if (isset($itemMain->items) && count($itemMain->items) > 0) {
+                            //         foreach ($itemMain->items as $oneItem) {
+                            //             if ($oneItem["item_id"] == $item->item_id) {
+                            //                 $itemData = (object) $oneItem;
+                            //             }
+                            //         }
+                            //     }
+                            //     if (!$itemData) {
+                            //         $itemData = $itemMain;
+                            //     }
+                            //     $inStock = (int) $itemData->item_stock;
+                            //     if ($inStock < $item->quantity && $inStock > 0) {
+                            //         $item->quantity = $inStock;
+                            //         $item->save();
+                            //     } elseif ($inStock < 1) {
+                            //         if ($celebration) {
+                            //             if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                            //                 $item->delete();
+                            //         } else
+                            //             $item->delete();
+                            //     }
+                            // } else {
+                            //     if ($celebration) {
+                            //         if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                            //             $item->delete();
+                            //     } else
+                            //         $item->delete();
+                            // }
                             break;
                     }
+                }
+            } else {
+                if ($celebration) {
+                    $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $celebration->id)->first();
+                    $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->get();
+                    foreach ($participants as $participant) {
+                        $participant->payment_status = 1;
+                        $participant->save();
+                    }
+                    $celebration->commit_date = NULL;
+                    $celebration->celebration_status = 1;
+                    $celebration->save();
                 }
             }
         }

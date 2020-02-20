@@ -294,6 +294,24 @@ class PaymentHelper extends OlaHubCommonHelper
                         if ($item->customize_data != null) {
                             $customItem = unserialize($item->customize_data);
                         }
+                        if ($toDelete) {
+                            $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$item->item_id])->first();
+                            if ($itemMain) {
+                                $itemData = false;
+                                if (isset($itemMain->items) && count($itemMain->items) > 0) {
+                                    foreach ($itemMain->items as $oneItem) {
+                                        if ($oneItem["item_id"] == $item->item_id) {
+                                            $itemData = $oneItem;
+                                        }
+                                    }
+                                }
+                                if (!$itemData) {
+                                    $itemData = $itemMain;
+                                }
+                                $itemData->item_stock--;
+                                $itemData->save();
+                            }
+                        }
                         $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price, true, $designer->country_id);
                         $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price * $item->quantity, true, $designer->country_id);
                         $return[$item->store_id]['items'][] = [

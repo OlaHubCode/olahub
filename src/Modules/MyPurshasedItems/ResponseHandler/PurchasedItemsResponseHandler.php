@@ -104,11 +104,14 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
 
     private function setCelebration()
     {
-        $celebrationName = null;
+        $celebrationName = NULL;
+        $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
+        $lang = strtolower($languageArray[0]);
         if ($this->data->pay_for > 0) {
             $celebration = \OlaHub\UserPortal\Models\CelebrationModel::find($this->data->pay_for);
             if ($celebration) {
-                $celebrationName = $celebration->title;
+                $occassion = \OlaHub\UserPortal\Models\Occasion::where('id', $celebration->occassion_id)->first();
+                $celebrationName = json_decode($occassion->name)->$lang;
             }
         }
         return $celebrationName;

@@ -559,7 +559,6 @@ class OlaHubPaymentsMainController extends BaseController
             $this->billing->billing_fees += $this->paymentMethodCountryData->extra_fees;
         }
         $this->billing->save();
-        $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
         if ($this->typeID == 1 && $sendEmails) {
             $this->finalizeSuccessMeMails();
         } elseif ($this->typeID == 2 && $sendEmails) {
@@ -613,6 +612,7 @@ class OlaHubPaymentsMainController extends BaseController
 
     protected function finalizeSuccessMeMails()
     {
+        $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
         \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
@@ -630,6 +630,7 @@ class OlaHubPaymentsMainController extends BaseController
 
     protected function finalizeSuccessGiftMails()
     {
+        $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
         \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
         $shipping = unserialize($this->billing->order_address);
@@ -658,22 +659,15 @@ class OlaHubPaymentsMainController extends BaseController
         if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
         }
-        $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->where('payment_status', 3)->get();
-        if (count($participant) == 1) {
+        $participantPaids = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->where('payment_status', 3)->get()->count();
+        if ($participantPaids == 1) {
+            $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderCelebration($this->grouppedMers, $this->billing, app('session')->get('tempData'));
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderCelebration($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         }
 
-        $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->get();
-        $totalpats = $participants->count();
-        $paidParts = 0;
-        foreach ($participants as $one) {
-
-            if ($one->payment_status == 3) {
-                $paidParts += 1;
-            }
-        }
-        if ($paidParts == $totalpats) {
+        $participantsCount = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->get()->count();
+        if ($participantPaids == $participantsCount) {
             $this->celebrationDetails->celebration_status = 3;
             $this->celebrationDetails->save();
         }
