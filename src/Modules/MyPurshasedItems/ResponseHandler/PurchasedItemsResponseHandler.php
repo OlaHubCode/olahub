@@ -16,6 +16,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     public function transform(UserBill $data)
     {
         $this->data = $data;
+        $this->currency = NULL;
         $this->setDefaultData();
         $this->setBillItems();
         return $this->return;
@@ -24,27 +25,53 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $country = \OlaHub\UserPortal\Models\Country::where('id', $this->data->country_id)->first();
+        $this->currency = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($country->currencyData->code);
         $payData = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPayUsed($this->data);
         $payStatus = $this->setPayStatusData();
         $this->return = [
             "billNum" => isset($this->data->billing_number) ? $this->data->billing_number : NULL,
             "billPaidBy" => isset($payData) ? $payData : NULL,
-            "billCurrency" => isset($this->data->billing_currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($this->data->billing_currency) : NULL,
+            "billCurrency" => $this->currency,
             "billPaidFor" => isset($this->data->pay_for) ? $this->data->pay_for : 0,
             "celebration" => $this->setCelebration(),
             "billIsGift" => isset($this->data->is_gift) ? $this->data->is_gift : 0,
-            "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees, 2),
-            "billShippingFees" => number_format($this->data->shipping_fees, 2),
-            "billTotal" => isset($this->data->billing_total) ? number_format($this->data->billing_total, 2) : NULL,
-            "billFees" => isset($this->data->billing_fees) ? number_format($this->data->billing_fees, 2) : NULL,
-            "billVoucher" => isset($this->data->voucher_used) ? number_format($this->data->voucher_used, 2) : 0,
-            "billVoucherAfter" => isset($this->data->voucher_after_pay) ? number_format($this->data->voucher_after_pay, 2) : 0,
+            "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees, 2) . " " . $this->currency,
+            "billShippingFees" => isset($this->data->shipment_details) ? $this->getShipmentDetails($this->data->shipment_details) : NULL,
+            "billTotal" => isset($this->data->billing_total) ? number_format($this->data->billing_total, 2) . " " . $this->currency : NULL,
+            "billFees" => isset($this->data->billing_fees) ? number_format($this->data->billing_fees, 2) . " " . $this->currency : NULL,
+            "billVoucher" => isset($this->data->voucher_used) ? number_format($this->data->voucher_used, 2) . " " . $this->currency : 0,
+            "billVoucherAfter" => isset($this->data->voucher_after_pay) ? number_format($this->data->voucher_after_pay, 2) . " " . $this->currency : 0,
             "orderAddress" => isset($this->data->order_address) ? unserialize($this->data->order_address) : [],
-            "billCountryName" => isset(unserialize($this->data->order_address)['country']) ? unserialize($this->data->order_address)['country'] : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name'),
+            "billCountryName" => $this->getCountry($this->data, $country),
             "billDate" => isset($this->data->billing_date) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDateTime($this->data->billing_date) : NULL,
             "billStatus" => isset($payStatus["name"]) ? $payStatus["name"] : "Fail",
             "billShippingEnabled" => isset($payStatus["shipping"]) ? $payStatus["shipping"] : 0,
         ];
+    }
+
+    private function getShipmentDetails($data)
+    {
+        $data = unserialize($data);
+        $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
+        $lang = strtolower($languageArray[0]);
+        $return = [];
+        foreach ($data as $row) {
+            $return[] = array(
+                'amount' => $row['amount'] . " " . $row['currency']->$lang,
+                'country' => $row['country']->$lang
+            );
+        }
+        return $return;
+    }
+
+    private function getCountry($data, $country)
+    {
+        if (isset(unserialize($this->data->order_address)['country'])) {
+            $data = unserialize($this->data->order_address)['country'];
+            $data = \OlaHub\UserPortal\Models\Country::whereRaw("JSON_EXTRACT(name, '$.en') = '" . $data . "'")->first();
+        }
+        $data = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name');
+        return $data;
     }
 
     private function setPayStatusData()
@@ -122,11 +149,6 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         $userBillDetails = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $this->data->id)->get();
         $itemsDetails = [];
         foreach ($userBillDetails as $userBillDetail) {
-            if ($userBillDetail->item_type == 'designer') {
-                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($userBillDetail->item_price, true, $this->data->billing_currency);
-            } else {
-                $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userBillDetail->item_price);
-            }
             $attr = @unserialize($userBillDetail->item_details);
             $shipping = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("review_enabled", "1")->find($userBillDetail->shipping_status);
             $existReview = \OlaHub\UserPortal\Models\ItemReviews::where('item_id', $userBillDetail->item_id)->where('item_type', $userBillDetail->item_type)->first();
@@ -134,7 +156,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
                 'itemOrderNumber' => $userBillDetail->id,
                 'itemName' => $userBillDetail->item_name,
                 'itemQuantity' => $userBillDetail->quantity,
-                'itemPrice' => $newPrice,
+                'itemPrice' => number_format($userBillDetail->country_paid, 2) . " " . $this->currency,
                 'itemImage' => $this->setItemImageData($userBillDetail->item_image),
                 'itemAttribute' => isset($attr['attributes']) ? $attr['attributes'] : [],
                 'itemShippingStatus' => $this->setItemStatus($userBillDetail),

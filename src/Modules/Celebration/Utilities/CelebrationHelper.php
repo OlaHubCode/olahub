@@ -16,11 +16,10 @@ class CelebrationHelper extends OlaHubCommonHelper
             $celebrationCart = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebrationCart->id)->get();
 
-            $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($cart->country_id);
-            $shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($cart, $shippingFees);
+            $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($cart->country_id, $cart->country_id, $cart);
 
             $pp = count($participants);
-            $totalPrice = $totalPrice + $shippingFees;
+            $totalPrice = $totalPrice + $shippingFees['total'];
             $price = ($totalPrice / $pp);
             $price = number_format($price - fmod($price, MOD_CELEBRATION), 2, ".", "");
             $creatorAmount = ($totalPrice == ($price * $pp) ? $price : number_format(($totalPrice - ($price * $pp)) + $price, 2, ".", ""));

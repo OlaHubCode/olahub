@@ -37,16 +37,15 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $exchangeRate = \DB::table('points_exchange_rates')->where('country_id', app('session')->get('def_country')->id)->first();
         $userReedem = $userPoints * $exchangeRate->sell_price;
         $userVoucher += $userReedem;
+        
+        $countryTo = $this->data->shipped_to ? $this->data->shipped_to : $this->data->country_id;
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $this->data->country_id, $this->data);
 
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->data->country_id);
-        $shippingFees += Cart::checkDesignersShipping($this->data, $shippingFees);
-
-        // $shippingFees += $shippingFees == 0 ? Cart::checkDesignersShipping($this->data) : 0;
         $cashOnDeliver = TRUE ? 0 : 3;
-        $total = (float) $cartSubTotal + $shippingFees + $cashOnDeliver - $this->promoCodeSave;
+        $total = (float) $cartSubTotal + $shippingFees['total'] + $cashOnDeliver - $this->promoCodeSave;
 
         $this->return[] = ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cartSubTotal), 'className' => "subtotal"];
-        $this->return[] = ['label' => 'shippingFees', 'value' => $shippingFees ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees) : 'free', 'className' => "shippingFees"];
+        $this->return[] = ['label' => 'shippingFees', 'value' => $shippingFees['shipping'], 'className' => "shippingFees"];
         if ($cashOnDeliver) {
             $this->return[] = ['label' => 'cashFees', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cashOnDeliver)];
         }

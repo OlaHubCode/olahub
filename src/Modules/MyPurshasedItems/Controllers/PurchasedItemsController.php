@@ -67,9 +67,9 @@ class PurchasedItemsController extends BaseController
                 $purchasedItem->cancel_date = date("Y-m-d");
                 $purchasedItem->save();
                 if ($purchasedItem->item_type == 'designer') {
-                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 } else {
-                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 }
 
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesCancelItem($purchasedItem, $bill, app('session')->get('tempData'));
@@ -107,9 +107,9 @@ class PurchasedItemsController extends BaseController
                 $purchasedItem->refund_date = date("Y-m-d");
                 $purchasedItem->save();
                 if ($purchasedItem->item_type == 'designer') {
-                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 } else {
-                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity);
+                    $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 }
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesRefundItem($purchasedItem, $bill, app('session')->get('tempData'));
                 if (app('session')->get('tempData')->email) {

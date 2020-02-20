@@ -2,20 +2,23 @@
 
 namespace OlaHub\UserPortal\Helpers;
 
-class CartHelper extends OlaHubCommonHelper {
+class CartHelper extends OlaHubCommonHelper
+{
 
-    function setSessionCartData($userID, $cartRequest, $returnCart = false) {
+    function setSessionCartData($userID, $cartRequest, $returnCart = false)
+    {
         if ($cartRequest) {
             $cart = \OlaHub\UserPortal\Models\Cart::getUserCart($userID);
             $this->addSessionCartProducts($cart, $cartRequest);
-//            if ($created) {
-//                return $returnCart ? \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($cart, '\OlaHub\UserPortal\ResponseHandlers\CartResponseHandler') : TRUE;
-//            }
+            //            if ($created) {
+            //                return $returnCart ? \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($cart, '\OlaHub\UserPortal\ResponseHandlers\CartResponseHandler') : TRUE;
+            //            }
         }
-//        return $returnCart ? [] : FALSE;
+        //        return $returnCart ? [] : FALSE;
     }
 
-    function addSessionCartProducts($cart, $cartRequest) {
+    function addSessionCartProducts($cart, $cartRequest)
+    {
         if ($cartRequest && count($cartRequest)) {
             foreach ($cartRequest as $requestItem) {
                 $id = isset($requestItem['productID']) ? $requestItem['productID'] : (isset($requestItem['productId']) ? isset($requestItem['productId']) : 0);
@@ -28,7 +31,8 @@ class CartHelper extends OlaHubCommonHelper {
         }
     }
 
-    function setCelebrationCartData($celebration, $cartRequest = false) {
+    function setCelebrationCartData($celebration, $cartRequest = false)
+    {
         if ($celebration) {
             $cart = \OlaHub\UserPortal\Models\Cart::getCelebrationCart($celebration);
             if ($cart) {
@@ -39,7 +43,8 @@ class CartHelper extends OlaHubCommonHelper {
         return FALSE;
     }
 
-    function addCelebrationCartProducts($cart, $cartRequest) {
+    function addCelebrationCartProducts($cart, $cartRequest)
+    {
         if ($cartRequest && count($cartRequest)) {
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->where('celebration_id', $cart->celebration_id)->first();
             if ($participant) {
@@ -48,33 +53,36 @@ class CartHelper extends OlaHubCommonHelper {
         }
     }
 
-    function checkOutOfStockInCartItem($cartId = false, $celebration = false) {
+    function checkOutOfStockInCartItem($cartId = false, $celebration = false)
+    {
         if ($cartId > 0) {
             $itemsCart = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope("countryUser")->where('shopping_cart_id', $cartId)->get();
+            $paiedParticipant = false;
+            if ($celebration)
+                $paiedParticipant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->where('payment_status', 3)->first();
             if ($itemsCart->count() > 0) {
                 foreach ($itemsCart as $item) {
                     switch ($item->item_type) {
                         case "store":
-                            if ($celebration) {
-                                $itemData = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")
-                                                ->whereHas('merchant', function ($merchantQ) use($celebration) {
-                                                    $merchantQ->withoutGlobalScope('country');
-                                                    $merchantQ->where('country_id', $celebration->country_id);
-                                                })
-                                                ->where('id', $item->item_id)->first();
-                            } else {
-                                $itemData = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item->item_id)->first();
-                            }
+                            $itemData = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item->item_id)->first();
                             if ($itemData) {
                                 $inStock = \OlaHub\UserPortal\Models\CatalogItem::checkStock($itemData);
                                 if ($inStock < $item->quantity && $inStock > 0) {
                                     $item->quantity = $inStock;
                                     $item->save();
                                 } elseif ($inStock < 1) {
-                                    $item->delete();
+                                    if ($celebration) {
+                                        if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                                            $item->delete();
+                                    } else
+                                        $item->delete();
                                 }
                             } else {
-                                $item->delete();
+                                if ($celebration) {
+                                    if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                                        $item->delete();
+                                } else
+                                    $item->delete();
                             }
                             break;
                         case "designer":
@@ -85,16 +93,17 @@ class CartHelper extends OlaHubCommonHelper {
             }
         }
     }
-    
-    
-    function setNotLoggedCartTotal($cartCookies){
+
+
+    function setNotLoggedCartTotal($cartCookies)
+    {
         $return = [];
         $subTotal = 0;
         $shippingFees = 0;
-        foreach ($cartCookies as $cartCookie){
+        foreach ($cartCookies as $cartCookie) {
             $total = 0;
-            if($cartCookie->productType == 'designer'){
-               $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$cartCookie->productId])->first();
+            if ($cartCookie->productType == 'designer') {
+                $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$cartCookie->productId])->first();
                 if ($mainItem) {
                     $itemDes = false;
                     if (isset($mainItem->items) && count($mainItem->items) > 0) {
@@ -109,7 +118,7 @@ class CartHelper extends OlaHubCommonHelper {
                     }
                     $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($itemDes, TRUE, FALSE);
                     $total += $itemPrice * (isset($cartCookie->productQuantity) ? $cartCookie->productQuantity : 1);
-                } 
+                }
             } else {
                 $mainItem = \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->first();
                 if ($mainItem) {
@@ -119,9 +128,9 @@ class CartHelper extends OlaHubCommonHelper {
             }
             $subTotal += \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($total, false);
             // $shippingFees = \OlaHub\UserPortal\Models\CatalogItem::where('id', $cartCookie->productId)->where('is_shipment_free', '1')->first() ? SHIPPING_FEES : 0;
-            
+
         }
-        $totalVal = (double) $subTotal;
+        $totalVal = (float) $subTotal;
         // $totalVal = (double) $subTotal + $shippingFees;
         $return[] = ['label' => 'shippingFees', 'value' => 'free', 'className' => "shippingFees"];
         $return[] = ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($subTotal, true), 'className' => "subtotal"];
@@ -129,5 +138,4 @@ class CartHelper extends OlaHubCommonHelper {
         $return[] = ['label' => 'total', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($totalVal), 'className' => "total"];
         return $return;
     }
-
 }

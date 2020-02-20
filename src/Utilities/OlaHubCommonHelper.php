@@ -334,11 +334,11 @@ abstract class OlaHubCommonHelper
         return $returnPrice;
     }
 
-    static function setDesignerPrice($itemPrice, $withCurr = true, $currencyID = null)
+    static function setDesignerPrice($itemPrice, $withCurr = true, $countryID = null)
     {
         $price = (float) $itemPrice;
-        $currency = $currencyID ? \OlaHub\UserPortal\Models\Currency::where('code', $currencyID)->first() : app('session')->get('def_currency');
-        $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", $currency->code)->first();
+        $currency = $countryID ? \OlaHub\UserPortal\Models\Country::find($countryID)->currencyData : app('session')->get('def_currency');
+        $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", json_decode($currency->code)->en)->first();
         if ($exchangeRate) {
             $newPrice = $price * $exchangeRate->exchange_rate;
             // $returnPrice = number_format($newPrice, 2);
@@ -756,11 +756,12 @@ abstract class OlaHubCommonHelper
     {
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $language = strtolower($languageArray[0]);
-        if ($language == "ar") {
-            return "د.أ.";
-        } else {
-            return $currency;
-        }
+        return json_decode($currency)->$language;
+        // if ($language == "ar") {
+        //     return "د.أ.";
+        // } else {
+        //     return $currency;
+        // }
     }
 
     static function checkHolidaysDatesNumber($totalDays)

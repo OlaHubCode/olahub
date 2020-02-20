@@ -170,7 +170,7 @@ class Cart extends Model
         return false;
     }
 
-    static function checkDesignersShipping($cart, $shippingFees)
+    static function checkDesignersShipping($cart)
     {
         $return = 0;
         $country = $cart->shipped_to ? $cart->shipped_to : $cart->country_id;
@@ -179,7 +179,7 @@ class Cart extends Model
         foreach ($designerItems as $item) {
             if ($item->item_type == "designer") {
                 $designer = Designer::find($item->merchant_id);
-                if ($designer && !in_array($designer->country_id, $addedCountries) && ($country != $designer->country_id || $shippingFees == 0)) {
+                if ($designer && !in_array($designer->country_id, $addedCountries) && $country != $designer->country_id) {
                     $designerCountry = $designer->country_id;
                     $shippingFees = CountriesShipping::getShippingFees($designerCountry, $country);
                     $return += $shippingFees;

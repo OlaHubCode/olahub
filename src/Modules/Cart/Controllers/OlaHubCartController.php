@@ -365,27 +365,38 @@ class OlaHubCartController extends BaseController
 
     private function handleCartReturn($first = false)
     {
+        if ($first && !$this->celebration) {
+            $this->cart->shipped_to = null;
+            $this->cart->for_friend = null;
+            $this->cart->gift_date = null;
+            $this->cart->save();
+        }
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
-        $countryID = $this->celebration ? $this->celebration->country_id : $countryData->id;
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryID);
-        $shippingFees += Cart::checkDesignersShipping($this->cart, $shippingFees);
+        $countryTo = $this->celebration ? $this->celebration->country_id : ($this->cart->shipped_to ? $this->cart->shipped_to : $countryData->id);
+        $defaultCountry = $this->celebration ? $this->celebration->country_id : $countryData->id;
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart);
+        $this->cart->shipment_fees = $shippingFees['total'];
+        $this->cart->shipment_details = serialize($shippingFees['saving']);
+        $this->cart->country_id = $countryTo;
+        $this->cart->save();
+
         if ($this->celebration) {
-            $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
+            if ($this->celebration->celebration_status > 2) {
+                $celebrationID = $this->celebration->id;
+                $cartDetails = \OlaHub\UserPortal\Models\UserBillDetails::whereHas("mainBill", function ($q) use ($celebrationID) {
+                    $q->where("pay_for", $celebrationID);
+                })->get();
+                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftDoneResponseHandler');
+            } else {
+                $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
+                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
+            }
             $return['total'] = $this->cart->total_price > 0 ? array(
-                'sub_price' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id),
-                'shipping_fees' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees, true, $this->celebration->country_id),
-                'total_price' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price + $shippingFees, true, $this->celebration->country_id),
+                ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id), 'className' => "subtotal"],
+                ['label' => 'shippingFees', 'value' => $shippingFees['shipping'], 'className' => "shippingFees"],
+                ['label' => 'total', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price + $shippingFees['total'], true, $this->celebration->country_id), 'className' => "total"]
             ) : null;
         } else {
-            if ($first) {
-                $this->cart->shipped_to = null;
-                $this->cart->for_friend = null;
-                $this->cart->gift_date = null;
-                $this->cart->shipment_fees = $shippingFees;
-                $this->cart->country_id = $countryData->id;
-                $this->cart->save();
-            }
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->cart, '\OlaHub\UserPortal\ResponseHandlers\CartResponseHandler');
         }
 
@@ -415,10 +426,11 @@ class OlaHubCartController extends BaseController
         $this->cart = null;
         $checkCart = $this->cartFilter($type);
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
+        $countryTo = $this->celebration ? $this->celebration->country_id : $countryData->id;
         if ($checkCart) {
             $this->cart = $checkCart;
             if ($this->cart->country_id == 0) {
-                $this->cart->country_id = $countryData->id;
+                $this->cart->country_id = $countryTo;
                 // $this->cart->country_id = 5;
                 $this->cart->save();
             }
@@ -429,7 +441,7 @@ class OlaHubCartController extends BaseController
             if ($this->creatCart($type)) {
                 $this->cart = $this->cartFilter($type);
                 if ($this->cart->country_id == 0) {
-                    $this->cart->country_id = $countryData->id;
+                    $this->cart->country_id = $countryTo;
                     // $this->cart->country_id = 5;
                     $this->cart->save();
                 }

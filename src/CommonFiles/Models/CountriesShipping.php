@@ -27,29 +27,53 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         parent::boot();
     }
 
-    static function getShippingFees($from, $to = NULL)
+    static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL)
     {
-        $country = \OlaHub\UserPortal\Models\Country::find($from);
+        if (!$defaultCountry)
+            $defaultCountry = $countryID;
+        $shippingFees = [];
+        $shippingSavings = [];
+        $shippingFeesTotal = 0;
+        $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($defaultCountry);
         $currency = $country->currencyData;
+        $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
 
-        if (!$to)
-            $to = $from;
-        // echo $to. " - " . $from;
-        $return = 0;
-        $shipping = CountriesShipping::where("country_from", $from)
-            ->where("country_to", $to)
-            ->where("is_shipping", 1)
-            ->first();
-        if (!$shipping) {
-            $shipping = CountriesShipping::where("country_from", $from)
-                ->where("country_to", 0)
+        $shoppingItems = $cart->cartDetails()->get();
+        foreach ($shoppingItems as $item) {
+            if ($item->item_type == 'designer')
+                $brand = \OlaHub\UserPortal\Models\Designer::find($item->merchant_id);
+            else
+                $brand = \OlaHub\UserPortal\Models\Merchant::find($item->merchant_id);
+
+            $shipping = CountriesShipping::join('countries', 'countries_shipping_fees.country_from', 'countries.id')
+                ->where("country_from", $brand->country_id)
+                ->where("country_to", $countryID)
                 ->where("is_shipping", 1)
                 ->first();
+            if (!$shipping) {
+                $shipping = CountriesShipping::join('countries', 'countries_shipping_fees.country_from', 'countries.id')
+                    ->where("country_from", $brand->country_id)
+                    ->where("country_to", 0)
+                    ->where("is_shipping", 1)
+                    ->first();
+            }
+            $countryName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($shipping, 'name');
+            $key = array_search($countryName, array_column($shippingFees, 'country'));
+            if ($key == false && gettype($key) == 'boolean') {
+                $amount = CurrnciesExchange::getCurrncy("USD", json_decode($currency->code)->en, $shipping->total_shipping);
+                $shippingFees[] = array('country' => $countryName, 'amount' => number_format($amount, 2) . " " . $transCur);
+                $shippingFeesTotal += $amount;
+                $shippingSavings[] = array(
+                    'amount' => number_format($amount, 2),
+                    'currency' => json_decode($currency->code),
+                    'country' => json_decode($shipping->name)
+                );
+            }
         }
-        $shippingFees = $shipping->total_shipping;
-        $return = CurrnciesExchange::getCurrncy("USD", $currency->code, $shippingFees);
-        // $return = CurrnciesExchange::getCurrncy("USD", app("session")->get("def_currency") ? app("session")->get("def_currency")->code : "JOD", $shippingFees);
-
-        return $return;
+        return array(
+            'total' => $shippingFeesTotal,
+            'shipping' => $shippingFees,
+            'saving' => $shippingSavings
+        );
     }
 }
