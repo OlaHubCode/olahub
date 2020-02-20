@@ -214,7 +214,7 @@ class CronController extends BaseController {
 
                 $creatorBill = \OlaHub\UserPortal\Models\UserBill::withoutGlobalScope("currntUser")->where("pay_for", $celebration->id)->where("user_id", $celebration->created_by)->first();
                 $creatorBillDetails = $creatorBill->billDetails;
-                $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($creatorBillDetails);
+                $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($creatorBillDetails, false);
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantScheduledOrderCelebration($grouppedMers, $creatorBill, $celebration, $celebrationOwner);
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesScheduledOrderCelebration($grouppedMers, $creatorBill, $celebration, $celebrationOwner);
             }
@@ -278,7 +278,7 @@ class CronController extends BaseController {
             }
             $bill->gift_message_sent = "1";
             $bill->save();
-            $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($bill->billDetails);
+            $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($bill->billDetails, false);
             $shipping = unserialize($bill->order_address);
             $targetID = isset($shipping['for_user']) ? $shipping['for_user'] : NULL;
             $target = \OlaHub\UserPortal\Models\UserModel::withOutGlobalScope('notTemp')->find($targetID);
@@ -392,7 +392,7 @@ public function updateXiaomiItem(){
     public function updateCountriesCode(){
         $countries = \DB::table("shipping_countries")->get();
         foreach ($countries as $country){
-            $olaHubCountry = \DB::table("countries")->where("two_letter_iso_code", strtoupper($country->code))->first();
+            $olaHubCountry = \DB::table("countries")->where("two_letter_iso_code", strtoupper(json_decode($country->code))->en)->first();
             if($olaHubCountry){
                 \DB::table("shipping_countries")->where("id", $country->id)->update(["olahub_country_id" => $olaHubCountry->id]);
             }

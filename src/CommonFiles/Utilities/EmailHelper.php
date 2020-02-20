@@ -111,9 +111,9 @@ class EmailHelper extends OlaHubCommonHelper
         //        $reciverPhone = $billingAddress['phone'];
         //        $reciverEmail = $billingAddress['email'];
         $reciverAddress = $billingAddress['country'] . ', ' . $billingAddress['city'] . ", " . $billingAddress['address'] . ", " . $billingAddress['zipcode'];
-        $totalAmount = $billing->billing_total + $billing->billing_fees . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency);
-        $voucherAmount = number_format($billing->voucher_used, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency);
-        $cashAmount = number_format(($billing->billing_total + $billing->billing_fees - $billing->voucher_used), 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency);
+        $totalAmount = $billing->billing_total + $billing->billing_fees . " " . $billing->billing_currency;
+        $voucherAmount = number_format($billing->voucher_used, 2) . " " . $billing->billing_currency;
+        $cashAmount = number_format(($billing->billing_total + $billing->billing_fees - $billing->voucher_used), 2) . " " . $billing->billing_currency;
         $replace = ['[customerName]', '[customerPhone]', '[customerEmail]', '[billingNumber]', '[orderItems]', '[totalAmount]', '[voucherAmount]', '[cashAmount]', "[customerAddress]"];
         $with = [$customerName, $customerPhone, $customerEmail, $billingNumber, $orderItems, $totalAmount, $voucherAmount, $cashAmount, $reciverAddress];
         $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
@@ -156,7 +156,7 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR013';
         $userName = "$userData->first_name $userData->last_name";
         $billingNumber = $billing->billing_number;
-        $totalAmount = number_format(($billing->billing_total + $billing->billing_fees - $billing->voucher_used), 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency);
+        $totalAmount = number_format(($billing->billing_total + $billing->billing_fees - $billing->voucher_used), 2) . " " . $billing->billing_currency;
         $replace = ['[userName]', '[orderNumber]', '[orderAmmount]'];
         $with = [$userName, $billingNumber, $totalAmount];
         $to = [[$userData->email, $userName]];
@@ -221,15 +221,15 @@ class EmailHelper extends OlaHubCommonHelper
         $payData = OlaHubCommonHelper::setPayUsed($billing);
         $amountCollection = "<div><b>Paid by: </b>" . $payData["paidBy"] . "</div>";
         if (isset($payData["orderPayVoucher"])) {
-            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($payData["orderPayVoucher"], 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
-            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($payData["orderVoucherAfterPay"], 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($payData["orderPayVoucher"], 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($payData["orderVoucherAfterPay"], 2) . " " . $billing->billing_currency . "</div>";
         }
 
         if (isset($payData["orderPayByGate"])) {
-            $amountCollection .= "<div><b>Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . $billing->billing_currency . "</div>";
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $amountCollection];
+        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -240,7 +240,7 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR030';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', "[failReason]"];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $reason];
+        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $reason];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -328,15 +328,15 @@ class EmailHelper extends OlaHubCommonHelper
         $payData = OlaHubCommonHelper::setPayUsed($billing);
         $amountCollection = "<div><b>Paid by: </b>" . $payData["paidBy"] . "</div>";
         if (isset($payData["orderPayVoucher"])) {
-            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($payData["orderPayVoucher"], 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
-            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($payData["orderVoucherAfterPay"], 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($payData["orderPayVoucher"], 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($payData["orderVoucherAfterPay"], 2) . " " . $billing->billing_currency . "</div>";
         }
 
         if (isset($payData["orderPayByGate"])) {
-            $amountCollection .= "<div><b>Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . $billing->billing_currency . "</div>";
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $amountCollection];
+        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -389,15 +389,15 @@ class EmailHelper extends OlaHubCommonHelper
         $username = "$userData->first_name $userData->last_name";
         $amountCollection = "<div><b>Paid by: </b>$billing->paid_by</div>";
         if ($billing->voucher_used > 0) {
-            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($billing->voucher_used, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
-            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($billing->voucher_after_pay, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($billing->voucher_used, 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($billing->voucher_after_pay, 2) . " " . $billing->billing_currency . "</div>";
         }
 
         if ($billing->voucher_used > 0 && $billing->billing_total > $billing->voucher_used) {
-            $amountCollection .= "<div><b>Paid using ($billing->paid_by): </b>" . number_format(($billing->billing_total - $billing->voucher_used), 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency) . "</div>";
+            $amountCollection .= "<div><b>Paid using ($billing->paid_by): </b>" . number_format(($billing->billing_total - $billing->voucher_used), 2) . " " . $billing->billing_currency . "</div>";
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . OlaHubCommonHelper::getTranslatedCurrency($billing->billing_currency), $amountCollection];
+        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }

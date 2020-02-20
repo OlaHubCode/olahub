@@ -161,7 +161,7 @@ class CelebrationContentsController extends BaseController {
 
                 $creatorBill = \OlaHub\UserPortal\Models\UserBill::where("pay_for", $celebration->id)->first();
                 $creatorBillDetails = $creatorBill->billDetails;
-                $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($creatorBillDetails);
+                $grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($creatorBillDetails, false);
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantScheduledOrderCelebration($grouppedMers, $creatorBill, $celebration, $celebrationOwner);
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesScheduledOrderCelebration($grouppedMers, $creatorBill, $celebration, $celebrationOwner);
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');

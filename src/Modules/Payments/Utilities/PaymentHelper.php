@@ -7,9 +7,11 @@ use LaravelFCM\Message\PayloadDataBuilder;
 use LaravelFCM\Message\PayloadNotificationBuilder;
 use FCM;
 
-class PaymentHelper extends OlaHubCommonHelper {
+class PaymentHelper extends OlaHubCommonHelper
+{
 
-    function createUserBillNumber() {
+    function createUserBillNumber()
+    {
         $lastBill = \OlaHub\UserPortal\Models\UserBill::where('country_id', app('session')->get('def_country')->id)->latest()->first();
         $billNumber = 0;
         if ($lastBill) {
@@ -20,7 +22,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return BILL_PREF . strtoupper(app('session')->get('def_country')->two_letter_iso_code) . "-" . parent::createNumberPrefix(app('session')->get('tempID')) . "-" . parent::createNumberPrefix($billNumber, 2);
     }
 
-    function getBillDetails($oneItem, $itemPrice) {
+    function getBillDetails($oneItem, $itemPrice)
+    {
         $details = [];
         if ($oneItem) {
             $details['merchant'] = $this->getBillMerchantDetails($oneItem->merchant);
@@ -37,7 +40,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $details;
     }
 
-    private function getBillMerchantDetails($merchant) {
+    private function getBillMerchantDetails($merchant)
+    {
         $return = [];
         if ($merchant) {
             $return['name'] = $merchant->company_legal_name;
@@ -48,7 +52,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillBrandDetails($brand) {
+    private function getBillBrandDetails($brand)
+    {
         $return = [];
         if ($brand) {
             $return['name'] = isset($brand->name) ? $brand->name : null;
@@ -58,7 +63,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillPickupAddressDetails($oneItem) {
+    private function getBillPickupAddressDetails($oneItem)
+    {
         $return = 0;
         $pickup = \OlaHub\UserPortal\Models\ItemPickuAddr::where("item_id", $oneItem->id)->first();
         if ($pickup) {
@@ -67,13 +73,14 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillCategoryDetails($category) {
+    private function getBillCategoryDetails($category)
+    {
         $return = [];
         if ($category) {
             $return['name'] = $category->name;
             $return['slug'] = $category->category_slug;
             $catCountry = \OlaHub\UserPortal\Models\ManyToMany\ItemCountriesCategory::where('country_id', app('session')->get('def_country')->id)
-                            ->where('category_id', $category->id)->first();
+                ->where('category_id', $category->id)->first();
             $return['catCountry'] = [
                 "id" => isset($catCountry->id) ? $catCountry->id : 0,
                 "country_id" => isset($catCountry->country_id) ? $catCountry->country_id : 0,
@@ -86,7 +93,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillClassifcationDetails($classification) {
+    private function getBillClassifcationDetails($classification)
+    {
         $return = [];
         if ($classification) {
             $return['name'] = isset($classification->name) ? $classification->name : null;
@@ -95,7 +103,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillOccasionsDetails($occasions) {
+    private function getBillOccasionsDetails($occasions)
+    {
         $return = [];
         foreach ($occasions as $oneOccasion) {
             $occasionDetails = $oneOccasion->occasionMainData;
@@ -107,7 +116,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillAttributesDetails($valuesData) {
+    private function getBillAttributesDetails($valuesData)
+    {
         $return = [];
         foreach ($valuesData as $value) {
             $valueMain = $value->valueMainData;
@@ -120,7 +130,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    function getBillDesignerDetails($oneItem, $mainItem, $itemPrice) {
+    function getBillDesignerDetails($oneItem, $mainItem, $itemPrice)
+    {
         $details = [];
         if ($oneItem) {
             $details['merchant'] = $this->getBillOwnerDetails($mainItem);
@@ -135,7 +146,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $details;
     }
 
-    private function getBillOwnerDetails($mainItem) {
+    private function getBillOwnerDetails($mainItem)
+    {
         $return = [];
         $owner = \OlaHub\UserPortal\Models\Designer::where("id", $mainItem->designer_id)->first();
         if ($owner) {
@@ -147,7 +159,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillDesignerCategoryDetails($mainItem) {
+    private function getBillDesignerCategoryDetails($mainItem)
+    {
         $return = [];
         $category = \OlaHub\UserPortal\Models\ItemCategory::where("id", $mainItem->item_parent_category_id)->first();
         $subCategory = \OlaHub\UserPortal\Models\ItemCategory::where("id", $mainItem->item_sub_category_id)->first();
@@ -160,7 +173,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillDesignerClassifcationDetails($mainItem) {
+    private function getBillDesignerClassifcationDetails($mainItem)
+    {
         $return = [];
         $classification = \OlaHub\UserPortal\Models\Classification::where("id", $mainItem->item_classification_id)->first();
         if ($classification) {
@@ -170,7 +184,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillDesignerOccasionsDetails($mainItem) {
+    private function getBillDesignerOccasionsDetails($mainItem)
+    {
         $return = [];
         if (is_array($mainItem->item_occasion_ids) && count($mainItem->item_occasion_ids) > 0) {
             $occasions = \OlaHub\UserPortal\Models\Occasion::withoutGlobalScope("country")->whereIn("id", $mainItem->item_occasion_ids)->get();
@@ -184,7 +199,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    private function getBillDesignerAttributesDetails($oneItem) {
+    private function getBillDesignerAttributesDetails($oneItem)
+    {
         $return = [];
         if (isset($oneItem->item_attr) && is_array($oneItem->item_attr) && count($oneItem->item_attr)) {
             $valuesData = \OlaHub\UserPortal\Models\AttrValue::whereIn("id", $oneItem->item_attr)->get();
@@ -199,7 +215,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    static function groupBillMerchants($billDetails) {
+    static function groupBillMerchants($billDetails, $toDelete = true)
+    {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Payment for group bill merchants", "action_startData" => $billDetails]);
         $return = [
             'voucher' => 0,
@@ -243,11 +260,11 @@ class PaymentHelper extends OlaHubCommonHelper {
                             'fromPickupRegion' => isset($pickup->region) ? $pickup->region : '',
                             'fromPickupZipCode' => isset($pickup->zip_code) ? $pickup->zip_code : '',
                             'fromPickupID' => isset($pickup->id) ? $pickup->id : 0,
-                            'itemCustomImage' => isset($customItem ["image"]) ? $customItem ["image"] : '',
+                            'itemCustomImage' => isset($customItem["image"]) ? $customItem["image"] : '',
                             'itemCustomText' => isset($customItem["text"]) ? $customItem["text"] : '',
                         ];
-
-                        $itemStorePickup->quantity -= $item->quantity;
+                        if ($toDelete)
+                            $itemStorePickup->quantity -= $item->quantity;
                         $itemStorePickup->save();
                         $details['pickup'] = [
                             "id" => $itemStorePickup->id,
@@ -277,8 +294,8 @@ class PaymentHelper extends OlaHubCommonHelper {
                         if ($item->customize_data != null) {
                             $customItem = unserialize($item->customize_data);
                         }
-                        $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price);
-                        $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price * $item->quantity);
+                        $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price, true, $designer->country_id);
+                        $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price * $item->quantity, true, $designer->country_id);
                         $return[$item->store_id]['items'][] = [
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
@@ -291,7 +308,7 @@ class PaymentHelper extends OlaHubCommonHelper {
                             'fromPickupRegion' => '',
                             'fromPickupZipCode' => '',
                             'fromPickupID' => 0,
-                            'itemCustomImage' => isset($customItem ["image"]) ? $customItem ["image"] : '',
+                            'itemCustomImage' => isset($customItem["image"]) ? $customItem["image"] : '',
                             'itemCustomText' => isset($customItem["text"]) ? $customItem["text"] : '',
                         ];
                     }
@@ -302,7 +319,8 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    static function groupBillMerchantForCancelRefund($item) {
+    static function groupBillMerchantForCancelRefund($item)
+    {
         $return = "";
         $details = unserialize($item->item_details);
         $itemStorePickup = \OlaHub\UserPortal\Models\ItemPickuAddr::where("id", $item->from_pickup_id)->first();
@@ -332,7 +350,7 @@ class PaymentHelper extends OlaHubCommonHelper {
                 'fromPickupRegion' => isset($pickup->region) ? $pickup->region : '',
                 'fromPickupZipCode' => isset($pickup->zip_code) ? $pickup->zip_code : '',
                 'fromPickupID' => isset($pickup->id) ? $pickup->id : 0,
-                'itemCustomImage' => isset($customItem ["image"]) ? $customItem ["image"] : '',
+                'itemCustomImage' => isset($customItem["image"]) ? $customItem["image"] : '',
                 'itemCustomText' => isset($customItem["text"]) ? $customItem["text"] : '',
             ];
 
@@ -342,22 +360,24 @@ class PaymentHelper extends OlaHubCommonHelper {
         return $return;
     }
 
-    static function getPickubAddressDetails($details) {
+    static function getPickubAddressDetails($details)
+    {
         return \OlaHub\UserPortal\Models\ItemPickuAddr::where('item_id', $details['id'])
-                        ->whereHas('storeData', function($q) use($details) {
-                            $q->where('merchant_id', $details['merchant']['id']);
-                        })
-                        ->orderBy('quantity', 'DESC')
-                        ->first();
+            ->whereHas('storeData', function ($q) use ($details) {
+                $q->where('merchant_id', $details['merchant']['id']);
+            })
+            ->orderBy('quantity', 'DESC')
+            ->first();
     }
 
-    function sendSellersNewOrdersNotifications($fcmTokens) {
+    function sendSellersNewOrdersNotifications($fcmTokens)
+    {
         $optionBuilder = new OptionsBuilder();
         $optionBuilder->setTimeToLive(60 * 20);
 
         $notificationBuilder = new PayloadNotificationBuilder('New Order');
         $notificationBuilder->setBody('You have got new orders')
-                ->setSound('default');
+            ->setSound('default');
 
         $dataBuilder = new PayloadDataBuilder();
         $dataBuilder->addData(['a_data' => 'my_data']);
@@ -368,7 +388,7 @@ class PaymentHelper extends OlaHubCommonHelper {
 
         // You must change it to get your tokens
         $tokens = $fcmTokens;
-/*
+        /*
         $downstreamResponse = FCM::sendTo($tokens, $option, $notification, $data);
 
         $downstreamResponse->numberSuccess();
@@ -388,5 +408,4 @@ class PaymentHelper extends OlaHubCommonHelper {
         $downstreamResponse->tokensWithError();
         */
     }
-
 }

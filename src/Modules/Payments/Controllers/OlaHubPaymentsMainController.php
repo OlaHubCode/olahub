@@ -89,11 +89,6 @@ class OlaHubPaymentsMainController extends BaseController
             $this->return['shippingAddress'] = [];
         }
 
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id);
-        $shippingFees += \OlaHub\UserPortal\Models\Cart::checkDesignersShipping($this->cart, $shippingFees);
-
-        $this->return['shippingFees'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($shippingFees);
-
         return response($this->return, 200);
     }
 
@@ -326,9 +321,11 @@ class OlaHubPaymentsMainController extends BaseController
                     if ($itemPrice['productHasDiscount']) {
                         $price = $itemPrice['productDiscountedPrice'];
                         $originalPrice = $oneItem->price;
+                        $exchangedPrice = $itemPrice['productDiscountedPrice'];
                     } else {
                         $price = $oneItem->price;
                         $originalPrice = $oneItem->price;
+                        $exchangedPrice = $oneItem->price;
                     }
                     $billingDetails->billing_id = $this->billing->id;
                     $billingDetails->item_name = $oneItem->name;
@@ -338,6 +335,7 @@ class OlaHubPaymentsMainController extends BaseController
                     $billingDetails->item_details = serialize($details);
                     $billingDetails->item_price = $price;
                     $billingDetails->item_original_price = $originalPrice;
+                    $billingDetails->country_paid = $exchangedPrice;
                     $billingDetails->from_sale = $itemPrice['productHasDiscount'] ? 1 : 0;
                     $billingDetails->quantity = $this->cartItem->quantity;
                     $billingDetails->customize_data = $this->cartItem->customize_data;
@@ -372,10 +370,11 @@ class OlaHubPaymentsMainController extends BaseController
                             $price = $itemPrice['productDiscountedPrice'];
                             $originalPrice = $itemDes->item_price;
                         } else {
-                            // $price = $itemPrice['productPrice'];
                             $price = $itemDes->item_price;
                             $originalPrice = $itemDes->item_price;
                         }
+                        $exchangedPrice = $itemPrice['productPrice'];
+
                         $billingDetails->billing_id = $this->billing->id;
                         $billingDetails->item_name = $mainItem->item_title;
                         $image = isset($itemDes->item_image) ? $itemDes->item_image : (isset($mainItem->item_images) ? $mainItem->item_images : false);
@@ -384,6 +383,7 @@ class OlaHubPaymentsMainController extends BaseController
                         $billingDetails->item_details = serialize($details);
                         $billingDetails->item_price = $price;
                         $billingDetails->item_original_price = $originalPrice;
+                        $billingDetails->country_paid = $exchangedPrice;
                         $billingDetails->from_sale = $itemPrice['productHasDiscount'] ? 1 : 0;
                         $billingDetails->quantity = $this->cartItem->quantity;
                         $billingDetails->customize_data = $this->cartItem->customize_data;
@@ -464,7 +464,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->billing->user_id = app('session')->get('tempID');
             $this->billing->pay_for = $this->cart->celebration_id > 0 ? $this->cart->celebration_id : 0;
             $this->billing->calendar_id = $this->cart->calendar_id > 0 ? $this->cart->calendar_id : 0;
-            $this->billing->billing_currency = $this->currency->code;
+            $this->billing->billing_currency = json_decode($this->currency->code)->en;
         } else {
             $billingNum = $this->billing->billing_number;
         }
@@ -484,6 +484,7 @@ class OlaHubPaymentsMainController extends BaseController
         $this->billing->gift_date = $this->typeID == 2 && isset($this->requestData['billGiftDate']) ? $this->requestData['billGiftDate'] : null;
         $this->billing->billing_total = $this->total;
         $this->billing->shipping_fees = $this->shippingFees;
+        $this->billing->shipment_details = $this->cart->shipment_details;
         $this->billing->billing_fees = $this->cashOnDeliver;
         // $this->billing->billing_fees = $this->shippingFees + $this->cashOnDeliver;
         $this->billing->voucher_used = $this->voucherUsed > 0 && $this->pointsUsedCurr > 0 ? ($this->voucherUsed - $this->pointsUsedCurr) : $this->voucherUsed;
@@ -604,7 +605,7 @@ class OlaHubPaymentsMainController extends BaseController
         }
         if (!empty(app('session')->get('tempData')->email)) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
-        } 
+        }
         if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
         }
