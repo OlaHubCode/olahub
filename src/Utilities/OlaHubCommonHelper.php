@@ -701,8 +701,11 @@ abstract class OlaHubCommonHelper
         $payBy = explode("_", $payByData);
         if ($bill->voucher_used > 0) {
             $return["paidBy"] .= "Voucher";
-            $return["orderPayVoucher"] = $bill->voucher_used;
+            $return["orderPayVoucher"] = number_format($bill->voucher_used + $bill->points_used_curr, 2);
             $return["orderVoucherAfterPay"] = $bill->voucher_after_pay;
+        }
+        if ($bill->promo_code_saved > 0) {
+            $return["orderPromoSave"] = number_format($bill->promo_code_saved, 2);
         }
         if ($bill->voucher_used != $bill->billing_total) {
             foreach ($payBy as $payType) {
@@ -714,7 +717,7 @@ abstract class OlaHubCommonHelper
                         }
                         $return["orderPayByGate"] = OlaHubCommonHelper::returnCurrentLangField($payData, "name");
                         $return["paidBy"] .= OlaHubCommonHelper::returnCurrentLangField($payData, "name");
-                        $return["orderPayByGateAmount"] = number_format($bill->billing_total - $bill->voucher_used, 2);
+                        $return["orderPayByGateAmount"] = number_format($bill->billing_total - $bill->voucher_used - $bill->points_used_curr, 2);
                     }
                 }
             }

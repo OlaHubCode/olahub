@@ -401,10 +401,10 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End set user country"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response([
-            'status' => true, 
-            'country' => strtolower($country->two_letter_iso_code), 
-            'country_id' => $country->id, 
-            'countryName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name'), 
+            'status' => true,
+            'country' => strtolower($country->two_letter_iso_code),
+            'country_id' => $country->id,
+            'countryName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name'),
             'code' => 200
         ], 200);
     }
@@ -895,7 +895,14 @@ class OlaHubGeneralController extends BaseController
         $all = [];
         $upcoming = [];
         $user = \OlaHub\UserPortal\Models\UserMongo::find(app('session')->get('tempID'));
+        $userInfo = NULL;
         if ($user) {
+            $userInfo = [
+                'user_id' => $user->user_id,
+                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->avatar_url),
+                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($user, 'profile_url', $user->username, '.'),
+                'username' => $user->username,
+            ];
             $friends = is_array($user->friends) ? $user->friends : [];
             if (count($friends) > 0) {
                 $friendsCalendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn('user_id', $friends)->where('calender_date', "<=", date("Y-m-d H:i:s", strtotime("+7 days")))->where('calender_date', ">", date("Y-m-d H:i:s"))->orderBy('calender_date', 'desc')->get();
@@ -933,12 +940,11 @@ class OlaHubGeneralController extends BaseController
                     ->where('gift_for', app('session')->get('tempID'))
                     ->where('gift_date', $now)
                     ->update(["seen" => 1]);
-           }
+            }
             //posts
             try {
-                $currentCountryID = (int) app('session')->get('def_country')->id;
                 $friends[] = (int) app('session')->get('tempID');
-                $posts = \OlaHub\UserPortal\Models\Post::where(function ($q) use ($currentCountryID, $friends) {
+                $posts = \OlaHub\UserPortal\Models\Post::where(function ($q) use ($friends) {
                     $q->where(function ($userPost) use ($friends) {
                         $userPost->whereIn('user_id', $friends);
                         $userPost->where('friend_id', NULL);
@@ -946,461 +952,12 @@ class OlaHubGeneralController extends BaseController
                     $q->orWhere(function ($userPost) use ($friends) {
                         $userPost->where('friend_id', (int) app('session')->get('tempID'));
                     });
-                    $q->orWhere(function ($storePosts) use ($currentCountryID) {
-                        $storePosts->whereNull('user_id');
-                        $storePosts->where('country_id', $currentCountryID);
-                        // $storePosts->orWhere('country', $currentCountryID);
-                    });
                 })->orderBy('created_at', 'desc')->whereNull('group_id')->paginate(20);
 
                 if ($posts->count() > 0) {
                     foreach ($posts as $post) {
                         if ($post->type) {
                             switch ($post->type) {
-                                case 'store_post':
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            $likerData[] = [
-                                                'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
-                                            ];
-                                        }
-                                    }
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $timeline[] = [
-                                        'type' => 'merchant',
-                                        'post' => isset($post->_id) ? $post->_id : 0,
-                                        'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                        'comments' => [],
-                                        'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                        'liked' => $liked,
-                                        'likersData' => $likerData,
-                                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                        'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                        'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                        'user_info' => [
-                                            'user_id' => $author->id,
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                            'username' => $authorName,
-                                        ]
-                                    ];
-                                    break;
-                                case 'designer_post':
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            $likerData[] = [
-                                                'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
-                                            ];
-                                        }
-                                    }
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $timeline[] = [
-                                        'type' => 'designer',
-                                        'post' => isset($post->_id) ? $post->_id : 0,
-                                        'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                        'comments' => [],
-                                        'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                        'liked' => $liked,
-                                        'likersData' => $likerData,
-                                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                        'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                        'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                        'user_info' => [
-                                            'user_id' => $author->id,
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                            'username' => $authorName,
-                                        ]
-                                    ];
-                                    break;
-                                case 'item_post':
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    $friendslikerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            if (in_array($like, $friends)) {
-                                                $friendslikerData[] = [
-                                                    'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'likerName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $likerData[] = [
-                                                    'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'likerName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $wishlists = isset($post->wishlists) && is_array($post->wishlists) ? $post->wishlists : [];
-                                    $wishlistsData = [];
-                                    $friendsWishlistsData = [];
-                                    foreach ($wishlists as $wishlist) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
-                                        if ($userData) {
-                                            if (in_array($wishlist, $friends)) {
-                                                $friendsWishlistsData[] = [
-                                                    'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $wishlistsData[] = [
-                                                    'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $shares = isset($post->shares) && is_array($post->shares) ? $post->shares : [];
-                                    $shareData = [];
-                                    $friendsShareData = [];
-                                    foreach ($shares as $share) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
-                                        if ($userData) {
-                                            if (in_array($share, $friends)) {
-                                                $friendsShareData[] = [
-                                                    'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'shareUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $shareData[] = [
-                                                    'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'shareUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $timeline[] = [
-                                        'type' => 'item',
-                                        'post' => isset($post->_id) ? $post->_id : 0,
-                                        'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                        'comments' => [],
-                                        'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                        'liked' => $liked,
-                                        'likersData' => $likerData,
-                                        'friendsLikerData' => $friendslikerData,
-                                        'shareData' => $shareData,
-                                        'friendsShareData' => $friendsShareData,
-                                        'wishlistsData' => $wishlistsData,
-                                        'friendsWishlistsData' => $friendsWishlistsData,
-                                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                        'item_slug' => isset($post->item_slug) ? $post->item_slug : NULL,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($post->post_image) ? $post->post_image : false)),
-                                        'item_title' => isset($post->item_name) ? $post->item_name : NULL,
-                                        'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
-                                        'merchant_info' => [
-                                            'type' => 'brand',
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                            'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                            'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                        ],
-                                        'user_info' => [
-                                            'user_id' => $author->id,
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                            'username' => $authorName,
-                                        ]
-                                    ];
-                                    break;
-                                case 'designer_item_post':
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    $friendslikerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            if (in_array($like, $friends)) {
-                                                $friendslikerData[] = [
-                                                    'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'likerName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $likerData[] = [
-                                                    'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'likerName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $wishlists = isset($post->wishlists) && is_array($post->wishlists) ? $post->wishlists : [];
-                                    $wishlistsData = [];
-                                    $friendsWishlistsData = [];
-                                    foreach ($wishlists as $wishlist) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
-                                        if ($userData) {
-                                            if (in_array($wishlist, $friends)) {
-                                                $friendsWishlistsData[] = [
-                                                    'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $wishlistsData[] = [
-                                                    'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $shares = isset($post->shares) && is_array($post->shares) ? $post->shares : [];
-                                    $shareData = [];
-                                    $friendsShareData = [];
-                                    foreach ($shares as $share) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
-                                        if ($userData) {
-                                            if (in_array($share, $friends)) {
-                                                $friendsShareData[] = [
-                                                    'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'shareUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            } else {
-                                                $shareData[] = [
-                                                    'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                    'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                                                    'shareUserName' => isset($userData->username) ? $userData->username : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $timeline[] = [
-                                        'type' => 'designer_item',
-                                        'post' => isset($post->_id) ? $post->_id : 0,
-                                        'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                        'comments' => [],
-                                        'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                        'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                        'liked' => $liked,
-                                        'likersData' => $likerData,
-                                        'friendsLikerData' => $friendslikerData,
-                                        'shareData' => $shareData,
-                                        'friendsShareData' => $friendsShareData,
-                                        'wishlistsData' => $wishlistsData,
-                                        'friendsWishlistsData' => $friendsWishlistsData,
-                                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                        'item_slug' => isset($post->item_slug) ? $post->item_slug : NULL,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($post->post_image) ? $post->post_image : false)),
-                                        'item_title' => isset($post->item_name) ? $post->item_name : NULL,
-                                        'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
-                                        'merchant_info' => [
-                                            'type' => 'designer',
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                            'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                            'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                        ],
-                                        'user_info' => [
-                                            'user_id' => $author->id,
-                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                            'username' => $authorName,
-                                        ]
-                                    ];
-                                    break;
-                                case 'multi_item_post':
-                                    $items = [];
-                                    if ($post->items && is_array($post->items)) {
-                                        foreach ($post->items as $item) {
-                                            if (isset($item['item_image']) && $item['item_image']) {
-                                                $items[] = [
-                                                    'item_slug' => isset($item['item_slug']) ? $item['item_slug'] : NULL,
-                                                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($item['item_image']) ? $item['item_image'] : false)),
-                                                    'item_title' => isset($item['item_name']) ? $item['item_name'] : NULL,
-                                                    'item_desc' => isset($item['item_description']) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item['item_description'], 10) : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            $likerData[] = [
-                                                'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
-                                            ];
-                                        }
-                                    }
-
-
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $merchantIndex = $this->getMerchantIndexFromSlug($timeline, $post->store_slug);
-                                    if ($merchantIndex === false) {
-                                        $timeline[] = [
-                                            'type' => 'multi_item',
-                                            'post' => isset($post->_id) ? $post->_id : 0,
-                                            'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                            'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                            'comments' => [],
-                                            'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                            'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                            'liked' => $liked,
-                                            'likersData' => $likerData,
-                                            'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                            'items' => $items,
-                                            'merchant_info' => [
-                                                'type' => 'brand',
-                                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                                'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                                'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                            ],
-                                            'user_info' => [
-                                                'user_id' => $author->id,
-                                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                                'username' => $authorName,
-                                            ]
-                                        ];
-                                    } else {
-                                        $timeLineMerchant = $timeline[$merchantIndex];
-                                        $oldItems = $timeLineMerchant["items"];
-                                        if (is_array($oldItems) && count($oldItems) > 0) {
-                                            foreach ($items as $oneItem) {
-                                                if (count($oldItems) >= 26) break;
-                                                $oldItems[] = $oneItem;
-                                            }
-                                            $timeline[$merchantIndex]["items"] = $oldItems;
-                                        }
-                                    }
-
-                                    break;
-                                case 'designer_multi_item_post':
-                                    $items = [];
-                                    if ($post->items && is_array($post->items)) {
-                                        foreach ($post->items as $item) {
-                                            if (isset($item['item_image']) && $item['item_image']) {
-                                                $items[] = [
-                                                    'item_slug' => isset($item['item_slug']) ? $item['item_slug'] : NULL,
-                                                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($item['item_image']) ? $item['item_image'] : false)),
-                                                    'item_title' => isset($item['item_name']) ? $item['item_name'] : NULL,
-                                                    'item_desc' => isset($item['item_description']) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item['item_description'], 10) : NULL,
-                                                ];
-                                            }
-                                        }
-                                    }
-
-                                    $liked = 0;
-                                    if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-                                        $liked = 1;
-                                    }
-
-                                    $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
-                                    $likerData = [];
-                                    foreach ($likes as $like) {
-                                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                                        if ($userData) {
-                                            $likerData[] = [
-                                                'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                                'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
-                                            ];
-                                        }
-                                    }
-
-
-                                    $author = app('session')->get('tempData');
-                                    $authorName = "$author->first_name $author->last_name";
-                                    $merchantIndex = $this->getMerchantIndexFromSlug($timeline, $post->store_slug);
-                                    if ($merchantIndex === false) {
-                                        $timeline[] = [
-                                            'type' => 'designer_multi_item',
-                                            'post' => isset($post->_id) ? $post->_id : 0,
-                                            'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
-                                            'comments_count' => isset($post->comments) ? count($post->comments) : 0,
-                                            'comments' => [],
-                                            'shares_count' => isset($post->shares) ? count($post->shares) : 0,
-                                            'likers_count' => isset($post->likes) ? count($post->likes) : 0,
-                                            'liked' => $liked,
-                                            'likersData' => $likerData,
-                                            'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
-                                            'items' => $items,
-                                            'merchant_info' => [
-                                                'type' => 'designer',
-                                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
-                                                'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
-                                                'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
-                                            ],
-                                            'user_info' => [
-                                                'user_id' => $author->id,
-                                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                                'username' => $authorName,
-                                            ]
-                                        ];
-                                    } else {
-                                        $timeLineMerchant = $timeline[$merchantIndex];
-                                        $oldItems = $timeLineMerchant["items"];
-                                        if (is_array($oldItems) && count($oldItems) > 0) {
-                                            foreach ($items as $oneItem) {
-                                                if (count($oldItems) >= 26) break;
-                                                $oldItems[] = $oneItem;
-                                            }
-                                            $timeline[$merchantIndex]["items"] = $oldItems;
-                                        }
-                                    }
-
-                                    break;
                                 case 'post':
                                     $author = \OlaHub\UserPortal\Models\UserModel::find($post->user_id);
                                     $friend = \OlaHub\UserPortal\Models\UserModel::find($post->friend_id);
@@ -1479,120 +1036,531 @@ class OlaHubGeneralController extends BaseController
                 }
             } catch (Exception $ex) {
             }
-        }
 
+            //celebration
+            $celebrations = [];
+            try {
+                $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->get();
 
-
-
-        //celebration
-        $celebrations = [];
-        try {
-            $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->get();
-
-            if ($participants->count() > 0) {
-                foreach ($participants as $participant) {
-                    $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->where('created_at', ">=", date("Y-m-d H:i:s", strtotime("-7 days")))->orderBy('created_at', 'desc')->get();
-                    // $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->orderBy('created_at', 'DESC')->paginate(5);
-                    $type = '';
-                    if ($celebrationContents->count() > 0) {
-                        foreach ($celebrationContents as $celebrationContent) {
-                            $contentOwner = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('id', $celebrationContent->created_by)->first();
-                            $author = \OlaHub\UserPortal\Models\UserModel::where('id', $contentOwner->user_id)->first();
-                            if ($contentOwner && $author) {
-                                $authorName = "$author->first_name $author->last_name";
-                                $explodedData = explode('.', $celebrationContent->reference);
-                                $extension = end($explodedData);
-                                if (in_array(strtolower($extension), VIDEO_EXT)) {
-                                    $type = 'video';
-                                } elseif (in_array($extension, IMAGE_EXT)) {
-                                    $type = 'image';
+                if ($participants->count() > 0) {
+                    foreach ($participants as $participant) {
+                        $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->where('created_at', ">=", date("Y-m-d H:i:s", strtotime("-7 days")))->orderBy('created_at', 'desc')->get();
+                        // $celebrationContents = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('celebration_id', $participant->celebration_id)->orderBy('created_at', 'DESC')->paginate(5);
+                        $type = '';
+                        if ($celebrationContents->count() > 0) {
+                            foreach ($celebrationContents as $celebrationContent) {
+                                $contentOwner = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('id', $celebrationContent->created_by)->first();
+                                $author = \OlaHub\UserPortal\Models\UserModel::where('id', $contentOwner->user_id)->first();
+                                if ($contentOwner && $author) {
+                                    $authorName = "$author->first_name $author->last_name";
+                                    $explodedData = explode('.', $celebrationContent->reference);
+                                    $extension = end($explodedData);
+                                    if (in_array(strtolower($extension), VIDEO_EXT)) {
+                                        $type = 'video';
+                                    } elseif (in_array($extension, IMAGE_EXT)) {
+                                        $type = 'image';
+                                    }
+                                    $celebrations[] = [
+                                        "type" => 'celebration',
+                                        "id" => $celebrationContent->celebration_id,
+                                        "mediaType" => $type,
+                                        "content" => isset($celebrationContent->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($celebrationContent->reference) : NULL,
+                                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($celebrationContent->created_at),
+                                        'user_info' => [
+                                            'user_id' => $author->id,
+                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+                                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
+                                            'username' => $authorName,
+                                        ]
+                                    ];
                                 }
-                                $celebrations[] = [
-                                    "type" => 'celebration',
-                                    "id" => $celebrationContent->celebration_id,
-                                    "mediaType" => $type,
-                                    "content" => isset($celebrationContent->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($celebrationContent->reference) : NULL,
-                                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($celebrationContent->created_at),
-                                    'user_info' => [
-                                        'user_id' => $author->id,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                        'username' => $authorName,
-                                    ]
-                                ];
                             }
                         }
                     }
                 }
+            } catch (Exception $ex) {
             }
-        } catch (Exception $ex) {
-        }
 
-
-
-
-        try {
-            $groupPosts = \OlaHub\UserPortal\Models\Post::where('user_id', (int) app('session')->get('tempID'))->where('isApprove', 1)->whereNotNull('group_id')->orderBy('created_at', 'desc')->paginate(5);
-            $type = '';
-            if ($groupPosts->count() > 0) {
-                foreach ($groupPosts as $groupPost) {
-                    $author = \OlaHub\UserPortal\Models\UserModel::where('id', $groupPost->user_id)->first();
-                    if ($author) {
-                        $authorName = "$author->first_name $author->last_name";
-                        $liked = 0;
-                        if (is_array($groupPost->likes) && in_array(app('session')->get('tempID'), $groupPost->likes)) {
-                            $liked = 1;
-                        }
-                        $likes = isset($groupPost->likes) && is_array($groupPost->likes) ? $groupPost->likes : [];
-                        $likerData = [];
-                        foreach ($likes as $like) {
-                            $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
-                            if ($userData) {
-                                $likerData[] = [
-                                    'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                                    'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
-                                ];
+            // group posts
+            try {
+                $groupPosts = \OlaHub\UserPortal\Models\Post::where('user_id', (int) app('session')->get('tempID'))->where('isApprove', 1)->whereNotNull('group_id')->orderBy('created_at', 'desc')->paginate(5);
+                $type = '';
+                if ($groupPosts->count() > 0) {
+                    foreach ($groupPosts as $groupPost) {
+                        $author = \OlaHub\UserPortal\Models\UserModel::where('id', $groupPost->user_id)->first();
+                        if ($author) {
+                            $authorName = "$author->first_name $author->last_name";
+                            $liked = 0;
+                            if (is_array($groupPost->likes) && in_array(app('session')->get('tempID'), $groupPost->likes)) {
+                                $liked = 1;
                             }
+                            $likes = isset($groupPost->likes) && is_array($groupPost->likes) ? $groupPost->likes : [];
+                            $likerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    $likerData[] = [
+                                        'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                                    ];
+                                }
+                            }
+                            $timeline[] = [
+                                "type" => 'group',
+                                'post' => isset($groupPost->_id) ? $groupPost->_id : 0,
+                                'color' => isset($post->color) ? $post->color : NULL,
+                                'total_share_count' => isset($groupPost->shares) ? count($groupPost->shares) : 0,
+                                'comments_count' => isset($groupPost->comments) ? count($groupPost->comments) : 0,
+                                'comments' => [],
+                                'shares_count' => isset($groupPost->shares) ? count($groupPost->shares) : 0,
+                                'likers_count' => isset($groupPost->likes) ? count($groupPost->likes) : 0,
+                                'liked' => $liked,
+                                'likersData' => $likerData,
+                                'post_img' => $groupPost->post_image ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($groupPost->post_image) : null,
+                                'post_video' => $groupPost->post_video ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($groupPost->post_video) : null,
+                                'subject' => isset($groupPost->subject) ? $groupPost->subject : NULL,
+                                'content' => isset($groupPost->post) ? $groupPost->post : NULL,
+                                "group_id" => isset($groupPost->group_id) ? $groupPost->group_id : NULL,
+                                "groupName" => isset($groupPost->group_title) ? $groupPost->group_title : NULL,
+                                'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($groupPost->created_at),
+                                'user_info' => [
+                                    'user_id' => $author->id,
+                                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+                                    'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
+                                    'username' => $authorName,
+                                ]
+                            ];
                         }
-                        $timeline[] = [
-                            "type" => 'group',
-                            'post' => isset($groupPost->_id) ? $groupPost->_id : 0,
-                            'color' => isset($post->color) ? $post->color : NULL,
-                            'total_share_count' => isset($groupPost->shares) ? count($groupPost->shares) : 0,
-                            'comments_count' => isset($groupPost->comments) ? count($groupPost->comments) : 0,
-                            'comments' => [],
-                            'shares_count' => isset($groupPost->shares) ? count($groupPost->shares) : 0,
-                            'likers_count' => isset($groupPost->likes) ? count($groupPost->likes) : 0,
-                            'liked' => $liked,
-                            'likersData' => $likerData,
-                            'post_img' => $groupPost->post_image ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($groupPost->post_image) : null,
-                            'post_video' => $groupPost->post_video ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($groupPost->post_video) : null,
-                            'subject' => isset($groupPost->subject) ? $groupPost->subject : NULL,
-                            'content' => isset($groupPost->post) ? $groupPost->post : NULL,
-                            "group_id" => isset($groupPost->group_id) ? $groupPost->group_id : NULL,
-                            "groupName" => isset($groupPost->group_title) ? $groupPost->group_title : NULL,
-                            'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($groupPost->created_at),
-                            'user_info' => [
-                                'user_id' => $author->id,
-                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                                'username' => $authorName,
-                            ]
-                        ];
+                    }
+                }
+            } catch (Exception $ex) {
+            }
+        }
+        // items
+        $currentCountryID = (int) app('session')->get('def_country')->id;
+        $posts = \OlaHub\UserPortal\Models\Post::where(function ($q) use ($currentCountryID) {
+            $q->orWhere(function ($storePosts) use ($currentCountryID) {
+                $storePosts->whereNull('user_id');
+                $storePosts->where('country_id', $currentCountryID);
+            });
+        })->orderBy('created_at', 'desc')->whereNull('group_id')->paginate(30);
+
+        if ($posts->count() > 0) {
+            foreach ($posts as $post) {
+                if ($post->type) {
+                    switch ($post->type) {
+                        case 'store_post':
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    $likerData[] = [
+                                        'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                                    ];
+                                }
+                            }
+                            $timeline[] = [
+                                'type' => 'merchant',
+                                'post' => isset($post->_id) ? $post->_id : 0,
+                                'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                'comments' => [],
+                                'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                'liked' => $liked,
+                                'likersData' => $likerData,
+                                'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                'user_info' => $userInfo
+                            ];
+                            break;
+                        case 'designer_post':
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    $likerData[] = [
+                                        'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                                    ];
+                                }
+                            }
+                            $timeline[] = [
+                                'type' => 'designer',
+                                'post' => isset($post->_id) ? $post->_id : 0,
+                                'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                'comments' => [],
+                                'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                'liked' => $liked,
+                                'likersData' => $likerData,
+                                'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                'user_info' => $userInfo
+                            ];
+                            break;
+                        case 'item_post':
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            $friendslikerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    if (in_array($like, $friends)) {
+                                        $friendslikerData[] = [
+                                            'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'likerName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $likerData[] = [
+                                            'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'likerName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $wishlists = isset($post->wishlists) && is_array($post->wishlists) ? $post->wishlists : [];
+                            $wishlistsData = [];
+                            $friendsWishlistsData = [];
+                            foreach ($wishlists as $wishlist) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
+                                if ($userData) {
+                                    if (in_array($wishlist, $friends)) {
+                                        $friendsWishlistsData[] = [
+                                            'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $wishlistsData[] = [
+                                            'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $shares = isset($post->shares) && is_array($post->shares) ? $post->shares : [];
+                            $shareData = [];
+                            $friendsShareData = [];
+                            foreach ($shares as $share) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
+                                if ($userData) {
+                                    if (in_array($share, $friends)) {
+                                        $friendsShareData[] = [
+                                            'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'shareUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $shareData[] = [
+                                            'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'shareUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $timeline[] = [
+                                'type' => 'item',
+                                'post' => isset($post->_id) ? $post->_id : 0,
+                                'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                'comments' => [],
+                                'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                'liked' => $liked,
+                                'likersData' => $likerData,
+                                'friendsLikerData' => $friendslikerData,
+                                'shareData' => $shareData,
+                                'friendsShareData' => $friendsShareData,
+                                'wishlistsData' => $wishlistsData,
+                                'friendsWishlistsData' => $friendsWishlistsData,
+                                'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                'item_slug' => isset($post->item_slug) ? $post->item_slug : NULL,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($post->post_image) ? $post->post_image : false)),
+                                'item_title' => isset($post->item_name) ? $post->item_name : NULL,
+                                'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
+                                'merchant_info' => [
+                                    'type' => 'brand',
+                                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                    'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                    'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                ],
+                                'user_info' => $userInfo
+                            ];
+                            break;
+                        case 'designer_item_post':
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            $friendslikerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    if (in_array($like, $friends)) {
+                                        $friendslikerData[] = [
+                                            'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'likerName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $likerData[] = [
+                                            'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'likerName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $wishlists = isset($post->wishlists) && is_array($post->wishlists) ? $post->wishlists : [];
+                            $wishlistsData = [];
+                            $friendsWishlistsData = [];
+                            foreach ($wishlists as $wishlist) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $wishlist)->first();
+                                if ($userData) {
+                                    if (in_array($wishlist, $friends)) {
+                                        $friendsWishlistsData[] = [
+                                            'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $wishlistsData[] = [
+                                            'wishlistUserPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'wishlistUserProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'wishlistUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $shares = isset($post->shares) && is_array($post->shares) ? $post->shares : [];
+                            $shareData = [];
+                            $friendsShareData = [];
+                            foreach ($shares as $share) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $share)->first();
+                                if ($userData) {
+                                    if (in_array($share, $friends)) {
+                                        $friendsShareData[] = [
+                                            'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'shareUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    } else {
+                                        $shareData[] = [
+                                            'sharePhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                            'shareProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                                            'shareUserName' => isset($userData->username) ? $userData->username : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $timeline[] = [
+                                'type' => 'designer_item',
+                                'post' => isset($post->_id) ? $post->_id : 0,
+                                'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                'comments' => [],
+                                'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                'liked' => $liked,
+                                'likersData' => $likerData,
+                                'friendsLikerData' => $friendslikerData,
+                                'shareData' => $shareData,
+                                'friendsShareData' => $friendsShareData,
+                                'wishlistsData' => $wishlistsData,
+                                'friendsWishlistsData' => $friendsWishlistsData,
+                                'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                'item_slug' => isset($post->item_slug) ? $post->item_slug : NULL,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($post->post_image) ? $post->post_image : false)),
+                                'item_title' => isset($post->item_name) ? $post->item_name : NULL,
+                                'item_desc' => isset($post->item_description) ? strip_tags($post->item_description) : NULL,
+                                'merchant_info' => [
+                                    'type' => 'designer',
+                                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                    'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                    'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                ],
+                                'user_info' => $userInfo
+                            ];
+                            break;
+                        case 'multi_item_post':
+                            $items = [];
+                            if ($post->items && is_array($post->items)) {
+                                foreach ($post->items as $item) {
+                                    if (isset($item['item_image']) && $item['item_image']) {
+                                        $items[] = [
+                                            'item_slug' => isset($item['item_slug']) ? $item['item_slug'] : NULL,
+                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($item['item_image']) ? $item['item_image'] : false)),
+                                            'item_title' => isset($item['item_name']) ? $item['item_name'] : NULL,
+                                            'item_desc' => isset($item['item_description']) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item['item_description'], 10) : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    $likerData[] = [
+                                        'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                                    ];
+                                }
+                            }
+
+                            $merchantIndex = $this->getMerchantIndexFromSlug($timeline, $post->store_slug);
+                            if ($merchantIndex === false) {
+                                $timeline[] = [
+                                    'type' => 'multi_item',
+                                    'post' => isset($post->_id) ? $post->_id : 0,
+                                    'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                    'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                    'comments' => [],
+                                    'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                    'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                    'liked' => $liked,
+                                    'likersData' => $likerData,
+                                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                    'items' => $items,
+                                    'merchant_info' => [
+                                        'type' => 'brand',
+                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                        'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                        'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                    ],
+                                    'user_info' => $userInfo
+                                ];
+                            } else {
+                                $timeLineMerchant = $timeline[$merchantIndex];
+                                $oldItems = $timeLineMerchant["items"];
+                                if (is_array($oldItems) && count($oldItems) > 0) {
+                                    foreach ($items as $oneItem) {
+                                        if (count($oldItems) >= 26) break;
+                                        $oldItems[] = $oneItem;
+                                    }
+                                    $timeline[$merchantIndex]["items"] = $oldItems;
+                                }
+                            }
+
+                            break;
+                        case 'designer_multi_item_post':
+                            $items = [];
+                            if ($post->items && is_array($post->items)) {
+                                foreach ($post->items as $item) {
+                                    if (isset($item['item_image']) && $item['item_image']) {
+                                        $items[] = [
+                                            'item_slug' => isset($item['item_slug']) ? $item['item_slug'] : NULL,
+                                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl((isset($item['item_image']) ? $item['item_image'] : false)),
+                                            'item_title' => isset($item['item_name']) ? $item['item_name'] : NULL,
+                                            'item_desc' => isset($item['item_description']) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item['item_description'], 10) : NULL,
+                                        ];
+                                    }
+                                }
+                            }
+
+                            $liked = 0;
+                            if (is_array($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
+                                $liked = 1;
+                            }
+
+                            $likes = isset($post->likes) && is_array($post->likes) ? $post->likes : [];
+                            $likerData = [];
+                            foreach ($likes as $like) {
+                                $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $like)->first();
+                                if ($userData) {
+                                    $likerData[] = [
+                                        'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                                    ];
+                                }
+                            }
+
+                            $merchantIndex = $this->getMerchantIndexFromSlug($timeline, $post->store_slug);
+                            if ($merchantIndex === false) {
+                                $timeline[] = [
+                                    'type' => 'designer_multi_item',
+                                    'post' => isset($post->_id) ? $post->_id : 0,
+                                    'total_share_count' => isset($post->shares) ? count($post->shares) : 0,
+                                    'comments_count' => isset($post->comments) ? count($post->comments) : 0,
+                                    'comments' => [],
+                                    'shares_count' => isset($post->shares) ? count($post->shares) : 0,
+                                    'likers_count' => isset($post->likes) ? count($post->likes) : 0,
+                                    'liked' => $liked,
+                                    'likersData' => $likerData,
+                                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($post->created_at),
+                                    'items' => $items,
+                                    'merchant_info' => [
+                                        'type' => 'designer',
+                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($post->store_logo),
+                                        'merchant_slug' => isset($post->store_slug) ? $post->store_slug : NULL,
+                                        'merchant_title' => isset($post->store_name) ? $post->store_name : NULL,
+                                    ],
+                                    'user_info' => $userInfo
+                                ];
+                            } else {
+                                $timeLineMerchant = $timeline[$merchantIndex];
+                                $oldItems = $timeLineMerchant["items"];
+                                if (is_array($oldItems) && count($oldItems) > 0) {
+                                    foreach ($items as $oneItem) {
+                                        if (count($oldItems) >= 26) break;
+                                        $oldItems[] = $oneItem;
+                                    }
+                                    $timeline[$merchantIndex]["items"] = $oldItems;
+                                }
+                            }
+
+                            break;
                     }
                 }
             }
-        } catch (Exception $ex) {
         }
-
-        // Sponsers
-        $sponsers_arr = [];
+        // Sponsors
+        $sponsors_arr = [];
         try {
             $timelinePosts = \DB::table('campaign_slot_prices')->where('country_id', app('session')->get('def_country')->id)->where('is_post', '1')->get();
             if ($timelinePosts->count() > 0) {
                 foreach ($timelinePosts as $onePost) {
-                    $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->paginate(5);
-		 foreach ($sponsers as $one) {
+                    $sponsors = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->paginate(5);
+                    foreach ($sponsors as $one) {
                         $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
                         $liked = 0;
                         if ($campaign) {
@@ -1606,7 +1574,7 @@ class OlaHubGeneralController extends BaseController
                         }
 
 
-                        $sponsers_arr[] = [
+                        $sponsors_arr[] = [
                             'type' => 'sponser',
                             "adToken" => isset($one->token) ? $one->token : NULL,
                             'updated_at' => isset($one->updated_at) ? $one->updated_at : 0,
@@ -1623,46 +1591,52 @@ class OlaHubGeneralController extends BaseController
             }
         } catch (Exception $ex) {
         }
-        // try {
-        //     $seenGifts = \OlaHub\UserPortal\Models\UserBill::where('is_gift', 1)
-        //         ->where('gift_for', app('session')->get('tempID'))
-        //         ->where('gift_date', $now)
-        //         ->where('seen', 1)
-        //         ->paginate(5);
-        //     foreach ($seenGifts as $gift) {
-        //         $gift_sender = \OlaHub\UserPortal\Models\UserModel::find($gift->user_id);
-        //         $items = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $gift->id)->get();
-        //         $seenGiftsResponse = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
-        //         $timeline[] = [
-        //             'type' => 'gift',
-        //             'gift_sender' => $gift_sender,
-        //             'message' => isset($gift->gift_message) ? $gift->gift_message : "",
-        //             'video' => isset($gift->gift_video_ref) ? $gift->gift_video_ref : "",
-        //             'items' => $seenGiftsResponse['data']
-        //         ];
-        //     }
-        // } catch (Exception $ex) {
-        // }
-        if (count($timeline) > 0) {
-            // shuffle($timeline);
 
-            $count_timeline = count($timeline);
-            $count_sponsers = count($sponsers_arr);
-            $break = ($count_sponsers - 1) > 0 ? (int) ($count_timeline / $count_sponsers - 1) : 0;
-            $start_in = 0;
-            for ($i = 0; $i < count($timeline); $i++) {
-                $all[] = $timeline[$i];
-                if ($break - 1 == $i) {
-                    $all[] = $sponsers_arr[$start_in];
-                    $start_in++;
-                    $break = $break * 2;
+        // communities
+        $communities_arr = [];
+        try {
+            $communities = \OlaHub\UserPortal\Models\groups::where('olahub_community', 1)
+                ->whereIn("countries", [app("session")->get("def_country")->id])->orderBy("total_members", "DESC")->paginate(3);
+            if ($communities->count() > 0) {
+                foreach ($communities as $one) {
+                    $communities_arr[] = [
+                        'type' => 'community',
+                        "slug" => isset($one->_id) ? $one->_id : "",
+                        "image" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->image, "community"),
+                        "cover" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->cover, "community"),
+                        "name" => isset($one->name) ? $one->name : "",
+                        "desc" => isset($one->group_desc) ? $one->group_desc : NULL,
+                    ];
                 }
             }
-
-            $return = ['status' => true, 'data' => $all, 'celebrations' => $celebrations, 'upcoming' => $upcoming, 'code' => 200];
+        } catch (Exception $ex) {
         }
-        //        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-        //        $logHelper->setLog("", $return, 'getUserTimeline', $this->userAgent);
+
+        if (count($timeline) > 0) {
+            $count_timeline = count($timeline);
+            $breakSponsor = (count($sponsors_arr) - 1) > 0 ? (int) ($count_timeline / count($sponsors_arr) - 1) : 0;
+            $breakCommunity = (count($communities_arr) - 1) > 0 ? (int) ($count_timeline / count($communities_arr) - 5) : 0;
+            $startSponsor = 0;
+            $startCommunity = 0;
+            for ($i = 0; $i < count($timeline); $i++) {
+                $all[] = $timeline[$i];
+                if ($breakSponsor - 1 == $i) {
+                    $all[] = $sponsors_arr[$startSponsor];
+                    $startSponsor++;
+                    $breakSponsor = $breakSponsor * 2;
+                }
+                if ($breakCommunity - 1 == $i) {
+                    $all[] = $communities_arr[$startCommunity];
+                    $startCommunity++;
+                    $breakCommunity = $breakCommunity * 2;
+                }
+            }
+            if (isset($celebrations))
+                $return['celebrations'] = $celebrations;
+            if (isset($upcoming))
+                $return['upcoming'] = $upcoming;
+            $return = ['status' => true, 'data' => $all, 'code' => 200];
+        }
         return response($return, 200);
     }
 

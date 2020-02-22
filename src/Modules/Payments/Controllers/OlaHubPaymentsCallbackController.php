@@ -38,7 +38,6 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         $this->getPaymentMethodDetails();
         $this->{'callback' . ucfirst($this->paymentMethodData->call_back_func)}();
         return redirect()->to($this->return);
-        // return response($this->return, 200);
     }
 
     private function getBillMainData($requestAll)

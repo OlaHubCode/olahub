@@ -34,7 +34,8 @@ class PurchasedItemsController extends BaseController
     public function getUserPurchasedItems()
     {
         $payStatusesData = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("is_success", "1")
-            ->orWhere("action_id", "255")->get();
+            ->orWhere("action_id", 0)
+            ->orWhere("action_id", 255)->get();
         $payStatusesId = [];
         foreach ($payStatusesData as $statusId) {
             $payStatusesId[] = $statusId->id;
