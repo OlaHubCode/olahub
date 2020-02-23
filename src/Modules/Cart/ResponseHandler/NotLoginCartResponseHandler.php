@@ -38,7 +38,7 @@ class NotLoginCartResponseHandler extends Fractal\TransformerAbstract {
             "productDiscountedPrice" => $itemPrice['productDiscountedPrice'],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => 1,
-            "productCurrency" => isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD"),
+            "productCurrency" => isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD"),
             "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((double) $itemFinal, false),
             "productImage" => $itemImage,
             "productOwner" => $itemOwner['productOwner'],

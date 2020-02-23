@@ -25,7 +25,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $country = \OlaHub\UserPortal\Models\Country::where('id', $this->data->country_id)->first();
-        $this->currency = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($country->currencyData->code);
+        $this->currency = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($country->currencyData);
         $payData = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPayUsed($this->data);
         $payStatus = $this->setPayStatusData();
         $this->return = [
@@ -35,10 +35,10 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             "billPaidFor" => isset($this->data->pay_for) ? $this->data->pay_for : 0,
             "celebration" => $this->setCelebration(),
             "billIsGift" => isset($this->data->is_gift) ? $this->data->is_gift : 0,
-            "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees, 2) . " " . $this->currency,
+            "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees + $this->data->promo_code_saved, 2) . " " . $this->currency,
             "billShippingFees" => isset($this->data->shipment_details) ? $this->getShipmentDetails($this->data->shipment_details) : NULL,
             "billTotal" => isset($this->data->billing_total) ? number_format($this->data->billing_total, 2) . " " . $this->currency : NULL,
-            "billFees" => isset($this->data->billing_fees) ? number_format($this->data->billing_fees, 2) . " " . $this->currency : NULL,
+            "billFees" => $this->data->billing_fees ? number_format($this->data->billing_fees, 2) . " " . $this->currency : NULL,
             "billVoucher" => isset($this->data->voucher_used) ? number_format($this->data->voucher_used, 2) . " " . $this->currency : 0,
             "billVoucherAfter" => isset($this->data->voucher_after_pay) ? number_format($this->data->voucher_after_pay, 2) . " " . $this->currency : 0,
             "orderAddress" => isset($this->data->order_address) ? unserialize($this->data->order_address) : [],
@@ -57,8 +57,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         $return = [];
         foreach ($data as $row) {
             $return[] = array(
-                'amount' => $row['amount'] . " " . $row['currency']->$lang,
-                'country' => $row['country']->$lang
+                'amount' => $row['amount'] . " " . ($lang == 'en' ? $row['currency']->code : $row['currency']->native_code),
+                'country' => ($lang == 'ar' ? $row['country']->ar : $row['country']->en)
             );
         }
         return $return;
@@ -104,11 +104,14 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
 
     private function setCelebration()
     {
-        $celebrationName = null;
+        $celebrationName = NULL;
+        $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
+        $lang = strtolower($languageArray[0]);
         if ($this->data->pay_for > 0) {
             $celebration = \OlaHub\UserPortal\Models\CelebrationModel::find($this->data->pay_for);
             if ($celebration) {
-                $celebrationName = $celebration->title;
+                $occassion = \OlaHub\UserPortal\Models\Occasion::where('id', $celebration->occassion_id)->first();
+                $celebrationName = json_decode($occassion->name)->$lang;
             }
         }
         return $celebrationName;

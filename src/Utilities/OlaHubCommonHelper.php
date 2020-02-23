@@ -328,7 +328,7 @@ abstract class OlaHubCommonHelper
         $returnPrice = number_format($price, 2, '.', '');
         // $returnPrice = number_format($price, 2,'.',',');
         if ($withCurr) {
-            $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
+            $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
             return "$returnPrice $returnCur";
         }
         return $returnPrice;
@@ -338,7 +338,7 @@ abstract class OlaHubCommonHelper
     {
         $price = (float) $itemPrice;
         $currency = $countryID ? \OlaHub\UserPortal\Models\Country::find($countryID)->currencyData : app('session')->get('def_currency');
-        $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", json_decode($currency->code)->en)->first();
+        $exchangeRate = \DB::table("currencies_exchange_rates")->where("currency_to", $currency->code)->first();
         if ($exchangeRate) {
             $newPrice = $price * $exchangeRate->exchange_rate;
             // $returnPrice = number_format($newPrice, 2);
@@ -349,7 +349,7 @@ abstract class OlaHubCommonHelper
         }
 
         if ($withCurr) {
-            $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
+            $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
             return "$returnPrice $returnCur";
         }
         return $returnPrice;
@@ -701,8 +701,11 @@ abstract class OlaHubCommonHelper
         $payBy = explode("_", $payByData);
         if ($bill->voucher_used > 0) {
             $return["paidBy"] .= "Voucher";
-            $return["orderPayVoucher"] = $bill->voucher_used;
+            $return["orderPayVoucher"] = number_format($bill->voucher_used + $bill->points_used_curr, 2);
             $return["orderVoucherAfterPay"] = $bill->voucher_after_pay;
+        }
+        if ($bill->promo_code_saved > 0) {
+            $return["orderPromoSave"] = number_format($bill->promo_code_saved, 2);
         }
         if ($bill->voucher_used != $bill->billing_total) {
             foreach ($payBy as $payType) {
@@ -714,7 +717,7 @@ abstract class OlaHubCommonHelper
                         }
                         $return["orderPayByGate"] = OlaHubCommonHelper::returnCurrentLangField($payData, "name");
                         $return["paidBy"] .= OlaHubCommonHelper::returnCurrentLangField($payData, "name");
-                        $return["orderPayByGateAmount"] = number_format($bill->billing_total - $bill->voucher_used, 2);
+                        $return["orderPayByGateAmount"] = number_format($bill->billing_total - $bill->voucher_used - $bill->points_used_curr, 2);
                     }
                 }
             }
@@ -756,12 +759,11 @@ abstract class OlaHubCommonHelper
     {
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $language = strtolower($languageArray[0]);
-        return json_decode($currency)->$language;
-        // if ($language == "ar") {
-        //     return "د.أ.";
-        // } else {
-        //     return $currency;
-        // }
+        if ($language != "en") {
+            return $currency->native_code;
+        } else {
+            return $currency->code;
+        }
     }
 
     static function checkHolidaysDatesNumber($totalDays)

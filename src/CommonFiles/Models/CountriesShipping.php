@@ -27,7 +27,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         parent::boot();
     }
 
-    static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL)
+    static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL, $celebration = NULL)
     {
         if (!$defaultCountry)
             $defaultCountry = $countryID;
@@ -36,7 +36,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         $shippingFeesTotal = 0;
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($defaultCountry);
         $currency = $country->currencyData;
-        $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code);
+        $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
 
         $shoppingItems = $cart->cartDetails()->get();
         foreach ($shoppingItems as $item) {
@@ -60,12 +60,25 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
             $countryName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($shipping, 'name');
             $key = array_search($countryName, array_column($shippingFees, 'country'));
             if ($key == false && gettype($key) == 'boolean') {
-                $amount = CurrnciesExchange::getCurrncy("USD", json_decode($currency->code)->en, $shipping->total_shipping);
+                $amount = CurrnciesExchange::getCurrncy("USD", $currency->code, $shipping->total_shipping);
+
+                if ($celebration) {
+                    $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)
+                        ->where('user_id', app('session')->get('tempID'))->first();
+                    $pp = $celebration->celebrationParticipants->count();
+                    $debt = number_format($amount / $pp, 2);
+                    $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2);
+                    if ($participant->is_creator)
+                        $amount = ($amount == ($debt * $pp) ? $debt : ($amount - ($debt * $pp)) + $debt);
+                    else
+                        $amount = $debt;
+                }
+
                 $shippingFees[] = array('country' => $countryName, 'amount' => number_format($amount, 2) . " " . $transCur);
                 $shippingFeesTotal += $amount;
                 $shippingSavings[] = array(
                     'amount' => number_format($amount, 2),
-                    'currency' => json_decode($currency->code),
+                    'currency' => $currency,
                     'country' => json_decode($shipping->name)
                 );
             }

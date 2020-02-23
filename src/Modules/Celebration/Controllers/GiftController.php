@@ -131,7 +131,7 @@ class GiftController extends BaseController
                         if (!$item) {
                             $item = $itemMain;
                         }
-                        if ($item->item_stock <= 0) {
+                        if ((int) $item->item_stock <= 0) {
                             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') . 'isOutOfStock', 'code' => 500]]);
                             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                             return response(['status' => false, 'msg' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') . 'isOutOfStock', 'code' => 500], 200);
@@ -153,8 +153,6 @@ class GiftController extends BaseController
         }
         \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->whereNotIn('id', $this->requestData['giftId'])->where('shopping_cart_id', $cart->id)->delete();
     }
-
-
 
     public function unCommitCelebration()
     {

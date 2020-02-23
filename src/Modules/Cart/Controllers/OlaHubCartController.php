@@ -374,7 +374,7 @@ class OlaHubCartController extends BaseController
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
         $countryTo = $this->celebration ? $this->celebration->country_id : ($this->cart->shipped_to ? $this->cart->shipped_to : $countryData->id);
         $defaultCountry = $this->celebration ? $this->celebration->country_id : $countryData->id;
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart);
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
         $this->cart->shipment_fees = $shippingFees['total'];
         $this->cart->shipment_details = serialize($shippingFees['saving']);
         $this->cart->country_id = $countryTo;
@@ -391,6 +391,15 @@ class OlaHubCartController extends BaseController
                 $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
             }
+            $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
+                ->where('user_id', app('session')->get('tempID'))->first();
+            $pp = $this->celebration->celebrationParticipants->count();
+            $debt = number_format($this->cart->total_price / $pp, 2);
+            $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2);
+            if ($participant->is_creator)
+                $this->cart->total_price = ($this->cart->total_price == ($debt * $pp) ? $debt : ($this->cart->total_price - ($debt * $pp)) + $debt);
+            else
+                $this->cart->total_price = $debt;
             $return['total'] = $this->cart->total_price > 0 ? array(
                 ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id), 'className' => "subtotal"],
                 ['label' => 'shippingFees', 'value' => $shippingFees['shipping'], 'className' => "shippingFees"],
@@ -632,7 +641,7 @@ class OlaHubCartController extends BaseController
         $itemFinal = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false);
         $country = \OlaHub\UserPortal\Models\Country::find($item->country_id);
         $currency = $country->currencyData;
-        $currency = isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD");
+        $currency = isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD");
         $return = [
             "productID" => isset($item->id) ? $item->id : 0,
             "productType" => 'store',

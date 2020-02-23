@@ -6,13 +6,15 @@ use OlaHub\UserPortal\Controllers\OlaHubPaymentsMainController;
 use OlaHub\UserPortal\Models\PaymentMethod;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
-class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
+class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
+{
 
     private $vpcConnection;
     private $paymentConfig;
 
-    public function createUserBilling($type = "default") {
-        
+    public function createUserBilling($type = "default")
+    {
+
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(\OlaHub\UserPortal\Models\UserBill::$columnsMaping, $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
@@ -35,7 +37,7 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
             $this->voucherAfterPay = $this->userVoucher - $this->total;
             $this->finalSave = TRUE;
             $this->createUserBillingHistory("0", "paid_by_voucher");
-            $this->updateUserVoucher();
+            // $this->updateUserVoucher();
             $this->createUserBillingDetails();
             $this->doVoucherOnlyPaid();
         } else {
@@ -44,26 +46,28 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
             $this->prepareBilingActions();
             $this->{'prepare' . ucfirst($this->paymentMethodData->prepare_func)}();
         }
-        
+
         return response($this->return, 200);
     }
 
-    private function getSelectedPaymentMethodDetails($country) {
+    private function getSelectedPaymentMethodDetails($country)
+    {
         $typeID = $this->typeID;
-        $this->paymentMethodData = PaymentMethod::whereHas('typeDataSync', function($query) use($typeID) {
-                    $query->where('lkp_payment_method_types.id', $typeID);
-                })->whereHas('countryRelation', function($query) use($country) {
-                    $query->where('country_id', $country);
-                })->find($this->requestData['billGate']);
+        $this->paymentMethodData = PaymentMethod::whereHas('typeDataSync', function ($query) use ($typeID) {
+            $query->where('lkp_payment_method_types.id', $typeID);
+        })->whereHas('countryRelation', function ($query) use ($country) {
+            $query->where('country_id', $country);
+        })->find($this->requestData['billGate']);
         if (!$this->paymentMethodData) {
-            $this->paymentMethodData = PaymentMethod::whereHas('typeDataSync', function($query) use($typeID) {
-                        $query->where('lkp_payment_method_types.id', $typeID);
-                    })->where("accept_cross", "1")->has('countryRelation')->find($this->requestData['billGate']);
+            $this->paymentMethodData = PaymentMethod::whereHas('typeDataSync', function ($query) use ($typeID) {
+                $query->where('lkp_payment_method_types.id', $typeID);
+            })->where("accept_cross", "1")->has('countryRelation')->find($this->requestData['billGate']);
         }
         $this->paymentMethodCountryData = $this->paymentMethodData->countryRelation()->where('country_id', $country)->first();
     }
 
-    private function prepareBilingActions() {
+    private function prepareBilingActions()
+    {
         if ($this->userVoucher > 0 && $this->total > $this->userVoucher) {
             $this->voucherUsed = $this->userVoucher;
             $this->voucherAfterPay = 0;
@@ -74,14 +78,15 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
             $this->voucherAfterPay = $this->userVoucher - $this->total;
             $this->finalSave = TRUE;
             $this->createUserBillingHistory("0", "paid_by_voucher");
+            // $this->updateUserVoucher();
         } else {
             $this->createUserBillingHistory($this->paymentMethodData->id);
         }
-        $this->updateUserVoucher();
         $this->createUserBillingDetails();
     }
 
-    private function doVoucherOnlyPaid() {
+    private function doVoucherOnlyPaid()
+    {
         $this->finalizeSuccessPayment();
         $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'voucherPaid', 'code' => 200];
         if ($this->celebrationID) {
@@ -89,7 +94,8 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
         }
     }
 
-    private function prepareMepsSystem() {
+    private function prepareMepsSystem()
+    {
         if ($this->finalSave) {
             $this->finalizeSuccessPayment(true, 2);
             $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'voucherPaid', 'code' => 200];
@@ -113,7 +119,8 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
         }
     }
 
-    private function prepareZainCashSystem() {
+    private function prepareZainCashSystem()
+    {
         if ($this->finalSave) {
             $this->finalizeSuccessPayment(true, 2);
             $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
@@ -145,7 +152,8 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
         }
     }
 
-    private function prepareCashOnDeliverySystem() {
+    private function prepareCashOnDeliverySystem()
+    {
         $this->finalizeSuccessPayment(false, 1, 0);
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesCODRequest($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (app('session')->get('tempData')->email) {
@@ -158,7 +166,8 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
         $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'CODHasSent', 'code' => 200];
     }
 
-    private function setVPCConnection() {
+    private function setVPCConnection()
+    {
         $this->paymentConfig[config('paymentGateway.vpc_Currency')] = $this->billing->billing_currency;
         $this->paymentConfig[config('paymentGateway.vpc_MerchTxnRef')] = $this->billing->billing_number . "_" . $this->billing->bill_token;
         $this->paymentConfig[config('paymentGateway.vpc_OrderInfo')] = $this->billing->billing_number . "_" . $this->billing->bill_token;
@@ -174,5 +183,4 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController {
         $this->vpcConnection->addDigitalOrderField("vpc_SecureHash", $secureHash);
         $this->vpcConnection->addDigitalOrderField("vpc_SecureHashType", "SHA256");
     }
-
 }

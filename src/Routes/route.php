@@ -15,7 +15,7 @@ foreach ($di as $child) {
     }
 }
 
-$router->group([], function () use($router) {
+$router->group([], function () use ($router) {
     $router->post('countries', 'OlaHubGeneralController@getAllCountries');
     $router->post('list_countries', 'OlaHubGeneralController@getAllListedCountries');
     $router->post('interests', 'OlaHubGeneralController@getAllInterests');
@@ -30,21 +30,20 @@ $router->group([], function () use($router) {
     $router->post('allCountries', 'OlaHubGeneralController@getAllUnsupportCountries');
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
+    $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
     $router->group([
         'middleware' => ['checkAuth'],
-            ], function () use($router) {
+    ], function () use ($router) {
         $router->post('search_user', 'OlaHubGeneralController@searchUsers');
         $router->post('invite', 'OlaHubGeneralController@inviteNewUser');
-        $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
         $router->post('notification', 'OlaHubGeneralController@getUserNotification');
         $router->post('readNotification', 'OlaHubGeneralController@readNotification');
         $router->post('getAllNotifications', 'OlaHubGeneralController@getAllNotifications');
         $router->post('shareItem', 'OlaHubGeneralController@shareNewItem');
         $router->post('checkUserMerchant', 'OlaHubGeneralController@checkUserMerchant');
-        $router->post('getCitiesByRegion/{regionId}','OlaHubGeneralController@getCities');
+        $router->post('getCitiesByRegion/{regionId}', 'OlaHubGeneralController@getCities');
         $router->post('follow/{type:\bbrands|occassions|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userFollow');
         $router->post('unfollow/{type:\bbrands|occassions|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userUnFollow');
         $router->post('listFollowing', 'OlaHubGeneralController@listUserFollowing');
-
     });
 });

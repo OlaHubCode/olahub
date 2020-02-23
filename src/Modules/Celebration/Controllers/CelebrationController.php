@@ -376,6 +376,8 @@ class CelebrationController extends BaseController
                 $this->cartData->save();
             }
             $this->firstParticipant();
+            $owner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->requestData['celebrationOwner'])->first();
+            $this->requestData['shipping_address_full_name'] = $owner->first_name . " " . $owner->last_name;
             CelebrationShippingAddressModel::saveShippingAddress($this->celebration->id, $this->celebration->country_id, $this->requestData);
             (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
             return true;
