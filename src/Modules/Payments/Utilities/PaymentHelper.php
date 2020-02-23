@@ -308,8 +308,8 @@ class PaymentHelper extends OlaHubCommonHelper
                                 if (!$itemData) {
                                     $itemData = $itemMain;
                                 }
-                                $itemData->item_stock--;
-                                $itemData->save();
+                                // $itemData->item_stock--;
+                                // $itemData->save();
                             }
                         }
                         $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price, true, $designer->country_id);

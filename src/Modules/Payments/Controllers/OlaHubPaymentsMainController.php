@@ -459,7 +459,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->billing->user_id = app('session')->get('tempID');
             $this->billing->pay_for = $this->cart->celebration_id > 0 ? $this->cart->celebration_id : 0;
             $this->billing->calendar_id = $this->cart->calendar_id > 0 ? $this->cart->calendar_id : 0;
-            $this->billing->billing_currency = json_decode($this->currency->code)->en;
+            $this->billing->billing_currency = $this->currency->code;
         } else {
             $billingNum = $this->billing->billing_number;
         }

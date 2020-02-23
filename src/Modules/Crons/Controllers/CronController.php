@@ -406,7 +406,7 @@ class CronController extends BaseController
     {
         $countries = \DB::table("shipping_countries")->get();
         foreach ($countries as $country) {
-            $olaHubCountry = \DB::table("countries")->where("two_letter_iso_code", strtoupper(json_decode($country->code))->en)->first();
+            $olaHubCountry = \DB::table("countries")->where("two_letter_iso_code", strtoupper($country->code))->first();
             if ($olaHubCountry) {
                 \DB::table("shipping_countries")->where("id", $country->id)->update(["olahub_country_id" => $olaHubCountry->id]);
             }

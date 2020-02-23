@@ -25,7 +25,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $country = \OlaHub\UserPortal\Models\Country::where('id', $this->data->country_id)->first();
-        $this->currency = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($country->currencyData->code);
+        $this->currency = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($country->currencyData);
         $payData = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPayUsed($this->data);
         $payStatus = $this->setPayStatusData();
         $this->return = [
@@ -57,8 +57,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         $return = [];
         foreach ($data as $row) {
             $return[] = array(
-                'amount' => $row['amount'] . " " . $row['currency']->$lang,
-                'country' => $row['country']->$lang
+                'amount' => $row['amount'] . " " . ($lang == 'en' ? $row['currency']->code : $row['currency']->native_code),
+                'country' => ($lang == 'ar' ? $row['country']->ar : $row['country']->en)
             );
         }
         return $return;

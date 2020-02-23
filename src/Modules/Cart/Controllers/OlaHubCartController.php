@@ -641,7 +641,7 @@ class OlaHubCartController extends BaseController
         $itemFinal = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false);
         $country = \OlaHub\UserPortal\Models\Country::find($item->country_id);
         $currency = $country->currencyData;
-        $currency = isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency->code) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD");
+        $currency = isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD");
         $return = [
             "productID" => isset($item->id) ? $item->id : 0,
             "productType" => 'store',
