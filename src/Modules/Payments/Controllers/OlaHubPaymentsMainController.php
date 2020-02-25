@@ -600,9 +600,6 @@ class OlaHubPaymentsMainController extends BaseController
         $pay_status = $this->payStatusID($this->billing->paid_by, 2, 0, 1);
         $this->billing->pay_status = $pay_status;
         $this->billing->save();
-        // if ($this->billing->voucher_used && $this->billing->voucher_used > 0) {
-        //     \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->billing->voucher_used, $this->billing->country_id);
-        // }
         if (!empty(app('session')->get('tempData')->email)) {
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserFailPayment(app('session')->get('tempData'), $this->billing, $reason);
         }
@@ -616,9 +613,9 @@ class OlaHubPaymentsMainController extends BaseController
         $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
         \OlaHub\UserPortal\Models\CartItems::where('shopping_cart_id', $this->billing->temp_cart_id)->delete();
         \OlaHub\UserPortal\Models\Cart::where('id', $this->billing->temp_cart_id)->delete();
-        // if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
-        //     \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->grouppedMers['voucher'], $this->billing->country_id);
-        // }
+        if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
+            \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance(false, $this->grouppedMers['voucher'], $this->billing->country_id);
+        }
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (!empty(app('session')->get('tempData')->email)) {
@@ -637,9 +634,9 @@ class OlaHubPaymentsMainController extends BaseController
         $shipping = unserialize($this->billing->order_address);
         $targetID = isset($shipping['for_user']) ? $shipping['for_user'] : NULL;
         $target = UserModel::withOutGlobalScope('notTemp')->find($targetID);
-        // if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
-        //     \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance($targetID, $this->grouppedMers['voucher'], $this->cart->country_id);
-        // }
+        if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
+            \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance($targetID, $this->grouppedMers['voucher'], $this->cart->country_id);
+        }
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (!empty(app('session')->get('tempData')->email)) {

@@ -4,41 +4,51 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CartItems extends Model {
+class CartItems extends Model
+{
 
     protected $table = 'shopping_carts_details';
 
-    protected static function boot() {
+    protected static function boot()
+    {
         parent::boot();
 
-//        static::saved(function ($query) {
-//            $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->find($query->shopping_cart_id);
-//            $cart->total_price = Cart::getCartSubTotal($cart, TRUE);
-//        });
+        //        static::saved(function ($query) {
+        //            $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->find($query->shopping_cart_id);
+        //            $cart->total_price = Cart::getCartSubTotal($cart, TRUE);
+        //        });
     }
 
-    public function itemsMainData() {
+    public function itemsMainData()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\CatalogItem', 'item_id');
     }
 
-    public function cartMainData() {
+    public function itemsData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'id', 'item_id');
+    }
+
+    public function cartMainData()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Cart', 'shopping_cart_id');
     }
 
-    static function addItemToCartByID($cart, $itemID, $customImage, $customeText, $cartType,$quantity = 1) {
-        
-        switch ($cartType){
+    static function addItemToCartByID($cart, $itemID, $customImage, $customeText, $cartType, $quantity = 1)
+    {
+
+        switch ($cartType) {
             case "store":
-                $item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")->whereHas('merchant', function ($q) use($cart) {
+                $item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")->whereHas('merchant', function ($q) use ($cart) {
                     $q->country_id = $cart->country_id;
                 })->find($itemID);
                 $checkItem = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')
-                        ->where('item_id', $itemID)
-                        ->where('shopping_cart_id', $cart->id)
-                        ->first();
-                $customData=[
-                    'image'=>$customImage,
-                    'text'=>$customeText
+                    ->where('item_id', $itemID)
+                    ->where('shopping_cart_id', $cart->id)
+                    ->first();
+                $customData = [
+                    'image' => $customImage,
+                    'text' => $customeText
                 ];
                 if ($item) {
                     $cartItems = $checkItem ? $checkItem : new \OlaHub\UserPortal\Models\CartItems;
@@ -50,18 +60,18 @@ class CartItems extends Model {
                     $cartItems->customize_data = serialize($customData);
                     $cartItems->unit_price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, TRUE);
                     $cartItems->quantity = $quantity;
-                    $cartItems->total_price = (double) $cartItems->unit_price * $cartItems->quantity;
-                    if(!$cart->user_id){
-                       $cartItems->paricipant_likers = serialize(["user_id" => [app('session')->get('tempID')]]);
-                       $cartItems->created_by = app('session')->get('tempID');
+                    $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
+                    if (!$cart->user_id) {
+                        $cartItems->paricipant_likers = serialize(["user_id" => [app('session')->get('tempID')]]);
+                        $cartItems->created_by = app('session')->get('tempID');
                     }
                     $cartItems->save();
                 }
-                
-                
+
+
                 break;
             case "designer":
-                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [(string)$itemID, (int) $itemID])->first();
+                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [(string) $itemID, (int) $itemID])->first();
                 if ($itemMain) {
                     $item = false;
                     if (isset($itemMain->items) && count($itemMain->items) > 0) {
@@ -80,10 +90,10 @@ class CartItems extends Model {
                     } else {
                         $cartItems = new \OlaHub\UserPortal\Models\CartItems;
                     }
-                    
-                    $customData=[
-                        'image'=>$customImage,
-                        'text'=>$customeText
+
+                    $customData = [
+                        'image' => $customImage,
+                        'text' => $customeText
                     ];
                     $cartItems->customize_data = serialize($customData);
                     $cartItems->item_id = $item->item_id;
@@ -93,19 +103,27 @@ class CartItems extends Model {
                     $cartItems->item_type = $cartType;
                     $cartItems->unit_price = $item->item_price;
                     $cartItems->quantity = $quantity;
-                    $cartItems->total_price = (double) $cartItems->unit_price * $cartItems->quantity;
-                    if(!$cart->user_id){
-                       $cartItems->paricipant_likers = serialize(["user_id" => [app('session')->get('tempID')]]);
-                       $cartItems->created_by = app('session')->get('tempID');
+                    $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
+                    if (!$cart->user_id) {
+                        $cartItems->paricipant_likers = serialize(["user_id" => [app('session')->get('tempID')]]);
+                        $cartItems->created_by = app('session')->get('tempID');
                     }
                     $cartItems->save();
                 }
-                
-                
                 break;
         }
-        
-        
     }
 
+    static function checkIfItemsNotVoucher($items)
+    {
+        foreach ($items as $item) {
+            if ($item['items_data']) {
+                if (!$item['items_data'][0]['is_voucher'])
+                    return false;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
 }

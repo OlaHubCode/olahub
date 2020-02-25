@@ -52,6 +52,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function getShipmentDetails($data)
     {
         $data = unserialize($data);
+        if(!$data)
+        return NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $lang = strtolower($languageArray[0]);
         $return = [];

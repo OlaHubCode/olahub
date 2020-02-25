@@ -1012,8 +1012,8 @@ class OlaHubGeneralController extends BaseController
                                             'likers_count' => isset($post->likes) ? count($post->likes) : 0,
                                             'liked' => $liked,
                                             'likersData' => $likerData,
-                                            'post_img' => $images,
-                                            'post_video' => $videos,
+                                            'post_img' => !count($images) ? NULL : $images,
+                                            'post_video' => !count($videos) ? NULL : $videos,
                                             'friendId' => isset($post->friend_id) ? $post->friend_id : NULL,
                                             'user_info' => [
                                                 'user_id' => $author->id,

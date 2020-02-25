@@ -4,9 +4,11 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserVouchers extends Model {
+class UserVouchers extends Model
+{
 
-    protected static function boot() {
+    protected static function boot()
+    {
         parent::boot();
 
         static::addGlobalScope('voucherCountry', function ($query) {
@@ -17,25 +19,25 @@ class UserVouchers extends Model {
     protected $table = 'user_voucher_balance';
     static $columnsMaping = [];
 
-    public function country() {
+    public function country()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Country', 'country_id');
     }
 
-    public function user() {
+    public function user()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'user_id');
     }
 
-    static function updateVoucherBalance($userID = false, $newVoucher = 0, $countryID = false, $returnBalance = false) {
+    static function updateVoucherBalance($userID = false, $newVoucher = 0, $countryID = false, $returnBalance = false)
+    {
         if (!$countryID) {
             $countryID = app('session')->get('def_country')->id;
         }
-        if (!$userID) {
+        if (!$userID)
             $userID = app('session')->get('tempID');
-            $userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::withoutGlobalScope('voucherCountry')->where('country_id', $countryID)->where('user_id', $userID)->first();
-        } else {
-            $userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::withoutGlobalScope('voucherCountry')->where('country_id', $countryID)->where('user_id', $userID)->first();
-        }
-        
+        $userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::withoutGlobalScope('voucherCountry')->where('country_id', $countryID)->where('user_id', $userID)->first();
+
         if ($userVoucherAccount) {
             $userVoucherAccount->voucher_balance += $newVoucher;
         } else {
@@ -45,13 +47,14 @@ class UserVouchers extends Model {
             $userVoucherAccount->country_id = $countryID;
         }
         $userVoucherAccount->save();
-        
-        if($returnBalance){
+
+        if ($returnBalance) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userVoucherAccount->voucher_balance);
         }
     }
-    
-    static function getUserBalance() {
+
+    static function getUserBalance()
+    {
         $purshasedVoucher = 0;
         $voucher = \OlaHub\UserPortal\Models\UserVouchers::where('user_id', app('session')->get('tempData')->id)->first();
         if ($voucher) {
@@ -72,5 +75,4 @@ class UserVouchers extends Model {
         $totalBalance = $purshasedVoucher + $totalPointsCurrency;
         return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($totalBalance);
     }
-
 }
