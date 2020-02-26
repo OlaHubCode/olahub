@@ -44,7 +44,7 @@ class OlaHubLandingPageController extends BaseController
         // // offers
         $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
         // $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
-        
+
         $itemModel->where(function ($query) {
             $query->selectRaw('*, ((discounted_price / price) * 100) as discount_perc')
                 ->whereNotNull('discounted_price_start_date')
@@ -117,7 +117,9 @@ class OlaHubLandingPageController extends BaseController
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getTrendingData"]);
 
         $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
-        $itemModel->where(function ($query) {
+        $itemModel->whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
         });
@@ -143,7 +145,10 @@ class OlaHubLandingPageController extends BaseController
 
         $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
         $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
-
+        
+        $itemModel->whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        });
         $itemModel->where(function ($query) {
             $query->whereNotNull('discounted_price_start_date');
             $query->whereNotNull('discounted_price_end_date');

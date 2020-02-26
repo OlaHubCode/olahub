@@ -285,7 +285,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->userVoucherAccount = new \OlaHub\UserPortal\Models\UserVouchers;
             $this->userVoucherAccount->user_id = $userID;
             $this->userVoucherAccount->voucher_balance = 0;
-            $this->userVoucherAccount->country_id = $this->cart->country_id;
+            $this->userVoucherAccount->country_id = $countryID;
             $this->userVoucherAccount->save();
             $this->userVoucher = 0;
         }
