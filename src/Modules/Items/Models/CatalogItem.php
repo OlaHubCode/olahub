@@ -155,6 +155,10 @@ class CatalogItem extends Model {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemReviews', 'item_id');
     }
 
+    public function quantityData() {
+        return $this->hasMany('OlaHub\UserPortal\Models\ItemPickuAddr', 'item_id');
+    }
+
     static function checkStock($data) {
         if ($data && $data instanceof CatalogItem) {
             $quantity = 0;
