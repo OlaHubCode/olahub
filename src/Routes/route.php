@@ -16,6 +16,9 @@ foreach ($di as $child) {
 }
 
 $router->group([], function () use ($router) {
+    $router->get('app', function () {
+        return '2.1';
+    });
     $router->post('countries', 'OlaHubGeneralController@getAllCountries');
     $router->post('list_countries', 'OlaHubGeneralController@getAllListedCountries');
     $router->post('interests', 'OlaHubGeneralController@getAllInterests');

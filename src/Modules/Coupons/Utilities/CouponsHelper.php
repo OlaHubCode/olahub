@@ -2,7 +2,8 @@
 
 namespace OlaHub\UserPortal\Helpers;
 
-class CouponsHelper extends OlaHubCommonHelper {
+class CouponsHelper extends OlaHubCommonHelper
+{
 
     public $coupon;
     public $couponUser;
@@ -12,7 +13,8 @@ class CouponsHelper extends OlaHubCommonHelper {
     public $saveDiscount = 0;
     public $general = false;
 
-    function checkCouponValid($coupon) {
+    function checkCouponValid($coupon)
+    {
         $this->coupon = $coupon;
         $today = date("Y-m-d");
         if ($this->coupon->start_date != "0000-00-00" && $this->coupon->start_date > $today) {
@@ -56,7 +58,8 @@ class CouponsHelper extends OlaHubCommonHelper {
         return "valid";
     }
 
-    public function checkCouponRegister($coupon) {
+    public function checkCouponRegister($coupon)
+    {
         $user = app("session")->get("tempData");
         $userRegiseterDate = OlaHubCommonHelper::convertStringToDate($user->created_at, "Y-m-d");
         $this->couponUser = \OlaHub\UserPortal\Models\CouponUsers::where("promo_code_id", $coupon->id)->first();
@@ -105,7 +108,8 @@ class CouponsHelper extends OlaHubCommonHelper {
         }
     }
 
-    public function checkCouponCart($coupon, $subtotal, $cart, $recordUse = false) {
+    public function checkCouponCart($coupon, $subtotal, $cart, $recordUse = false)
+    {
         $this->couponData = unserialize($coupon->coupon_data);
         $save = 0;
         if (isset($this->couponData["couponMinCartTotal"]) && $subtotal > $this->couponData["couponMinCartTotal"]) {
@@ -143,11 +147,14 @@ class CouponsHelper extends OlaHubCommonHelper {
         return $save;
     }
 
-    private function checkCartItems($cart, $subTotal) {
+    private function checkCartItems($cart, $subTotal)
+    {
         $this->subtotal = $subTotal;
         if (isset($this->couponData["couponDiscountOn"])) {
             if ($this->couponData["couponDiscountOn"] != "general") {
-                $cartItems = $cart->cartDetails;
+                if (@!$cart->cartDetails)
+                    return $this->general = TRUE;
+                $cartItems = @$cart->cartDetails;
                 $discountOnVal = is_array($this->couponData["couponDiscountOnValues"]) ? $this->couponData["couponDiscountOnValues"] : [];
                 $discount = (isset($this->couponData["couponDiscountValue"]) ? $this->couponData["couponDiscountValue"] : 1) / 100;
                 $categories = [];
@@ -155,37 +162,45 @@ class CouponsHelper extends OlaHubCommonHelper {
                     if ($item->item_type == "store") {
                         if ($cart->celebration_id > 0) {
                             $celebration = \OlaHub\UserPortal\Models\CelebrationModel::find($cart->celebration_id);
-                            $mainItem = $item->itemsMainData()->withoutGlobalScope("country")->whereHas('merchant', function ($merchantQ) use($celebration) {
+                            $mainItem = $item->itemsMainData()->withoutGlobalScope("country")->whereHas('merchant', function ($merchantQ) use ($celebration) {
                                 $merchantQ->where('country_id', $celebration->country_id);
                             });
-                        }else{
+                        } else {
                             $mainItem = $item->itemsMainData;
                         }
+                        $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
                     } else {
-                        /*
-                         * Designer data
-                         */
+                        $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$item->item_id])->first();
+                        if ($mainItem) {
+                            if (isset($mainItem->items) && count($mainItem->items) > 0) {
+                                foreach ($mainItem->items as $oneItem) {
+                                    if ($oneItem["item_id"] == $item->item_id) {
+                                        $mainItem = (object) $oneItem;
+                                    }
+                                }
+                            }
+                        }
+                        $price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
                     }
 
-                    $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
                     switch ($this->couponData["couponDiscountOn"]) {
                         case "brand":
-                            if (in_array($mainItem->store_id, $discountOnVal)) {
+                            if (in_array(@$mainItem->store_id, $discountOnVal)) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
                             break;
                         case "designer":
-                            if (in_array($mainItem->designer_id, $discountOnVal)) {
+                            if (in_array(@$mainItem->designer_id, $discountOnVal)) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
                             break;
                         case "classification":
-                            if (in_array($mainItem->clasification_id, $discountOnVal)) {
+                            if (in_array(@$mainItem->clasification_id, $discountOnVal)) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
                             break;
                         case "occasion":
-                            $checkOccasions = $this->checkOccasion($mainItem->id, $discountOnVal);
+                            $checkOccasions = $this->checkOccasion(@$mainItem->id, $discountOnVal);
                             if ($checkOccasions) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
@@ -194,7 +209,7 @@ class CouponsHelper extends OlaHubCommonHelper {
                             if (count($categories) <= 0) {
                                 $categories = $this->getAllCategories($discountOnVal);
                             }
-                            if (in_array($mainItem->category_id, $categories)) {
+                            if (in_array(@$mainItem->category_id, $categories)) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
                             break;
@@ -208,7 +223,8 @@ class CouponsHelper extends OlaHubCommonHelper {
         }
     }
 
-    private function getAllCategories($values) {
+    private function getAllCategories($values)
+    {
         $categories = $values;
         $categoriesChilds = \OlaHub\UserPortal\Models\ItemCategory::whereIn("parent_id", $values)->get();
         foreach ($categoriesChilds as $cat) {
@@ -217,7 +233,8 @@ class CouponsHelper extends OlaHubCommonHelper {
         return $categories;
     }
 
-    private function checkOccasion($id, $values) {
+    private function checkOccasion($id, $values)
+    {
         $check = FALSE;
         $occasions = \OlaHub\UserPortal\Models\ItemOccasions::where("item_id", $id)->whereIn("occasion_id", $values)->count();
         if ($occasions) {
@@ -225,5 +242,4 @@ class CouponsHelper extends OlaHubCommonHelper {
         }
         return $check;
     }
-
 }

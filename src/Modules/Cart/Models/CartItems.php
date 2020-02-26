@@ -126,4 +126,14 @@ class CartItems extends Model
         }
         return true;
     }
+
+    static function checkIfItemsHasVoucher($items)
+    {
+        foreach ($items as $item) {
+            if (@$item['items_data']) {
+                if ($item['items_data'][0]['is_voucher'])
+                    return true;
+            }
+        }
+    }
 }
