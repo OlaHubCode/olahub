@@ -85,12 +85,12 @@ class OlaHubCartController extends BaseController
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
         }
-        $countryData = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($country);
-        if (!$countryData) {
-            throw new NotAcceptableHttpException(404);
-        }
+        // $countryData = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($country);
+        // if (!$countryData) {
+        //     throw new NotAcceptableHttpException(404);
+        // }
         $this->checkCart($type);
-        $this->cart->shipped_to = $this->cart->shipped_to == $this->cart->country_id ? NULL : $country;
+        $this->cart->shipped_to = $country == $this->cart->country_id ? NULL : $country;
         // $this->cart->shipment_fees = 44.90;
         $this->cart->save();
         $return["status"] = true;
@@ -377,7 +377,7 @@ class OlaHubCartController extends BaseController
         $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
         $this->cart->shipment_fees = $shippingFees['total'];
         $this->cart->shipment_details = serialize($shippingFees['saving']);
-        $this->cart->country_id = $countryTo;
+        $this->cart->country_id = $countryData->id;
         $this->cart->save();
 
         if ($this->celebration) {

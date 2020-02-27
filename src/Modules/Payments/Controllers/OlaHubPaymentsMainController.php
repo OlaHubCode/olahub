@@ -76,12 +76,14 @@ class OlaHubPaymentsMainController extends BaseController
             $this->return["proceed"] = 1;
         } else {
             $this->checkCrossCountries();
-            $this->getPaymentMethodsDetails($this->cart->country_id, $this->cart->shipped_to);
+            $chkItems = \OlaHub\UserPortal\Models\CartItems::with('itemsData')->where('shopping_cart_id', $this->cart->id)->get()->toArray();
+            $checkVoucherItems = \OlaHub\UserPortal\Models\CartItems::checkIfItemsHasVoucher($chkItems);
+            $this->getPaymentMethodsDetails($this->cart->country_id, $this->cart->shipped_to, $checkVoucherItems);
             $this->return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($this->paymentMethodCountryData, '\OlaHub\UserPortal\ResponseHandlers\PaymentResponseHandler');
         }
         $this->return['status'] = true;
         $this->return['code'] = 200;
-        if ($this->typeID == '1' || !($this->cart->for_friend > 0)) {
+        if (($this->typeID == '1' || !($this->cart->for_friend > 0)) && !$this->cart->shipped_to) {
             $this->return['shippingAddress'] = \OlaHub\UserPortal\Models\UserShippingAddressModel::checkUserShippingAddress(app('session')->get('tempID'), $this->cart->country_id);
         } elseif ($this->typeID == '2' && $this->cart->for_friend > 0) {
             $this->return['shippingAddress'] = \OlaHub\UserPortal\Models\UserShippingAddressModel::checkUserShippingAddress($this->cart->for_friend, $this->cart->country_id);
@@ -200,16 +202,16 @@ class OlaHubPaymentsMainController extends BaseController
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
     }
 
-    protected function getPaymentMethodsDetails($country, $shipped_to = NULL)
+    protected function getPaymentMethodsDetails($country, $shipped_to = NULL, $ifHasVoucher = NULL)
     {
         $typeID = $this->typeID;
         if ($this->crossCountry) {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
-                ->whereHas('PaymentData', function ($q) use ($typeID, $shipped_to) {
+                ->whereHas('PaymentData', function ($q) use ($typeID, $shipped_to, $ifHasVoucher) {
                     $q->whereHas('typeDataSync', function ($query) use ($typeID) {
                         $query->where('lkp_payment_method_types.id', $typeID);
                     });
-                    if ($shipped_to)
+                    if ($shipped_to || $ifHasVoucher)
                         $q->where('prepare_func', '<>', 'cashOnDeliverySystem');
                 })
                 ->where('is_cross', '1')

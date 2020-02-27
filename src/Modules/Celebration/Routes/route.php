@@ -45,6 +45,7 @@ $router->group([
         
         $router->post('addWishText', 'CelebrationContentsController@addParticipantWishText');
         $router->post('addvideo', 'CelebrationContentsController@uploadCelebrationVideo');
+        $router->post('removevideo', 'CelebrationContentsController@removeCelebrationVideo');
         $router->post('schedule', 'CelebrationContentsController@scheduleCelebration');
         $router->post('changeDate', 'CelebrationContentsController@changeDateBeforeSchedule');
         $router->post('uploadMediaToPublishedCelebration', 'CelebrationContentsController@uploadMediaTopublishedCelebration');

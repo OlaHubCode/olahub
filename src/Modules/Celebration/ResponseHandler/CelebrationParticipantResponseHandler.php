@@ -68,6 +68,8 @@ class CelebrationParticipantResponseHandler extends Fractal\TransformerAbstract 
                 $type = 'image';
             }
             $mediaData[] = [
+                "mediaId" => $celebrationContent->id,
+                "mediaOwner" => $this->data->user_id,
                 "mediaType" => $type,
                 "participantWishVideo" => isset($celebrationContent->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($celebrationContent->reference) : NULL
             ];
