@@ -79,8 +79,8 @@ class OlaHubGuestController extends BaseController
             }
         }
         if (!isset($request['userCountry'])) {
-            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-            $userData->country_id = $country->id;
+            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
+            $userData->country_id = @$country->id;
         }
         $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
         // print_r($userData); return "";
@@ -376,8 +376,8 @@ class OlaHubGuestController extends BaseController
                         if (isset($this->requestData['userCountry']) && $this->requestData['userCountry']) {
                             $userData->country_id = $this->requestData['userCountry'];
                         } else {
-                            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-                            $userData->country_id = $country->id;
+                            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
+                            $userData->country_id = @$country->id;
                         }
                         $userData->is_active = 1;
                     }
@@ -396,8 +396,8 @@ class OlaHubGuestController extends BaseController
                 if (isset($this->requestData['userCountry']) && $this->requestData['userCountry']) {
                     $userData->country_id = $this->requestData['userCountry'];
                 } else {
-                    $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-                    $userData->country_id = $country->id;
+                    $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
+                    $userData->country_id = @$country->id;
                 }
                 $userData->is_active = 1;
             }
@@ -680,24 +680,16 @@ class OlaHubGuestController extends BaseController
             $userData = false;
             $password = false;
             $tempCode = false;
-            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-            $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : $country->id;
+            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country_code)->first();
+            $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : @$country->id;
 
             if ($type == 'email') {
                 $userData = UserModel::where(function ($q) use ($requestEmailData) {
                     $q->where('email', $requestEmailData);
-                    $q->where(function ($query) {
-                        $query->whereNull("mobile_no");
-                        $query->orWhere("mobile_no", "!=", "");
-                    });
                 })->first();
             } elseif ($type == 'phoneNumber') {
                 $requestEmailData = $this->userHelper->fullPhone($requestEmailData);
                 $userData = UserModel::where(function ($q) use ($requestEmailData, $country_id) {
-                    $q->where(function ($query) {
-                        $query->whereNull("email");
-                        $query->orWhere("email", "!=", "");
-                    });
                     $q->where('mobile_no', $requestEmailData);
                     $q->where('country_id', $country_id);
                     $q->where('for_merchant', 0);
@@ -763,8 +755,8 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resetGuestPassword"]);
 
-        $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->ipInfo->country)->first();
-        $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : $country->id;
+        $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
+        $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : @$country->id;
         $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
         $userData = null;
         $email = $this->requestData["userEmail"];
