@@ -8,7 +8,7 @@ class UserHelper extends OlaHubCommonHelper
     static function getIPInfo()
     {
         $ip = $_SERVER['REMOTE_ADDR'];
-       return json_decode(file_get_contents("http://api.ipapi.com/{$ip}?access_key=52d6f557dd6faf1dbeaa8601450321b6"));
+       return json_decode(file_get_contents("http://api.ipapi.com/$ip?access_key=52d6f557dd6faf1dbeaa8601450321b6"));
         // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
