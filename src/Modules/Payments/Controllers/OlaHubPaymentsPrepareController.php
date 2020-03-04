@@ -23,7 +23,7 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
         }
-        if ($this->celebration->celebration_date == date("Y-m-d", strtotime("-3 days")) || $this->celebration->celebration_date == date("Y-m-d", strtotime("-2 days")) || $this->celebration->celebration_date == date("Y-m-d", strtotime("-1 days")) || $this->celebration->celebration_date == date("Y-m-d")) {
+        if (@$this->celebration->celebration_date == date("Y-m-d", strtotime("-3 days")) || @$this->celebration->celebration_date == date("Y-m-d", strtotime("-2 days")) || @$this->celebration->celebration_date == date("Y-m-d", strtotime("-1 days")) || @$this->celebration->celebration_date == date("Y-m-d")) {
             return response(['status' => false, 'msg' => 'dateOvered', 'code' => 406, 'errorData' => []], 200);
         }
         $this->checkCart($type);
