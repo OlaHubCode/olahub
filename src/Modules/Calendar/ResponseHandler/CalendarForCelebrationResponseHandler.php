@@ -25,7 +25,7 @@ class CalendarForCelebrationResponseHandler extends Fractal\TransformerAbstract 
             "celebrationDate" => isset($this->data->calender_date) ? $this->data->calender_date : NULL,
             "celebrationOccassion" => isset($this->data->occasion_id) ? $this->data->occasion_id : NULL,
             "celebrationOccassionName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name'),
-            // "celebrationTitle" => isset($this->data->title) ? $this->data->title : NULL,
+            "celebrationTitle" => isset($this->data->title) ? $this->data->title : NULL,
             "celebrationOwner" => isset($this->data->user_id) ? $this->data->user_id : NULL,
             
         ];

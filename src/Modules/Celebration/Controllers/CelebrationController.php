@@ -189,6 +189,10 @@ class CelebrationController extends BaseController
             $this->celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->first();
             foreach ($this->requestData as $input => $value) {
                 if (isset(CelebrationModel::$columnsMaping[$input])) {
+                    if ($input == 'celebrationOccassion') {
+                        $occassion = \OlaHub\UserPortal\Models\Occasion::where('id', $value)->first();
+                        $this->celebration->title = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name');
+                    }
                     $this->celebration->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(CelebrationModel::$columnsMaping, $input)} = $value;
                 }
             }
@@ -361,6 +365,10 @@ class CelebrationController extends BaseController
         $this->celebration = new CelebrationModel;
         foreach ($this->requestData as $input => $value) {
             if (isset(CelebrationModel::$columnsMaping[$input])) {
+                if ($input == 'celebrationOccassion') {
+                    $occassion = \OlaHub\UserPortal\Models\Occasion::where('id', $value)->first();
+                    $this->celebration->title = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name');
+                }
                 $this->celebration->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(CelebrationModel::$columnsMaping, $input)} = $value;
             }
         }

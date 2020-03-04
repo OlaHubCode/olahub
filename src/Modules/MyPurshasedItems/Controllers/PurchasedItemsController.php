@@ -40,7 +40,7 @@ class PurchasedItemsController extends BaseController
         foreach ($payStatusesData as $statusId) {
             $payStatusesId[] = $statusId->id;
         }
-        $purchasedItem = UserBill::whereIn("pay_status", $payStatusesId)->orderBy('billing_number', 'DESC')->paginate(10);
+        $purchasedItem = UserBill::whereIn("pay_status", $payStatusesId)->orderBy('id', 'DESC')->paginate(10);
         if ($purchasedItem->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($purchasedItem, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemsResponseHandler');
             $return['status'] = TRUE;

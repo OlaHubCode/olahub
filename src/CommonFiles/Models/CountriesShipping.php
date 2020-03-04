@@ -89,7 +89,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                     $shippingFeesTotal += $amount;
                     $shippingSavings[] = array(
                         'amount' => number_format($amount, 2),
-                        'currency' => $currency,
+                        'currency' => $currency->toArray(),
                         'country' => json_decode($shipping->name)
                     );
                 }
