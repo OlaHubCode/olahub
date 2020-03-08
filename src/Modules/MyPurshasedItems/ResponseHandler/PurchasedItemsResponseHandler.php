@@ -51,15 +51,15 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
 
     private function getShipmentDetails($data)
     {
-        $data = unserialize($data);
-        if(!$data)
-        return NULL;
+        $data = @unserialize($data);
+        if (!$data)
+            return NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
         $lang = strtolower($languageArray[0]);
         $return = [];
         foreach ($data as $row) {
             $return[] = array(
-                'amount' => $row['amount'] . " " . ($lang == 'en' ? $row['currency']->code : $row['currency']->native_code),
+                'amount' => $row['amount'] . " " . ($lang == 'en' ? $row['currency']['code'] : $row['currency']['native_code']),
                 'country' => ($lang == 'ar' ? $row['country']->ar : $row['country']->en)
             );
         }

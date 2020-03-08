@@ -262,7 +262,7 @@ class OlaHubPaymentsMainController extends BaseController
     {
         $countryID = $this->cart ? $this->cart->country_id : $this->billing->country_id;
         $userId = $this->userId ? $this->userId : $this->billing->user_id;
-        $this->total = $this->total ? $this->total : $this->billing->billing_total;
+        $this->total = $this->total ? $this->total : @$this->billing->billing_total;
         $this->userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::withoutGlobalScope('voucherCountry')->where('country_id', $countryID)->where('user_id', $userId)->first();
 
         if ($this->userVoucherAccount) {

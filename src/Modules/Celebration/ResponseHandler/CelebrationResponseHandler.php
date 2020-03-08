@@ -30,7 +30,7 @@ class CelebrationResponseHandler extends Fractal\TransformerAbstract {
         $cartItems = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id',$cart->id)->first();
         $this->return = [
             "celebration" => isset($this->data->id) ? $this->data->id : 0,
-            "celebrationTitle" => isset($this->data->title) ? $this->data->title : NULL,
+            "celebrationTitle" =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name'),
             "celebrationDate" => isset($this->data->celebration_date) ? $this->data->celebration_date : NULL,
             "celebrationOriginalDate" => isset($this->data->original_celebration_date) ? $this->data->original_celebration_date : NULL,
             "celebrationCommitDate" => isset($this->data->commit_date) ? $this->data->commit_date : NULL,

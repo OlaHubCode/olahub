@@ -27,12 +27,16 @@ class CartResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($this->data->country_id);
+        if ($this->data->shipped_to){
+            $country2 = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($this->data->shipped_to);
+        }
         $change_country = \OlaHub\UserPortal\Models\CartItems::where("shopping_cart_id", $this->data->id)->where("item_type", "store")->count() > 0 ? false : true;
         $this->return = [
             "cartID" => isset($this->data->id) ? $this->data->id : 0,
             "cartIsGift" => isset($this->data->for_friend) && $this->data->for_friend > 0 ? true : false,
             "cartCountry" => isset($this->data->country_id) && $this->data->country_id > 0 ? $this->data->country_id : false,
             "cartCountryName" => isset($country->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, "name") : false,
+            "cartCountryToName" => isset($this->data->shipped_to) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country2, "name") : false,
             "cartCountryCode" => isset($country->two_letter_iso_code) ? $country->two_letter_iso_code : NULL,
             "cartEnableCountry" => $change_country,
             "cartDate" => isset($this->data->shopping_cart_date) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDateTime($this->data->shopping_cart_date) : 0,
