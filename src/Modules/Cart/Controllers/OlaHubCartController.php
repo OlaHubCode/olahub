@@ -374,9 +374,10 @@ class OlaHubCartController extends BaseController
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
         $countryTo = $this->celebration ? $this->celebration->country_id : ($this->cart->shipped_to ? $this->cart->shipped_to : $countryData->id);
         $defaultCountry = $this->celebration ? $this->celebration->country_id : $countryData->id;
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart);
+        $shippingFeesCelebration = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
         $this->cart->shipment_fees = $shippingFees['total'];
-        $this->cart->shipment_details = serialize($shippingFees['saving']);
+        $this->cart->shipment_details = serialize($shippingFeesCelebration['saving']);
         $this->cart->country_id = $countryData->id;
         $this->cart->save();
 
@@ -394,16 +395,17 @@ class OlaHubCartController extends BaseController
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
             $pp = $this->celebration->celebrationParticipants->count();
-            $debt = number_format($this->cart->total_price / $pp, 2);
+            $total = $this->cart->total_price + $shippingFees['total'];
+            $debt = number_format($total / $pp, 2);
             $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2);
             if ($participant->is_creator)
-                $this->cart->total_price = ($this->cart->total_price == ($debt * $pp) ? $debt : ($this->cart->total_price - ($debt * $pp)) + $debt);
+                $total = ($total == ($debt * $pp) ? $debt : ($total - ($debt * $pp)) + $debt);
             else
-                $this->cart->total_price = $debt;
-            $return['total'] = $this->cart->total_price > 0 ? array(
+                $total = $debt;
+            $return['total'] = $total > 0 ? array(
                 ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price, true, $this->celebration->country_id), 'className' => "subtotal"],
                 ['label' => 'shippingFees', 'value' => $shippingFees['shipping'], 'className' => "shippingFees"],
-                ['label' => 'total', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->cart->total_price + $shippingFees['total'], true, $this->celebration->country_id), 'className' => "total"]
+                ['label' => 'yourTotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($total, true, $this->celebration->country_id), 'className' => "total"]
             ) : null;
         } else {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->cart, '\OlaHub\UserPortal\ResponseHandlers\CartResponseHandler');

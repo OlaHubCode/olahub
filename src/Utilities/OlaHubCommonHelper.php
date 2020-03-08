@@ -642,54 +642,60 @@ abstract class OlaHubCommonHelper
     static function timeElapsedString($datetime)
     {
         $lang = app('session')->get('def_lang')->default_locale;
-        $elapsed = strtotime($datetime);
-        $newDate = strtotime(date("y-m-d h:i:s"));
-        $diff = round($newDate - $elapsed);
+        // $elapsed = strtotime($datetime);
+        // $newDate = strtotime(date("Y-m-d h:i:s"));
+        // $diff = abs($elapsed - $newDate);
+        // $diff = abs($newDate - $elapsed);
 
-        // $elapsed = new \DateTime($datetime);
-        // $newDate = new \DateTime;
-        // $diff = $newDate->diff($elapsed);
+        $elapsed = new \DateTime($datetime);
+        $newDate = new \DateTime;
+        $diff = $newDate->diff($elapsed);
+        
+        $elapsedDays = strtotime($datetime);
+        $newDateDays = strtotime(date("Y-m-d h:i:s"));
+        $diffDays = abs($elapsedDays - $newDateDays);
         // $y = $diff->format('%y');
         // $m = $diff->format('%m');
+        $d = floor($diffDays / (60*60*24));
         // $d = $diff->format('%d');
-        // $h = $diff->format('%h');
-        // $i = $diff->format('%i');
-        // $s = $diff->format('%s');
+        $h = $diff->format('%h');
+        $m = $diff->format('%i');
+        $s = $diff->format('%s');
 
-        $d = floor($diff / (24 * 60 * 60));
-        $diff = $diff - ($d * 24 * 60 * 60);
-        $h = floor($diff / (60 * 60));
-        $diff = $diff - ($h * 60 * 60);
-        $m = floor($diff / (60));
-        $diff = $diff - ($m * 60);
-        $s = $diff;
+        // $d = floor($diff / (24 * 60 * 60));
+        // $diff = $diff - ($d * 24 * 60 * 60);
+        // $h = floor($diff / (60 * 60));
+        // $diff = $diff - ($h * 60 * 60);
+        // $m = floor($diff / (60));
+        // $diff = $diff - ($m * 60);
+        // $s = $diff;
 
         if ($d > 0)
-            return OlaHubCommonHelper::translation($lang, 'chat_days', (int) $d);
+            return OlaHubCommonHelper::translation($lang, 'post_days', (int) $d);
         if ($h > 0)
-            return OlaHubCommonHelper::translation($lang, 'chat_hours', (int) $h);
+            return OlaHubCommonHelper::translation($lang, 'post_hours', (int) $h);
         if ($m > 0)
-            return OlaHubCommonHelper::translation($lang, 'chat_minutes', (int) $m);
+            return OlaHubCommonHelper::translation($lang, 'post_minutes', (int) $m);
         if ($s > 0)
-            return OlaHubCommonHelper::translation($lang, 'chat_seconds', (int) $s);
+            return OlaHubCommonHelper::translation($lang, 'post_seconds', (int) $s);
 
-        return OlaHubCommonHelper::translation($lang, 'chat_seconds', 0);
+        return OlaHubCommonHelper::translation($lang, 'post_seconds', 0);
     }
 
     static function translation($lang, $key, $word)
     {
         $langs = new \StdClass;
         $langs->en = [
-            "chat_days" => $word . ($word > 1 ? " Days" : " Day") . " ago",
-            "chat_hours" => $word . ($word > 1 ? " Hours" : " Hour") . " ago",
-            "chat_minutes" => $word . ($word > 1 ? " Minutes" : " Minute") . " ago",
-            "chat_seconds" => ($word > 5 ? $word . " Seconds ago" : "Just now")
+            "post_days" => $word . ($word > 1 ? " Days" : " Day") . " ago",
+            "post_hours" => $word . ($word > 1 ? " Hours" : " Hour") . " ago",
+            "post_minutes" => $word . ($word > 1 ? " Minutes" : " Minute") . " ago",
+            "post_seconds" => ($word > 5 ? $word . " Seconds ago" : "Just now")
         ];
         $langs->ar = [
-            "chat_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
-            "chat_hours" => "منذ " . ($word > 10 ? $word . " ساعة" : ($word > 1 ? $word . " ساعات" : " ساعة")),
-            "chat_minutes" => "منذ " . ($word > 10 ? $word . " دقيقة" : ($word > 1 ? $word . " دقائق" : " دقيقة")),
-            "chat_seconds" => "منذ " . ($word > 10 ? $word . " ثانية" : ($word > 5 ? $word . " ثوان" : " لحظات"))
+            "post_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
+            "post_hours" => "منذ " . ($word > 10 ? $word . " ساعة" : ($word > 1 ? $word . " ساعات" : " ساعة")),
+            "post_minutes" => "منذ " . ($word > 10 ? $word . " دقيقة" : ($word > 1 ? $word . " دقائق" : " دقيقة")),
+            "post_seconds" => "منذ " . ($word > 10 ? $word . " ثانية" : ($word > 5 ? $word . " ثوان" : " لحظات"))
         ];
         return $langs->{$lang}[$key];
     }
