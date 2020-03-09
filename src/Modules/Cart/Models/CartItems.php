@@ -117,7 +117,7 @@ class CartItems extends Model
     static function checkIfItemsNotVoucher($items)
     {
         foreach ($items as $item) {
-            if ($item['items_data']) {
+            if (@$item['items_data']) {
                 if (!$item['items_data'][0]['is_voucher'])
                     return false;
             } else {

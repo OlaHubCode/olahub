@@ -192,14 +192,15 @@ class OlaHubPaymentsMainController extends BaseController
                 $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
             }
         }
+        $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
         if ($this->celebration) {
             $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration);
             $this->shippingFees = $shippingFees['total'];
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
-            $this->cartTotal = $participant->amount_to_pay - $this->shippingFees;
+            // $this->cartTotal = $participant->amount_to_pay - $this->shippingFees;
+            $this->total = $participant->amount_to_pay;
         }
-        $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
     }
 
     protected function getPaymentMethodsDetails($country, $shipped_to = NULL, $ifHasVoucher = NULL)
@@ -800,7 +801,7 @@ class OlaHubPaymentsMainController extends BaseController
         $checkCart = $this->cartFilter($type);
 
         if ($checkCart) {
-            (new \OlaHub\UserPortal\Helpers\CartHelper)->checkOutOfStockInCartItem($checkCart->id);
+            (new \OlaHub\UserPortal\Helpers\CartHelper)->checkOutOfStockInCartItem($checkCart->id, $this->celebration);
             $this->cart = $checkCart;
         }
 
