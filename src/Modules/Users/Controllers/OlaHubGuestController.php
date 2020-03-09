@@ -847,11 +847,11 @@ class OlaHubGuestController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "checkActiveCode"]);
 
         // $this->requestData["userPhoneNumber"] = str_replace("+", "00", $this->requestData["userPhoneNumber"]);
-        $emailType = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
-        $phoneType = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userPhoneNumber"]);
+        $emailType = $this->userHelper->checkEmailOrPhoneNumber(@$this->requestData["userEmail"]);
+        $phoneType = $this->userHelper->checkEmailOrPhoneNumber(@$this->requestData["userPhoneNumber"]);
         if (isset($this->requestData['userCode']) && $this->requestData['userCode'] && ($emailType || $phoneType)) {
-            $email = $this->requestData["userEmail"];
-            $mobile = $this->requestData["userPhoneNumber"];
+            $email = @$this->requestData["userEmail"];
+            $mobile = @$this->requestData["userPhoneNumber"];
             $country_id = $this->requestData["userCountry"];
             if ($emailType == 'email') {
                 $userData = UserModel::where('is_active', '0')->where(function ($q) use ($email, $country_id) {

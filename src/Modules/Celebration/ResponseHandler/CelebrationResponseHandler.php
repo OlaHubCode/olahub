@@ -28,6 +28,7 @@ class CelebrationResponseHandler extends Fractal\TransformerAbstract {
         $paiedParticipant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id',$this->data->id)->where('payment_status',3)->first();
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('celebration_id',$this->data->id)->first();
         $cartItems = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id',$cart->id)->first();
+        $onePaid = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->data->id)->where('payment_status', 3)->first();
         $this->return = [
             "celebration" => isset($this->data->id) ? $this->data->id : 0,
             "celebrationTitle" =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name'),
@@ -51,7 +52,8 @@ class CelebrationResponseHandler extends Fractal\TransformerAbstract {
             "celebrationStatus" => $this->data->celebration_status,
             "existCelebrationParticipantPaied" => isset($paiedParticipant)? TRUE : FALSE,
             "existCelebrationGift" => isset($cartItems)? TRUE : FALSE,
-            "hiddenScheduleBtn" => isset($this->data->original_celebration_date) && ($this->data->original_celebration_date == date("Y-m-d", strtotime("+3 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+2 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+1 days")) || $this->data->original_celebration_date < date("Y-m-d")) ? TRUE : FALSE
+            "hiddenScheduleBtn" => isset($this->data->original_celebration_date) && ($this->data->original_celebration_date == date("Y-m-d", strtotime("+3 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+2 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+1 days")) || $this->data->original_celebration_date < date("Y-m-d")) ? TRUE : FALSE,
+            "hideUncommit" => isset($onePaid) ? true : false
         ];
     }
     
