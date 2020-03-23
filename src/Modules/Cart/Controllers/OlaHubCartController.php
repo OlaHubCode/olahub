@@ -18,7 +18,6 @@ class OlaHubCartController extends BaseController
     private $userId;
     private $celebration;
     private $cart;
-    private $userMongo;
     private $friends;
     private $calendar;
     protected $userAgent;
@@ -328,14 +327,7 @@ class OlaHubCartController extends BaseController
             throw new UnauthorizedHttpException(401);
         }
         if ($type == "event" && $this->id > 0 && $this->userId > 0) {
-            $this->userMongo = \OlaHub\UserPortal\Models\UserMongo::where("user_id", $this->userId)->first();
-            $this->friends = $this->userMongo->friends;
-            if (!is_array($this->friends) || count($this->friends) <= 0) {
-                $return['status'] = false;
-                $return['code'] = 404;
-                $return['msg'] = "noData";
-                return $return;
-            }
+            // $this->friends = $this->friends;
             $time = strtotime("+3 Days");
             $minTime = date("Y-m-d", $time);
             $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)

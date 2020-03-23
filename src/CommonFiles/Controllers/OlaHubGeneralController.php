@@ -773,32 +773,7 @@ class OlaHubGeneralController extends BaseController
         $user->is_first_login = 1;
         $user->country_id = $this->requestData->userCountry;
         if ($user->save()) {
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where("user_id", $user->id)->first();
-            if (!$userMongo) {
-                $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-                $userMongo->user_id = (int) $user->id;
-                $userMongo->my_groups = [];
-                $userMongo->groups = [];
-                $userMongo->celebrations = [];
-                $userMongo->friends = [];
-                $userMongo->requests = [];
-                $userMongo->responses = [];
-                $userMongo->intersts = [];
-            }
-            $userMongo->username = "$user->first_name $user->last_name";
-            $userMongo->avatar_url = $user->profile_picture;
-            $userMongo->country_id = $this->requestData->userCountry;
-            $userMongo->gender = $user->user_gender;
-            $userMongo->profile_url = $user->profile_url;
-            $userMongo->cover_photo = $user->cover_photo;
-            $userMongo->save();
-
-
-
             if (isset($this->requestData->isFriendsInvite) && $this->requestData->isFriendsInvite) {
-                $loginedUser = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
-                $loginedUser->push('requests', $user->id, true);
-                $userMongo->push('responses', app('session')->get('tempID'), true);
                 $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
                 $userData = app('session')->get('tempData');
                 $user->password = $password;
@@ -1688,105 +1663,18 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-        $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
-        if (!$user) {
-            $user = new \OlaHub\UserPortal\Models\UserMongo;
-            $user->user_id = (int) app('session')->get('tempID');
-            $user->my_groups = [];
-            $user->groups = [];
-            $user->celebrations = [];
-            $user->friends = [];
-            $user->requests = [];
-            $user->responses = [];
-            $user->intersts = [];
-            $user->followed_brands = [];
-            $user->followed_occassions = [];
-            $user->followed_designers = [];
-            $user->followed_interests = [];
-            $user->username = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
-            $user->avatar_url = app('session')->get('tempData')->profile_picture;
-            $user->country_id = app('session')->get('def_country')->id;
-            $user->gender = app('session')->get('tempData')->user_gender;
-            $user->profile_url = app('session')->get('tempData')->profile_url;
-            $user->cover_photo = app('session')->get('tempData')->cover_photo;
-            $user->save();
-        }
-
+        $user = NULL;
         $key = "followed_" . $type;
-        \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->push($key, $id, true);
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 
     public function userUnFollow($type, $id)
     {
-        $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
-        if (!$user) {
-            $user = new \OlaHub\UserPortal\Models\UserMongo;
-            $user->user_id = (int) app('session')->get('tempID');
-            $user->my_groups = [];
-            $user->groups = [];
-            $user->celebrations = [];
-            $user->friends = [];
-            $user->requests = [];
-            $user->responses = [];
-            $user->intersts = [];
-            $user->followed_brands = [];
-            $user->followed_occassions = [];
-            $user->followed_designers = [];
-            $user->followed_interests = [];
-            $user->username = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
-            $user->avatar_url = app('session')->get('tempData')->profile_picture;
-            $user->country_id = app('session')->get('def_country')->id;
-            $user->gender = app('session')->get('tempData')->user_gender;
-            $user->profile_url = app('session')->get('tempData')->profile_url;
-            $user->cover_photo = app('session')->get('tempData')->cover_photo;
-            $user->save();
-        }
-
-        $key = "followed_" . $type;
-        if (isset($user->{$key}) && is_array($user->{$key})) {
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->pull($key, $id);
-            return response(['status' => true, 'msg' => 'unfollow successfully', 'code' => 200], 200);
-        }
-        return response(['status' => false, 'msg' => 'unknown type and id', 'code' => 404], 200);
+        return response(['status' => true, 'msg' => 'unfollow successfully', 'code' => 200], 200);
     }
 
     public function listUserFollowing()
     {
-        $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
-        if ($user) {
-            $return = [];
-            if (isset($user->followed_brands) && is_array($user->followed_brands) && count($user->followed_brands) > 0) {
-                $brands = \OlaHub\UserPortal\Models\Brand::whereIn('id', $user->followed_brands)->get();
-                $return['brands'] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandsResponseHandler');
-            }
-            if (isset($user->followed_occassions) && is_array($user->followed_occassions) && count($user->followed_occassions) > 0) {
-                $occassions = \OlaHub\UserPortal\Models\Occasion::whereIn('id', $user->followed_occassions)->get();
-                $return['occassions'] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($occassions, '\OlaHub\UserPortal\ResponseHandlers\OccasionsResponseHandler');
-            }
-            if (isset($user->followed_designers) && is_array($user->followed_designers) && count($user->followed_designers) > 0) {
-                $designers = \OlaHub\UserPortal\Models\Designer::whereIn('id', $user->followed_designers)->get();
-                foreach ($designers as $designer) {
-                    $return['designer'][] = [
-                        "designerId" => isset($designer->id) ? $designer->id : 0,
-                        'designerName' => isset($designer->brand_name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($designer, "brand_name") : NULL,
-                        'designerLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($designer->logo_ref),
-                        'designerSlug' => isset($designer->designer_slug) ? $designer->designer_slug : null
-                    ];
-                }
-            }
-            if (isset($user->followed_interests) && is_array($user->followed_interests) && count($user->followed_interests) > 0) {
-                $interests = \OlaHub\UserPortal\Models\Interests::whereIn('id', $user->followed_interests)->get();
-                foreach ($interests as $interest) {
-                    $return['interests'][] = [
-                        'interestName' => isset($interest->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, "name") : NULL,
-                        'interestLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest->image),
-                        'interestSlug' => isset($interest->interest_slug) ? $interest->interest_slug : null
-                    ];
-                }
-            }
-            return response(['status' => true, 'data' => $return, 'code' => 200], 200);
-        }
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 }

@@ -83,30 +83,7 @@ class OlaHubGuestController extends BaseController
             $userData->country_id = @$country->id;
         }
         $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
-        // print_r($userData); return "";
         $userData->save();
-
-        $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-        $userMongo->user_id = (int) $userData->id;
-        $userMongo->username = "$userData->first_name $userData->last_name";
-        $userMongo->avatar_url = $userData->profile_picture;
-        $userMongo->country_id = $userData->country_id;
-        // $userMongo->country_id = app('session')->get('def_country')->id;
-        $userMongo->gender = $userData->user_gender;
-        $userMongo->profile_url = $userData->profile_url;
-        $userMongo->cover_photo = $userData->cover_photo;
-        $userMongo->my_groups = [];
-        $userMongo->groups = [];
-        $userMongo->celebrations = [];
-        $userMongo->friends = [];
-        $userMongo->requests = [];
-        $userMongo->responses = [];
-        $userMongo->followed_brands = [];
-        $userMongo->followed_occassions = [];
-        $userMongo->followed_designers = [];
-        $userMongo->followed_interests = [];
-        $userMongo->intersts = $this->requestData['userInterests'];
-        $userMongo->save();
 
         $log->setLogSessionData(['user_id' => $userData->id]);
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
@@ -206,33 +183,7 @@ class OlaHubGuestController extends BaseController
         if (!empty($userData->invited_by) && empty($userData->invitation_accepted_date)) {
             $userData->invitation_accepted_date = date('Y-m-d');
             $userData->save();
-
             $log->setLogSessionData(['user_id' => $userData->id]);
-
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
-            if (!$userMongo) {
-                $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-            }
-
-            $userMongo->user_id = (int) $userData->id;
-            $userMongo->username = "$userData->first_name $userData->last_name";
-            $userMongo->avatar_url = $userData->profile_picture;
-            $userMongo->country_id = app('session')->get('def_country')->id;
-            $userMongo->gender = $userData->user_gender;
-            $userMongo->profile_url = $userData->profile_url;
-            $userMongo->cover_photo = $userData->cover_photo;
-            $userMongo->my_groups = [];
-            $userMongo->groups = [];
-            $userMongo->celebrations = [];
-            $userMongo->friends = [];
-            $userMongo->requests = [];
-            $userMongo->responses = [];
-            $userMongo->intersts = [];
-            $userMongo->followed_brands = [];
-            $userMongo->followed_occassions = [];
-            $userMongo->followed_designers = [];
-            $userMongo->followed_interests = [];
-            $userMongo->save();
         }
 
         $userFirstLogin = false;
@@ -406,30 +357,6 @@ class OlaHubGuestController extends BaseController
         $userData->facebook_id = $this->requestData["userFacebook"];
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
-
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
-            if (!$userMongo) {
-                $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-                $userMongo->my_groups = [];
-                $userMongo->groups = [];
-                $userMongo->celebrations = [];
-                $userMongo->friends = [];
-                $userMongo->requests = [];
-                $userMongo->responses = [];
-                $userMongo->intersts = [];
-                $userMongo->followed_brands = [];
-                $userMongo->followed_occassions = [];
-                $userMongo->followed_designers = [];
-                $userMongo->followed_interests = [];
-            }
-            $userMongo->user_id = (int) $userData->id;
-            $userMongo->username = "$userData->first_name $userData->last_name";
-            $userMongo->avatar_url = $userData->profile_picture;
-            $userMongo->country_id = $userData->country_id;
-            $userMongo->gender = $userData->user_gender;
-            $userMongo->profile_url = $userData->profile_url;
-            $userMongo->cover_photo = $userData->cover_photo;
-            $userMongo->save();
 
             $returnUserToSecure = array(
                 'country_id' => $userData->country_id,
@@ -777,40 +704,7 @@ class OlaHubGuestController extends BaseController
         }
 
         if (!$userData) {
-            // $tempUser = UserModel::withOutGlobalScope('notTemp')
-            //     ->where("reset_pass_token", $this->requestData["resetPasswordToken"])
-            //     ->where("reset_pass_code", $this->requestData["userPassword"])
-            //     ->first();
-            // if (!$tempUser) {
             return response(['status' => false, 'msg' => 'invalidResetCode', 'code' => 404], 200);
-            // }
-            // $userData = $tempUser;
-            // $userData->invitation_accepted_date = date('Y-m-d');
-            // $userData->save();
-            // $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $userData->id)->first();
-            // if (!$userMongo) {
-            //     $userMongo = new \OlaHub\UserPortal\Models\UserMongo;
-            // }
-
-            // $userMongo->user_id = (int) $userData->id;
-            // $userMongo->username = "$userData->first_name $userData->last_name";
-            // $userMongo->avatar_url = $userData->profile_picture;
-            // $userMongo->country_id = app('session')->get('def_country')->id;
-            // $userMongo->gender = $userData->user_gender;
-            // $userMongo->profile_url = $userData->profile_url;
-            // $userMongo->cover_photo = $userData->cover_photo;
-            // $userMongo->my_groups = [];
-            // $userMongo->groups = [];
-            // $userMongo->celebrations = [];
-            // $userMongo->friends = [];
-            // $userMongo->requests = [];
-            // $userMongo->responses = [];
-            // $userMongo->intersts = [];
-            // $userMongo->followed_brands = [];
-            // $userMongo->followed_occassions = [];
-            // $userMongo->followed_designers = [];
-            // $userMongo->followed_interests = [];
-            // $userMongo->save();
         }
 
         app("session")->put("tempData", $userData);

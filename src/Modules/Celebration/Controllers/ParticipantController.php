@@ -78,10 +78,6 @@ class ParticipantController extends BaseController {
         if ($this->celebration) {
             $participant = CelebrationParticipantsModel::where('user_id', $this->requestData['userId'])->where('celebration_id', $this->requestData['celebrationId'])->first();
             if ($participant && $this->celebration->created_by != $this->requestData['userId'] && $this->celebration->user_id != $this->requestData['userId']) {
-                $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $participant->user_id)->first();
-                if ($userMongo) {
-                    $userMongo->pull('celebrations', (int) $participant->celebration_id, true);
-                }
                 $participant->delete();
                 $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
                 $celebrationTitle = $this->celebration->title;
@@ -146,12 +142,6 @@ class ParticipantController extends BaseController {
                 $notification->for_user = $celebration->created_by;
                 $notification->save();
 
-                $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', (int) app('session')->get('tempID'))->first();
-                if ($userMongo) {
-                    $userMongo->push('celebrations', (int) $participant->celebration_id, true);
-                }
-
-
                 $removeNotification = \OlaHub\UserPortal\Models\NotificationMongo::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->where('for_user', app('session')->get('tempID'))->first();
                 if ($removeNotification) {
                     $removeNotification->delete();
@@ -214,10 +204,6 @@ class ParticipantController extends BaseController {
                     ->where('is_creator', '!=', 1)
                     ->first();
             if ($participant) {
-                $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $participant->user_id)->first();
-                if ($userMongo) {
-                    $userMongo->pull('celebrations', (int) $participant->celebration_id, true);
-                }
                 $participant->delete();
                 $this->celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->first();
                 $this->celebration->participant_count = $this->celebration->participant_count - 1;

@@ -72,11 +72,9 @@ class Occasion extends Model {
             'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
         ];
         if ($occassions) {
-            $user = app('session')->get('tempID') ? \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first() : false;
             $return = [
                 'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassions, 'name'),
                 'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occassions->logo_ref),
-                'followed' => $user && isset($user->followed_occassions) && is_array($user->followed_occassions) && in_array($occassions->id, $user->followed_occassions) ? true : false,
             ];
         }
 

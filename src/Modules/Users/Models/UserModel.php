@@ -221,14 +221,6 @@ class UserModel extends Model {
         $user->profile_url = $slug;
         $saved = $user->save();
         if ($saved) {
-            
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $user->id)->first();
-            if($userMongo){
-                $userMongo->profile_url = $user->profile_url;
-                $userMongo->save();
-            }
-            
-            
             return $slug;
         }
         return Null;

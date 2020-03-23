@@ -89,12 +89,11 @@ class ItemResponseHandler extends Fractal\TransformerAbstract {
     }
 
     private function setMerchantData() {
-        $user = app('session')->get('tempID') ? \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first() : false;
         $brand = $this->parentData->brand;
         $this->return["productOwner"] = isset($brand->id) ? $brand->id : NULL;
         $this->return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name');
         $this->return["productOwnerSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $this->return["productOwnerName"]);
-        $this->return["followed"] = $user && isset($user->followed_brands) && is_array($user->followed_brands) && in_array($brand->id, $user->followed_brands) ? true : false;
+        // $this->return["followed"] = $user && isset($user->followed_brands) && is_array($user->followed_brands) && in_array($brand->id, $user->followed_brands) ? true : false;
     }
 
     private function setBrandData() {
@@ -117,17 +116,8 @@ class ItemResponseHandler extends Fractal\TransformerAbstract {
     private function setFollowStatus($brand) {
         $this->return["productOwnerFollowed"] = 0;
         $this->return["productOwnerFollowers"] = 0;
-        if (app('session')->get('tempID')) {
-            $user = \OlaHub\UserPortal\Models\UserMongo::where("user_id", app('session')->get('tempID'))->first();
-            if ($user) {
-                $brands = $user->followed_brands && is_array($user->followed_brands) ? $user->followed_brands : [];
-                if (in_array($brand->id, $brands)) {
-                    $this->return["productOwnerFollowed"] = 1;
-                }
-            }
-        }
-        $followers = \OlaHub\UserPortal\Models\UserMongo::whereIn("followed_brands", [(string) $brand->id, (int) $brand->id])->count();
-        $this->return["productOwnerFollowers"] = $followers;
+        // $this->return["productOwnerFollowers"] = $followers;
+        $this->return["productOwnerFollowers"] = 0;
     }
 
     private function setAddData() {

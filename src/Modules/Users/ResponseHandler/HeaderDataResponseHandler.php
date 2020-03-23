@@ -29,11 +29,6 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
                     ->where('country_id', app('session')->get('def_country')->id);
         })->count();
         $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user',$userID)->where('read',0)->count();
-        $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $this->data->id)->first();
-        $followed_brands = $userMongo && isset($userMongo->followed_brands) && count($userMongo->followed_brands) > 0 ? count($userMongo->followed_brands) : 0;
-        $followed_occassions = $userMongo && isset($userMongo->followed_occassions) && count($userMongo->followed_occassions) > 0 ? count($userMongo->followed_occassions) : 0;
-        $followed_designers = $userMongo && isset($userMongo->followed_designers) && count($userMongo->followed_designers) > 0 ? count($userMongo->followed_designers) : 0;
-        $followed_interests = $userMongo && isset($userMongo->followed_interests) && count($userMongo->followed_interests) > 0 ? count($userMongo->followed_interests) : 0;
         $this->return = [
             "user" => isset($this->data->id) ? $this->data->id : 0,
             "userFullName" => isset($this->data->first_name) ? $this->data->first_name . ' ' . $this->data->last_name : NULL,
@@ -46,8 +41,8 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
             "notificationCount" =>$notification > 0 ?$notification:0,
             "userCountry" => app('session')->get('def_country')->id,
             "userCountryName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField(app('session')->get('def_country'), 'name'),
-            "userFriends" => $userMongo && isset($userMongo->friends) && count($userMongo->friends) > 0 ? count($userMongo->friends) : 0,
-            "userFollowing" => $followed_brands + $followed_occassions + $followed_designers + $followed_interests,
+            "userFriends" =>  0,
+            "userFollowing" => 0,
             "userBalanceNumber" => \OlaHub\UserPortal\Models\UserVouchers::getUserBalance(),
         ];
     }

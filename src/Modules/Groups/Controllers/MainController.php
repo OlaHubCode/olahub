@@ -89,8 +89,6 @@ class MainController extends BaseController {
         $group->creator = app('session')->get('tempID');
         $saved = $group->save();
         if ($saved) {
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->push('my_groups', $group->_id, true);
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->push('groups', $group->_id, true);
             \OlaHub\UserPortal\Models\Interests::whereIn('interest_id', $group->interests)->push('groups', $group->_id, true);
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = true;
@@ -219,9 +217,7 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'deleteThisGroup', 'code' => 400], 200);
             }
             \OlaHub\UserPortal\Models\Interests::project(['interest_id' => ['$slice' => $group->interests]])->pull('groups', $group->_id);
-            \OlaHub\UserPortal\Models\UserMongo::project(['my_groups' => ['$slice' => $group->_id]])->pull('my_groups', $group->_id);
-            \OlaHub\UserPortal\Models\UserMongo::project(['groups' => ['$slice' => $group->_id]])->pull('groups', $group->_id);
-            \OlaHub\UserPortal\Models\UserMongo::project(['group_invitions' => ['$slice' => $group->_id]])->pull('group_invition', $group->_id);
+            //remove all members from group
             $group->delete();
             $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200]]);
             $log->saveLogSessionData();
@@ -246,7 +242,7 @@ class MainController extends BaseController {
             }
 
             $group->push('responses', $this->requestData["userId"], true);
-            \OlaHub\UserPortal\Models\UserMongo::whereIn('user_id', $this->requestData["userId"])->push('group_invitions', $group->_id, true);
+            // insert member to member groups
 
             $inviterData = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
             foreach ($this->requestData["userId"] as $user) {
@@ -305,7 +301,7 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'removeMemberGroup', 'code' => 400], 200);
             }
             $group->pull('members', $this->requestData["userId"]);
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', $this->requestData["userId"])->pull('groups', $group->_id);
+            // remove member from members groups
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
@@ -375,8 +371,7 @@ class MainController extends BaseController {
             }
             $group->push('members', app('session')->get('tempID'), true);
             $group->pull('responses', app('session')->get('tempID'));
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->push('groups', $group->_id, true);
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->pull('group_invitions', $group->_id);
+            // change member status to 1 on accept
 
 
             $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
@@ -474,7 +469,7 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
             $group->pull('responses', app('session')->get('tempID'));
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->pull('group_invitions', $group->_id);
+            // remove member from members groups
             $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouRejectGroupRequest', 'code' => 200]]);
             $log->saveLogSessionData();
             return response(['status' => true, 'msg' => 'YouRejectGroupRequest', 'code' => 200], 200);
@@ -501,7 +496,7 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'leaveYouAreCreator', 'code' => 401], 200);
             }
             $group->pull('members', app('session')->get('tempID'));
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->pull('groups', $group->_id);
+            // remove member from members groups
             $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouLeaveGroup', 'code' => 200]]);
             $log->saveLogSessionData();
             return response(['status' => true, 'msg' => 'YouLeaveGroup', 'code' => 200], 200);
@@ -563,7 +558,7 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'alreadyMemberInGroup', 'code' => 500], 200);
             }
             $group->push('members', app('session')->get('tempID'), true);
-            \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->push('groups', $group->_id, true);
+            // add member to member groups
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;

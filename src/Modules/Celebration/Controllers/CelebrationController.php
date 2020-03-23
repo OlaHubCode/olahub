@@ -347,10 +347,6 @@ class CelebrationController extends BaseController
         $participant->is_approved = 1;
         $participant->is_creator = 1;
         $participant->save();
-        $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', (int) $participant->user_id)->first();
-        if ($userMongo) {
-            $userMongo->push('celebrations', (int) $this->celebration->id, true);
-        }
     }
 
     private function saveCelebrationData()
