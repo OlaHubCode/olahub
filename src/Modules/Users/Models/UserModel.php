@@ -112,6 +112,12 @@ class UserModel extends Model {
             'relation' => false,
             'validation' => ''
         ],
+        'userInterests' => [
+            'column' => 'interests',
+            'type' => 'string',
+            'relation' => false,
+            'validation' => ''
+        ],
     ];
     static $columnsInvitationMaping = [
         'userFirstName' => [

@@ -94,7 +94,7 @@ class Cart extends Model
                         }
                         break;
                     case "designer":
-                        $mainItem = DesginerItems::whereIn('item_ids', [(string) $item->item_id, (int) $item->item_id])->first();
+                        $mainItem = DesginerItems::where('id', $item->item_id)->first();
                         if ($mainItem) {
                             $itemDes = false;
                             if (isset($mainItem->items) && count($mainItem->items) > 0) {

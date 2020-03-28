@@ -31,7 +31,7 @@ class WishListsResponseHandler extends Fractal\TransformerAbstract {
             }
             
         } else {
-            $this->item = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$this->data->item_id])->first();
+            $this->item = \OlaHub\UserPortal\Models\DesginerItems::where('id', $this->data->item_id)->first();
             $this->getDesignerItemData();
         }
     }

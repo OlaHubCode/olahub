@@ -2,13 +2,13 @@
 
 namespace OlaHub\UserPortal\Models;
 
-use Jenssegers\Mongodb\Eloquent\Model as Eloquent;
+use Illuminate\Database\Eloquent\Model;
 
-class Interests extends Eloquent
+class Interests extends Model
 {
 
-    protected $connection = 'mongo';
-    protected $collection = 'interests';
+    // protected $connection = 'mongo';
+    protected $table = 'lkp_interests';
 
 
     public function __construct(array $attributes = array())
@@ -16,15 +16,23 @@ class Interests extends Eloquent
         parent::__construct($attributes);
 
         static::addGlobalScope('interestsCountry', function (\Illuminate\Database\Eloquent\Builder $builder) {
-            $builder->whereIn('countries', [(int) app('session')->get('def_country')->id]);
+            // $builder->whereIn('countries', [(int) app('session')->get('def_country')->id]);
         });
     }
 
 
+    public function scopeItems($query)
+    {
+        return $query->whereHas('itemsRelation', function ($q) {
+            $q->whereHas('itemsMainData', function ($query) {
+                $query->where('is_published', '1');
+            });
+        });
+    }
 
     public function itemsRelation()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\CatalogItem', 'items', 'id');
+        return $this->hasMany('OlaHub\UserPortal\Models\ItemInterests', 'interest_id');
     }
 
     static function getBannerBySlug($slug)
@@ -47,7 +55,7 @@ class Interests extends Eloquent
         if ($interest) {
             $return = [
                 'storeName' => isset($interest->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, "name") : NULL,
-                'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest->image),
+                'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest->image_ref),
             ];
         }
 

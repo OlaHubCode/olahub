@@ -52,15 +52,15 @@ class GiftController extends BaseController
             if (!empty($participants)) {
                 foreach ($participants as $participant) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_commitCelebration";
-                    $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    $notification->celebration_title =  $this->celebration->title;
+                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
+                    // $notification->celebration_title =  $this->celebration->title;
                     $notification->celebration_id = $this->requestData['celebrationId'];
-                    $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $participantData->id;
+                    $notification->user_id = $participantData->id;
                     $notification->save();
                 }
             }
@@ -118,19 +118,8 @@ class GiftController extends BaseController
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove unselected gifts"]);
             foreach ($cartItems as $cartItem) {
                 if ($cartItem->item_type == 'designer') {
-                    $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$cartItem->item_id])->first();
-                    if ($itemMain) {
-                        $item = false;
-                        if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                            foreach ($itemMain->items as $oneItem) {
-                                if ($oneItem["item_id"] == $cartItem->item_id) {
-                                    $item = (object) $oneItem;
-                                }
-                            }
-                        }
-                        if (!$item) {
-                            $item = $itemMain;
-                        }
+                    $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $cartItem->item_id)->first();
+                    if ($item) {
                         if ((int) $item->item_stock <= 0) {
                             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') . 'isOutOfStock', 'code' => 500]]);
                             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
@@ -182,15 +171,15 @@ class GiftController extends BaseController
             if (!empty($participants)) {
                 foreach ($participants as $participant) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_uncommitCelebration";
-                    $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    $notification->celebration_title =  $this->celebration->title;
+                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
+                    // $notification->celebration_title =  $this->celebration->title;
                     $notification->celebration_id = $this->requestData['celebrationId'];
-                    $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $participantData->id;
+                    $notification->user_id = $participantData->id;
                     $notification->save();
                 }
             }

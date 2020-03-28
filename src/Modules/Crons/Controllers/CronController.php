@@ -54,15 +54,15 @@ class CronController extends BaseController
         $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->get();
         foreach ($participants as $participant) {
             $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
-            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
             $notification->type = 'celebration';
             $notification->content = "notifi_publishCelebration";
-            $notification->user_name = $celebrationOwner->first_name . " " . $celebrationOwner->last_name;
+            // $notification->user_name = $celebrationOwner->first_name . " " . $celebrationOwner->last_name;
             $notification->celebration_id = $celebration->id;
-            $notification->celebration_title = $celebration->title;
-            $notification->avatar_url = $participantData->profile_picture;
+            // $notification->celebration_title = $celebration->title;
+            // $notification->avatar_url = $participantData->profile_picture;
             $notification->read = 0;
-            $notification->for_user = $participantData->id;
+            $notification->user_id = $participantData->id;
             $notification->save();
         }
     }
@@ -174,15 +174,15 @@ class CronController extends BaseController
                 $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->get();
                 foreach ($participants as $participant) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_publishCelebration";
-                    $notification->user_name = $celebrationOwner->first_name . " " . $celebrationOwner->last_name;
+                    // $notification->user_name = $celebrationOwner->first_name . " " . $celebrationOwner->last_name;
                     $notification->celebration_id = $celebration->id;
-                    $notification->celebration_title = $celebration->title;
-                    $notification->avatar_url = $participantData->profile_picture;
+                    // $notification->celebration_title = $celebration->title;
+                    // $notification->avatar_url = $participantData->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $participantData->id;
+                    $notification->user_id = $participantData->id;
                     $notification->save();
                 }
             }
@@ -244,15 +244,15 @@ class CronController extends BaseController
                 $participant->payment_status = 1;
                 $participant->save();
 
-                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'celebration';
                 $notification->content = "notifi_paymentCancellation";
-                $notification->celebration_title = $celebration->title;
-                $notification->user_name = '';
+                // $notification->celebration_title = $celebration->title;
+                // $notification->user_name = '';
                 $notification->celebration_id = $celebration->id;
-                $notification->avatar_url = FRONT_URL . "/images/logo.png";
+                // $notification->avatar_url = FRONT_URL . "/images/logo.png";
                 $notification->read = 0;
-                $notification->for_user = $participant->user_id;
+                $notification->user_id = $participant->user_id;
                 $notification->save();
             }
 

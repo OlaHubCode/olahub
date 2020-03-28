@@ -18,7 +18,7 @@ class InterestsForPrequestFormsResponseHandler extends Fractal\TransformerAbstra
 
     private function setDefaultData() {
         $this->return = [
-            "value" => isset($this->data->interest_id) ?  $this->data->interest_id : 0,
+            "value" => isset($this->data->id) ?  $this->data->id : 0,
             "text" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data, 'name'),
         ];
     }

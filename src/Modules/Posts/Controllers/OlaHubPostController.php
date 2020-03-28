@@ -215,33 +215,33 @@ class OlaHubPostController extends BaseController
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $group = $groupData;
                 if ($group->posts_approve && $group->creator != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'group';
                     $notification->content = "notifi_postGroup";
-                    $notification->user_name = "";
-                    $notification->community_title = $group->name;
+                    // $notification->user_name = "";
+                    // $notification->community_title = $group->name;
                     $notification->group_id = $this->requestData['group'];
-                    $notification->avatar_url = $group->avatar_url;
+                    // $notification->avatar_url = $group->avatar_url;
                     $notification->read = 0;
-                    $notification->for_user = $group->creator;
+                    $notification->user_id = $group->creator;
                     $notification->save();
                 } else {
                     foreach ($group->members as $member) {
                         if ($member != app('session')->get('tempID')) {
 
-                            $existNotifi = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', $member)->where('content', 'notifi_postGroup')->where('read', 0)->first();
+                            $existNotifi = \OlaHub\UserPortal\Models\Notifications::where('user_id', $member)->where('content', 'notifi_postGroup')->where('read', 0)->first();
                             if ($existNotifi) {
                                 continue;
                             } else {
-                                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                                $notification = new \OlaHub\UserPortal\Models\Notifications();
                                 $notification->type = 'group';
                                 $notification->content = "notifi_postGroup";
-                                $notification->user_name = "";
-                                $notification->community_title = $group->name;
+                                // $notification->user_name = "";
+                                // $notification->community_title = $group->name;
                                 $notification->group_id = $this->requestData['group'];
-                                $notification->avatar_url = $group->avatar_url;
+                                // $notification->avatar_url = $group->avatar_url;
                                 $notification->read = 0;
-                                $notification->for_user = $member;
+                                $notification->user_id = $member;
                                 $notification->save();
                             }
                         }
@@ -292,14 +292,14 @@ class OlaHubPostController extends BaseController
                 $return['code'] = 200;
 
                 if ($postMongo->user_id != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'post';
                     $notification->content = "notifi_comment";
-                    $notification->user_name = $authorName;
+                    // $notification->user_name = $authorName;
                     $notification->post_id = $postID;
-                    $notification->avatar_url = $author->profile_picture;
+                    // $notification->avatar_url = $author->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $postMongo->user_id;
+                    $notification->user_id = $postMongo->user_id;
                     $notification->save();
                 }
             }
@@ -388,27 +388,27 @@ class OlaHubPostController extends BaseController
                         $comment["replies"][] = $replyData;
                         $postMongo->push('comments', $comment);
                         if ($comment['user_id'] != app('session')->get('tempID')) {
-                            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                            $notification = new \OlaHub\UserPortal\Models\Notifications();
                             $notification->type = 'post';
                             $notification->content = "notifi_reply";
-                            $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
+                            // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
                             $notification->post_id = $postID;
-                            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+                            // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
                             $notification->read = 0;
-                            $notification->for_user = $comment['user_id'];
+                            $notification->user_id = $comment['user_id'];
                             $notification->save();
                         }
 
 
                         if ($postMongo->user_id != app('session')->get('tempID')) {
-                            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                            $notification = new \OlaHub\UserPortal\Models\Notifications();
                             $notification->type = 'post';
                             $notification->content = "notifi_comment";
-                            $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
+                            // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
                             $notification->post_id = $postID;
-                            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+                            // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
                             $notification->read = 0;
-                            $notification->for_user = $postMongo->user_id;
+                            $notification->user_id = $postMongo->user_id;
                             $notification->save();
                         }
                     }

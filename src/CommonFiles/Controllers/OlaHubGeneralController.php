@@ -242,7 +242,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
-        $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
+        $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         if ($notification->count() > 0) {
@@ -291,7 +291,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all notifications"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch all notification"]);
-        $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
+        $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         if ($notification->count() > 0) {
@@ -341,10 +341,10 @@ class OlaHubGeneralController extends BaseController
 
         if (isset($this->requestData->notificationId) && $this->requestData->notificationId) {
             if ($this->requestData->notificationId == 'all') {
-                \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->update(['read' => 1]);
+                \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->update(['read' => 1]);
                 return ['status' => true, 'msg' => 'Notifications has been read', 'code' => 200];
             } else {
-                $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->find($this->requestData->notificationId);
+                $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->find($this->requestData->notificationId);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start making notification read"]);
                 if ($notification) {
                     $notification->read = 1;
@@ -1663,18 +1663,51 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-        $user = NULL;
-        $key = "followed_" . $type;
+        $following = (new \OlaHub\UserPortal\Models\Following);
+        $following->target_id = $id;
+        $following->user_id = app('session')->get('tempID');
+        $following->type = ($type == 'brands' ? 1 : 2);
+        $following->save();
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 
     public function userUnFollow($type, $id)
     {
+        \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $id)
+            ->where('type', ($type == 'brands' ? 1 : 2))->delete();
         return response(['status' => true, 'msg' => 'unfollow successfully', 'code' => 200], 200);
     }
 
     public function listUserFollowing()
     {
-        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        $user = \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first();
+        $return = [];
+        if ($user) {
+            $brands = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 1)->get();
+            $designers = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 2)->get();
+            if (isset($brands)) {
+                $brands = \OlaHub\UserPortal\Models\Brand::whereIn('id', $brands)->get();
+                foreach ($brands as $brand) {
+                    $return['brands']['data'][] = [
+                        "brandID" => isset($brand->id) ? $brand->id : 0,
+                        'brandName' => isset($brand->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, "name") : NULL,
+                        'brandLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref),
+                        'brandSlug' => isset($brand->store_slug) ? $brand->store_slug : null
+                    ];
+                }
+            }
+            if (isset($designers)) {
+                $designers = \OlaHub\UserPortal\Models\Designer::whereIn('id', $designers)->get();
+                foreach ($designers as $designer) {
+                    $return['designer'][] = [
+                        "designerId" => isset($designer->id) ? $designer->id : 0,
+                        'designerName' => isset($designer->brand_name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($designer, "brand_name") : NULL,
+                        'designerLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($designer->logo_ref),
+                        'designerSlug' => isset($designer->designer_slug) ? $designer->designer_slug : null
+                    ];
+                }
+            }
+        }
+        return response(['status' => true, 'data' => $return, 'code' => 200], 200);
     }
 }

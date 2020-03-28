@@ -3,15 +3,17 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Jenssegers\Mongodb\Eloquent\HybridRelations;
+// use Jenssegers\Mongodb\Eloquent\HybridRelations;
 
-class CatalogItem extends Model {
+class CatalogItem extends Model
+{
 
-    use HybridRelations;
+    // use HybridRelations;
 
     protected $connection = 'mysql';
 
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
 
         static::addGlobalScope('published', function (\Illuminate\Database\Eloquent\Builder $builder) {
@@ -48,12 +50,12 @@ class CatalogItem extends Model {
             'validation' => 'numeric'
         ],
         //Relations tables
-//        'attributes' => [
-//            'column' => 'item_attribute_value_id',
-//            'type' => 'number',
-//            'relation' => 'valuesData',
-//            'validation' => 'numeric'
-//        ],
+        //        'attributes' => [
+        //            'column' => 'item_attribute_value_id',
+        //            'type' => 'number',
+        //            'relation' => 'valuesData',
+        //            'validation' => 'numeric'
+        //        ],
         'occasions' => [
             'column' => 'occasion_id',
             'type' => 'number',
@@ -94,72 +96,93 @@ class CatalogItem extends Model {
         'interestSlug' => [
             'column' => 'interest_slug',
             'type' => 'number',
-            'relation' => 'interests',
+            'relation' => 'interestSync',
             'validation' => 'numeric'
         ],
     ];
 
-    public function country() {
+    public function country()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Country');
     }
 
-    public function templateItem() {
+    public function templateItem()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\CatalogItem', 'parent_item_id');
     }
 
-    public function interests() {
-        return $this->hasMany('OlaHub\UserPortal\Models\Interests', 'items');
+    public function interests()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\ItemInterests', 'item_id');
     }
 
-    public function merchant() {
+    public function interestSync()
+    {
+        return $this->belongsToMany('OlaHub\UserPortal\Models\Interests', 'catalog_item_interests', 'item_id', 'interest_id');
+    }
+
+    public function merchant()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Merchant', 'merchant_id');
     }
 
-    public function images() {
+    public function images()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemImages', 'item_id');
     }
 
-    public function brand() {
+    public function brand()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Brand', 'store_id');
     }
 
-    public function category() {
+    public function category()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\ItemCategory', 'category_id');
     }
 
-    public function classification() {
+    public function classification()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Classification', 'clasification_id');
     }
 
-    public function occasions() {
+    public function occasions()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemOccasions', 'item_id');
     }
 
-    public function occasionSync() {
+    public function occasionSync()
+    {
         return $this->belongsToMany('OlaHub\UserPortal\Models\Occasion', 'catalog_item_occasions', 'item_id', 'occasion_id');
     }
 
-    public function valuesData() {
+    public function valuesData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemAttrValue', 'item_id');
     }
 
-    public function parentValuesData() {
+    public function parentValuesData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemAttrValue', 'parent_item_id');
     }
 
-    public function exchangePolicy() {
+    public function exchangePolicy()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\ExchangeAndRefund', 'exchange_refund_policy');
     }
 
-    public function reviewsData() {
+    public function reviewsData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemReviews', 'item_id');
     }
 
-    public function quantityData() {
+    public function quantityData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemPickuAddr', 'item_id');
     }
 
-    static function checkStock($data) {
+    static function checkStock($data)
+    {
         if ($data && $data instanceof CatalogItem) {
             $quantity = 0;
             $itemQ = ItemPickuAddr::selectRaw('SUM(quantity) as qu')->where('item_id', $data->id)->first();
@@ -170,7 +193,8 @@ class CatalogItem extends Model {
         }
     }
 
-    static function checkIsNew($data) {
+    static function checkIsNew($data)
+    {
         if ($data && $data instanceof CatalogItem) {
             $createTime = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($data->created_at, "Y-m-d");
             $maxDays = date("Y-m-d", strtotime("-2 Days"));
@@ -181,7 +205,8 @@ class CatalogItem extends Model {
         return false;
     }
 
-    static function checkPrice(CatalogItem $data, $final = false, $withCurr = true, $countryId = false) {
+    static function checkPrice(CatalogItem $data, $final = false, $withCurr = true, $countryId = false)
+    {
         $return["productPrice"] = isset($data->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($data->price, $withCurr, $countryId) : 0;
         $return["productDiscountedPrice"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($final ? $data->price : 0, $withCurr, $countryId);
         $return["productHasDiscount"] = false;
@@ -196,14 +221,15 @@ class CatalogItem extends Model {
         return $return;
     }
 
-    static function searchItem($q = 'a', $count = 15) {
+    static function searchItem($q = 'a', $count = 15)
+    {
         $items = CatalogItem::where('name', 'LIKE', "%$q%")
-                        ->whereHas("merchant", function($merQ) {
-                            $merQ->where('country_id', app('session')->get('def_country')->id);
-                        })->where(function($q) {
-            $q->whereNull("parent_item_id");
-            $q->orWhere("parent_item_id", 0);
-        });
+            ->whereHas("merchant", function ($merQ) {
+                $merQ->where('country_id', app('session')->get('def_country')->id);
+            })->where(function ($q) {
+                $q->whereNull("parent_item_id");
+                $q->orWhere("parent_item_id", 0);
+            });
         if ($count > 0) {
             return $items->paginate($count);
         } else {
@@ -211,17 +237,18 @@ class CatalogItem extends Model {
         }
     }
 
-    static function searchItemByClassification($q = 'a', $classification = false, $count = 15) {
+    static function searchItemByClassification($q = 'a', $classification = false, $count = 15)
+    {
         if ($classification) {
             $items = (new CatalogItem)->newQuery();
             $items->where('name', 'LIKE', "%$q%");
-            $items->whereHas("merchant", function($merQ) {
+            $items->whereHas("merchant", function ($merQ) {
                 $merQ->where('country_id', app('session')->get('def_country')->id);
             });
-            $items->whereHas("classification", function($merQ) use($classification) {
+            $items->whereHas("classification", function ($merQ) use ($classification) {
                 $merQ->where('class_slug', $classification);
             });
-            $items->where(function($q) {
+            $items->where(function ($q) {
                 $q->whereNull("parent_item_id");
                 $q->orWhere("parent_item_id", 0);
             });
@@ -231,17 +258,17 @@ class CatalogItem extends Model {
         return false;
     }
 
-    static function getItemIdsFromInterest($interests) {
-        $return = [];
-        foreach ($interests as $interest) {
-            $itemsIDs = $interest->items;
-            foreach ($itemsIDs as $id) {
-                if (!in_array($id, $return)) {
-                    $return[] = $id;
-                }
-            }
-        }
-        return $return;
+    static function getItemIdsFromInterest($interests)
+    {
+        // $return = [];
+        // foreach ($interests as $interest) {
+        //     $itemsIDs = $interest->items;
+        //     foreach ($itemsIDs as $id) {
+        //         if (!in_array($id, $return)) {
+        //             $return[] = $id;
+        //         }
+        //     }
+        // }
+        // return $return;
     }
-
 }

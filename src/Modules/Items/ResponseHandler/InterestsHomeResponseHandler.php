@@ -20,7 +20,7 @@ class InterestsHomeResponseHandler extends Fractal\TransformerAbstract {
         $itemName = isset($this->data->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data, 'name') : NULL;
         $this->return = [
             "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($this->data, 'interest_slug', $itemName),
-            "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->image),
+            "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->image_ref),
             "itemName" => $itemName,
         ];
     }

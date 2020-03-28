@@ -28,7 +28,7 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
                     ->where('user_id', $userID)
                     ->where('country_id', app('session')->get('def_country')->id);
         })->count();
-        $notification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user',$userID)->where('read',0)->count();
+        $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id',$userID)->where('read',0)->count();
         $this->return = [
             "user" => isset($this->data->id) ? $this->data->id : 0,
             "userFullName" => isset($this->data->first_name) ? $this->data->first_name . ' ' . $this->data->last_name : NULL,

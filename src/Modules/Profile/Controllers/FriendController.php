@@ -170,14 +170,14 @@ class FriendController extends BaseController {
                 $friendMongo->push('responses', app('session')->get('tempID'), true);
 
                 $userData = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
-                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'user';
                 $notification->content = "notifi_friendRequest";
-                $notification->user_name = $userData->first_name . " " . $userData->last_name;
-                $notification->profile_url = $userData->profile_url;
-                $notification->avatar_url = $userData->profile_picture;
+                // $notification->user_name = $userData->first_name . " " . $userData->last_name;
+                $notification->friend_id_url = $userData->profile_url;
+                // $notification->avatar_url = $userData->profile_picture;
                 $notification->read = 0;
-                $notification->for_user = $friendMongo->user_id;
+                $notification->user_id = $friendMongo->user_id;
                 $notification->save();
                 $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'sentSuccessfully', 'code' => 200]]);
                 $log->saveLogSessionData();
@@ -244,7 +244,7 @@ class FriendController extends BaseController {
                 $friendMongo->pull('requests', app('session')->get('tempID'));
                 $userMongo->pull('responses', $friendID);
                 
-                $userNotification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', (int) app('session')->get('tempID'))->where('type', 'user')->where('profile_url', $friendMongo->profile_url)->first();
+                $userNotification = \OlaHub\UserPortal\Models\Notifications::where('user_id', (int) app('session')->get('tempID'))->where('type', 'user')->where('friend_id', $friendMongo->id)->first();
                 if ($userNotification) {
                     $userNotification->delete();
                 }
@@ -283,17 +283,17 @@ class FriendController extends BaseController {
                 $userMongo->push('friends', $friendID);
 
                 $userData = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
-                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'user';
                 $notification->content = "notifi_acceptFriend";
-                $notification->user_name = $userData->first_name . " " . $userData->last_name;
-                $notification->profile_url = $userData->profile_url;
-                $notification->avatar_url = $userData->profile_picture;
+                // $notification->user_name = $userData->first_name . " " . $userData->last_name;
+                $notification->friend_id = $userData->id;
+                // $notification->avatar_url = $userData->profile_picture;
                 $notification->read = 0;
-                $notification->for_user = $friendMongo->user_id;
+                $notification->user_id = $friendMongo->user_id;
                 $notification->save();
 
-                $userNotification = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', (int) app('session')->get('tempID'))->where('type', 'user')->where('profile_url', $friendMongo->profile_url)->first();
+                $userNotification = \OlaHub\UserPortal\Models\Notifications::where('user_id', (int) app('session')->get('tempID'))->where('type', 'user')->where('friend_id', $friendMongo->id)->first();
                 if ($userNotification) {
                     $userNotification->delete();
                 }

@@ -3,8 +3,8 @@
 namespace OlaHub\UserPortal\Models;
 use Illuminate\Database\Eloquent\Model;
 
-class Notifications extends Model {
+class Following extends Model {
 
-    protected $table = 'notifications';
+    protected $table = 'following';
 
 }

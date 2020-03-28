@@ -59,7 +59,6 @@ class UserHelper extends OlaHubCommonHelper
             $userLogin->code = $code;
             $userLogin->save();
         } else {
-            // \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', app('session')->get('tempID'))->update(['read' => 1]);
             \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->update(
                 array(
                     'device_id' => $data['deviceID'],

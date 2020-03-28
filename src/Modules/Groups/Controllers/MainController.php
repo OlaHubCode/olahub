@@ -6,14 +6,16 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\groups;
 
-class MainController extends BaseController {
+class MainController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
     protected $uploadImage;
     protected $userAgent;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
@@ -27,7 +29,8 @@ class MainController extends BaseController {
      * @param  Request  $request constant of Illuminate\Http\Request
      * @return Response
      */
-    public function listGroups() {
+    public function listGroups()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listGroups"]);
 
@@ -51,7 +54,8 @@ class MainController extends BaseController {
      * @param  Request  $request constant of Illuminate\Http\Request
      * @return Response
      */
-    public function listAllGroups() {
+    public function listAllGroups()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listGroups"]);
 
@@ -69,7 +73,8 @@ class MainController extends BaseController {
         return response($return, 200);
     }
 
-    public function createNewGroup() {
+    public function createNewGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "createNewGroup"]);
 
@@ -99,7 +104,8 @@ class MainController extends BaseController {
         }
     }
 
-    public function getOneGroup() {
+    public function getOneGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "getOneGroup"]);
 
@@ -122,7 +128,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function updateGroup() {
+    public function updateGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "updateGroup"]);
 
@@ -158,15 +165,15 @@ class MainController extends BaseController {
                         foreach ($notApprovedPosts as $post) {
                             $post->isApprove = 1;
                             $post->save();
-                            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                            $notification = new \OlaHub\UserPortal\Models\Notifications();
                             $notification->type = 'group';
                             $notification->content = "notifi_ApprovepostGroup";
-                            $notification->user_name = "";
-                            $notification->community_title = $group->name;
+                            // $notification->user_name = "";
+                            // $notification->community_title = $group->name;
                             $notification->group_id = $post->group_id;
-                            $notification->avatar_url = $group->avatar_url;
+                            // $notification->avatar_url = $group->avatar_url;
                             $notification->read = 0;
-                            $notification->for_user = $post->user_id;
+                            $notification->user_id = $post->user_id;
                             $notification->save();
                         }
                     }
@@ -200,7 +207,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function deleteGroup() {
+    public function deleteGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "deleteGroup"]);
 
@@ -228,7 +236,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function inviteUserToGroup() {
+    public function inviteUserToGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
 
@@ -248,15 +257,15 @@ class MainController extends BaseController {
             foreach ($this->requestData["userId"] as $user) {
                 $userData = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $user)->first();
                 if (!$userData->invited_by) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'group';
                     $notification->content = "notifi_inviteCommuntity";
-                    $notification->user_name = $inviterData->first_name . " " . $inviterData->last_name;
-                    $notification->community_title = $group->name;
+                    // $notification->user_name = $inviterData->first_name . " " . $inviterData->last_name;
+                    // $notification->community_title = $group->name;
                     $notification->group_id = $group->_id;
-                    $notification->avatar_url = $inviterData->profile_picture;
+                    // $notification->avatar_url = $inviterData->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $user;
+                    $notification->user_id = $user;
                     $notification->save();
                 } else {
                     $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
@@ -282,7 +291,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function removeGroupMember() {
+    public function removeGroupMember()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
 
@@ -314,7 +324,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function approveAdminGroupRequest() {
+    public function approveAdminGroupRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "approveAdminGroupRequest"]);
 
@@ -335,15 +346,15 @@ class MainController extends BaseController {
             $group->push('members', $this->requestData["userId"], true);
             $group->pull('requests', $this->requestData["userId"], true);
 
-            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
             $notification->type = 'group';
             $notification->content = "notifi_adminApproveReq";
-            $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
-            $notification->community_title = $group->name;
+            // $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
+            // $notification->community_title = $group->name;
             $notification->group_id = $group->_id;
-            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+            // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
             $notification->read = 0;
-            $notification->for_user = $this->requestData["userId"];
+            $notification->user_id = $this->requestData["userId"];
             $notification->save();
 
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
@@ -358,7 +369,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function approveUserGroupRequest() {
+    public function approveUserGroupRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "approveUserGroupRequest"]);
 
@@ -374,15 +386,15 @@ class MainController extends BaseController {
             // change member status to 1 on accept
 
 
-            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
             $notification->type = 'group';
             $notification->content = "notifi_acceptCommunity";
-            $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
-            $notification->community_title = $group->name;
+            // $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
+            // $notification->community_title = $group->name;
             $notification->group_id = $group->_id;
-            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+            // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
             $notification->read = 0;
-            $notification->for_user = $group->creator;
+            $notification->user_id = $group->creator;
             $notification->save();
 
 
@@ -398,7 +410,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function rejectAdminGroupRequest() {
+    public function rejectAdminGroupRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "rejectAdminGroupRequest"]);
 
@@ -427,7 +440,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function cancelAdminInvite() {
+    public function cancelAdminInvite()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "cancelAdminInvite"]);
 
@@ -457,7 +471,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function rejectUserGroupRequest() {
+    public function rejectUserGroupRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "rejectUserGroupRequest"]);
 
@@ -479,7 +494,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function leaveGroup() {
+    public function leaveGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "leaveGroup"]);
 
@@ -506,7 +522,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function listGroupMembers() {
+    public function listGroupMembers()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listGroupMembers"]);
 
@@ -541,7 +558,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function joinPublicGroup() {
+    public function joinPublicGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "joinPublicGroup"]);
 
@@ -571,7 +589,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function joinClosedGroup() {
+    public function joinClosedGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "joinClosedGroup"]);
 
@@ -595,15 +614,15 @@ class MainController extends BaseController {
             }
             $group->push('requests', app('session')->get('tempID'), true);
 
-            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
             $notification->type = 'group';
             $notification->content = "notifi_requestCommunity";
-            $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
-            $notification->community_title = $group->name;
+            // $notification->user_name = app('session')->get('tempData')->first_name . " " . app('session')->get('tempData')->last_name;
+            // $notification->community_title = $group->name;
             $notification->group_id = $group->_id;
-            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+            // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
             $notification->read = 0;
-            $notification->for_user = $group->creator;
+            $notification->user_id = $group->creator;
             $notification->save();
 
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
@@ -619,7 +638,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function cancelJoinClosedGroup() {
+    public function cancelJoinClosedGroup()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "cancelJoinClosedGroup"]);
 
@@ -649,7 +669,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function uploadGroupImageAndCover() {
+    public function uploadGroupImageAndCover()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "uploadGroupImageAndCover"]);
 
@@ -694,7 +715,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getBrandsRelatedGroupInterests() {
+    public function getBrandsRelatedGroupInterests()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "getBrandsRelatedGroupInterests"]);
 
@@ -715,8 +737,8 @@ class MainController extends BaseController {
             if ($group && $group->onlyMyStores) {
                 $creatorUser = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
                 $merchants = \OlaHub\UserPortal\Models\ItemStore::whereHas('merchantRelation', function ($q) {
-                            $q->country_id = app('session')->get('def_country')->id;
-                        })->where('merchant_id', $creatorUser->for_merchant)->get();
+                    $q->country_id = app('session')->get('def_country')->id;
+                })->where('merchant_id', $creatorUser->for_merchant)->get();
                 $itemIds = [];
                 foreach ($interests as $interest) {
                     $itemIds = $interest->items;
@@ -734,8 +756,8 @@ class MainController extends BaseController {
                     $itemIds = $interest->items;
                 }
                 $merchants = \OlaHub\UserPortal\Models\ItemStore::whereHas('merchantRelation', function ($q) {
-                            $q->country_id = app('session')->get('def_country')->id;
-                        })->whereIn('merchant_id', $merchantIds)->get();
+                    $q->country_id = app('session')->get('def_country')->id;
+                })->whereIn('merchant_id', $merchantIds)->get();
             }
 
 
@@ -745,19 +767,19 @@ class MainController extends BaseController {
                 $items = \OlaHub\UserPortal\Models\CatalogItem::whereIn('id', $itemIds)->where("store_id", $merchant->id)->paginate(5);
                 $itemData = [];
                 foreach ($items as $item) {
-                $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
-                $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item);
-                $images = $item->images;
-                $itemData[] = [
-                    "itemId" => $item->id,
-                    "itemName" => $itemName,
-                    "itemPrice" => $price['productPrice'],
-                    "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-                    "itemImage" => count($images) > 0 ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                ];
-            }
+                    $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
+                    $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item);
+                    $images = $item->images;
+                    $itemData[] = [
+                        "itemId" => $item->id,
+                        "itemName" => $itemName,
+                        "itemPrice" => $price['productPrice'],
+                        "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
+                        "itemImage" => count($images) > 0 ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                    ];
+                }
                 if (count($itemData) > 0) {
-                    $return ["data"][] = [
+                    $return["data"][] = [
                         "merchantId" => $merchant->id,
                         "merchantName" => $merchant->name,
                         "merchantSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($merchant, 'store_slug', $merchant->name),
@@ -778,7 +800,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function getDesignersRelatedGroupInterests() {
+    public function getDesignersRelatedGroupInterests()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "getDesignersRelatedGroupInterests"]);
 
@@ -797,48 +820,49 @@ class MainController extends BaseController {
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
 
-            $interest_ids = [];
-            foreach ($interests as $interest) {
-                $interest_ids[] = strval($interest->interest_id);
-            }
+            //////////////
             if ($group && $group->onlyMyStores) {
                 $creatorUser = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
-                $items = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_interest_id', $interest_ids)
-                ->where('designer_id',$creatorUser->id)
-                ->get();
-                
-            } else {
-                $items = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_interest_id', $interest_ids)->get();
-            }
-            $designers_ids = [];
-            $item_ids = [];
-            foreach ($items as $item) {
-                    if(! in_array($item->designer_id, $designers_ids) ){
-                        $designers_ids [] = $item->designer_id;
-                    }
-                    $item_ids[] = $item->item_id;
+                $designers = \OlaHub\UserPortal\Models\DesginerItems::whereHas('designer')->where('designer_id', $creatorUser->for_merchant)->get();
+                $itemIds = [];
+                foreach ($interests as $interest) {
+                    $itemIds = $interest->items;
                 }
-
+                if (count($itemIds) > 0) {
+                    $items = \OlaHub\UserPortal\Models\DesginerItems::where('designer_id', $creatorUser->for_merchant)->whereIn("id", $itemIds)->get();
+                } else {
+                    $items = \OlaHub\UserPortal\Models\DesginerItems::where('designer_id', $creatorUser->for_merchant)->orderByRaw("RAND()")->get();
+                }
+            } else {
+                $designerstIds = [];
+                $itemIds = [];
+                foreach ($interests as $interest) {
+                    $designersIds = $interest->merchants;
+                    $itemIds = $interest->items;
+                }
+                $designers = \OlaHub\UserPortal\Models\ItemStore::whereHas('designer')->whereIn('designer_id', $designersIds)->get();
+            }
+            /////////////
 
             $return = [];
-            foreach ($designers_ids as $designer_id) {
+            foreach ($designers as $designer_id) {
                 $designerData = \OlaHub\UserPortal\Models\Designer::find($designer_id);
                 $items = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_id', $item_ids)->where("designer_id", $designer_id)->paginate(5);
                 $itemData = [];
                 foreach ($items as $item) {
-                $itemName = isset($item->item_title) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'item_title') : NULL;
-                $price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item);
-                $images = $item->item_images;
-                $itemData[] = [
-                    "itemId" => $item->item_id,
-                    "itemName" => $itemName,
-                    "itemPrice" => $price['productPrice'],
-                    "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-                    "itemImage" => count($images) > 0 ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-                ];
-            }
+                    $itemName = isset($item->item_title) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'item_title') : NULL;
+                    $price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item);
+                    $images = $item->item_images;
+                    $itemData[] = [
+                        "itemId" => $item->item_id,
+                        "itemName" => $itemName,
+                        "itemPrice" => $price['productPrice'],
+                        "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
+                        "itemImage" => count($images) > 0 ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                    ];
+                }
                 if (count($itemData) > 0) {
-                    $return ["data"][] = [
+                    $return["data"][] = [
                         "designerId" => $designerData->id,
                         "designerName" => $designerData->brand_name,
                         "designerSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($designerData, 'designer_slug', $designerData->brand_name),
@@ -859,7 +883,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function approveAdminPost() {
+    public function approveAdminPost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "approveAdminPost"]);
 
@@ -874,15 +899,15 @@ class MainController extends BaseController {
                 }
                 $post->isApprove = 1;
                 $post->save();
-                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'group';
                 $notification->content = "notifi_ApprovepostGroup";
-                $notification->user_name = "";
-                $notification->community_title = $group->name;
+                // $notification->user_name = "";
+                // $notification->community_title = $group->name;
                 $notification->group_id = $post->group_id;
-                $notification->avatar_url = $group->avatar_url;
+                // $notification->avatar_url = $group->avatar_url;
                 $notification->read = 0;
-                $notification->for_user = $post->user_id;
+                $notification->user_id = $post->user_id;
                 $notification->save();
                 $return['status'] = TRUE;
                 $return['code'] = 200;
@@ -897,7 +922,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function rejectGroupPost() {
+    public function rejectGroupPost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "rejectGroupPost"]);
 
@@ -921,7 +947,8 @@ class MainController extends BaseController {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function listPendingGroupPost() {
+    public function listPendingGroupPost()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listPendingGroupPost"]);
 
@@ -943,5 +970,4 @@ class MainController extends BaseController {
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
 }

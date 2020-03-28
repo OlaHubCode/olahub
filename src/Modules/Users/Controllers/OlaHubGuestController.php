@@ -89,7 +89,7 @@ class OlaHubGuestController extends BaseController
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $this->userHelper->addUserLogin($this->requestData, $userData->id, true);
 
-        \OlaHub\UserPortal\Models\Interests::whereIn('interest_id', $this->requestData['userInterests'])->push('users', $userData->id, true);
+        \OlaHub\UserPortal\Models\Interests::whereIn('id', $this->requestData['userInterests'])->push('users', $userData->id, true);
         if ($userData->mobile_no && $userData->email) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNewUser($userData, $userData->activation_code);
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNewUser($userData, $userData->activation_code);

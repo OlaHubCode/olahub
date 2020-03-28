@@ -262,6 +262,8 @@ class OlaHubUserController extends BaseController
         /********************/
         if (!empty($this->requestData['userPhoneNumber']))
             $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
+        if (!empty($this->requestData['userInterests']))
+            $this->requestData['userInterests'] = implode(",", $this->requestData['userInterests']);
         foreach ($this->requestData as $input => $value) {
             if (isset($this->requestData['userNewPassword']) && $this->requestData['userNewPassword'] != "") {
                 $userData->password = $this->requestData['userNewPassword'];
