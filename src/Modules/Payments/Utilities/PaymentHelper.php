@@ -295,7 +295,7 @@ class PaymentHelper extends OlaHubCommonHelper
                             $customItem = unserialize($item->customize_data);
                         }
                         if ($toDelete) {
-                            $itemMain = \OlaHub\UserPortal\Models\DesginerItems::where("id", $item->item_id)->first();
+                            $itemMain = \OlaHub\UserPortal\Models\DesignerItems::where("id", $item->item_id)->first();
                             if ($itemMain) {
                                 $itemMain->item_stock--;
                                 $itemMain->save();

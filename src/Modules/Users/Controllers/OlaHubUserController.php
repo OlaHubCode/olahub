@@ -111,42 +111,43 @@ class OlaHubUserController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserFriends"]);
 
-        $userID = app('session')->get('tempID');
+        $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
         $celebrationId = null;
         if (isset($this->requestFilter['celebration'])) {
             $celebrationId = $this->requestFilter['celebration'];
         };
-        // if (count($friends) > 0) {
-        //     if ($celebrationId != null) {
-        //         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $celebrationId)->first();
-        //         foreach ($friends as $friend) {
-        //             if ($celebration->user_id != $friend['user_id']) {
-        //                 $part = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', $friend['user_id'])->where('celebration_id', $celebrationId)->first();
-        //                 if ($part) {
-        //                     continue;
-        //                 } else {
-        //                     $return['data'][] = [
-        //                         "profile" => isset($friend->user_id) ? $friend->user_id : 0,
-        //                         "username" => isset($friend->username) ? $friend->username : NULL,
-        //                         "profile_url" => isset($friend->profile_url) ? $friend->profile_url : NULL,
-        //                         "user_gender" => isset($friend->gender) ? $friend->gender : NULL,
-        //                         "avatar_url" => isset($friend->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->avatar_url),
-        //                         "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
-        //                     ];
-        //                 }
-        //             }
-        //         }
-        //     } else {
-        // $friends = \OlaHub\UserPortal\Models\User->paginate(10);
-        // $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($friends, '\OlaHub\UserPortal\ResponseHandlers\MyFriendsResponseHandler');
-        //     }
+        if (count($friends) > 0) {
+            if ($celebrationId != null) {
+                $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $celebrationId)->first();
+                $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->get();
+                foreach ($friends as $friend) {
+                    if ($celebration->user_id != $friend->id) {
+                        $part = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', $friend->id)->where('celebration_id', $celebrationId)->first();
+                        if ($part) {
+                            continue;
+                        } else {
+                            $return['data'][] = [
+                                "profile" => $friend->id,
+                                "username" => $friend->first_name . ' ' .  $friend->last_name,
+                                "profile_url" => $friend->profile_url,
+                                "user_gender" => isset($friend->user_gender) ? $friend->user_gender : NULL,
+                                "avatar_url" => isset($friend->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
+                                "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
+                            ];
+                        }
+                    }
+                }
+            } else {
+                $friends = \OlaHub\UserPortal\Models\Friends::getFriends(app('session')->get('tempID'))->paginate(10);
+                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($friends, '\OlaHub\UserPortal\ResponseHandlers\MyFriendsResponseHandler');
+            }
 
-        //     $return['status'] = TRUE;
-        //     $return['code'] = 200;
-        //     $log->setLogSessionData(['response' => $return]);
-        //     $log->saveLogSessionData();
-        //     return response($return, 200);
-        // }
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            $log->setLogSessionData(['response' => $return]);
+            $log->saveLogSessionData();
+            return response($return, 200);
+        }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);

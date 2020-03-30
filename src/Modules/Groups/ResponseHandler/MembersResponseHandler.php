@@ -5,12 +5,14 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 use OlaHub\UserPortal\Models\UserModel;
 use League\Fractal;
 
-class MembersResponseHandler extends Fractal\TransformerAbstract {
+class MembersResponseHandler extends Fractal\TransformerAbstract
+{
 
     private $return;
     private $data;
 
-    public function transform(UserModel $data) {
+    public function transform(UserModel $data)
+    {
         $this->data = $data;
         $this->setDefaultData();
         $this->setDefImageData();
@@ -18,31 +20,31 @@ class MembersResponseHandler extends Fractal\TransformerAbstract {
         return $this->return;
     }
 
-    private function setDefaultData() {
+    private function setDefaultData()
+    {
         $this->return = [
-            "userId" => isset($this->data->id)? $this->data->id: 0,
-            "groupMemberName" => isset($this->data->first_name)? $this->data->first_name . " " . $this->data->last_name : NULL,
+            "userId" => $this->data->id,
+            "groupMemberName" => $this->data->first_name . " " . $this->data->last_name,
             "groupMemberGender" => isset($this->data->user_gender) ? $this->data->user_gender : NULL,
-            "groupMemberSlug" => isset($this->data->profile_url) ? $this->data->profile_url: NULL,
+            "groupMemberSlug" => isset($this->data->profile_url) ? $this->data->profile_url : NULL,
         ];
     }
-    
-    private function setDefImageData() {
+
+    private function setDefImageData()
+    {
         if (isset($this->data->profile_picture)) {
             $this->return['groupMemberImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->profile_picture);
         } else {
             $this->return['groupMemberImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
     }
-    
-    private function setDefCoverData() {
+
+    private function setDefCoverData()
+    {
         if (isset($this->data->cover_photo)) {
             $this->return['groupMemberCoverImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->cover_photo);
         } else {
             $this->return['groupMemberCoverImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
     }
-    
-    
-
 }

@@ -37,7 +37,7 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
                 $this->setPriceData();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $this->data->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
                 if ($item) {
                     $this->return = [
                         "celebrationGiftId" => isset($this->data->id) ? $this->data->id : 0,
@@ -100,7 +100,7 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('id', $this->data->shopping_cart_id)->first();
         $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)->where('item_id', $item->item_id)->first();
         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
-        $return = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, false, true, $celebration->country_id);
+        $return = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, false, true, $celebration->country_id);
         $this->return['celebrationItemPrice'] = $return['productPrice'];
         $this->return['celebrationItemQuantity'] = $cartDetails->quantity;
         $this->return['celebrationItemTotalPrice'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cartDetails->total_price, true, $celebration->country_id);

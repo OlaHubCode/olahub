@@ -94,7 +94,7 @@ class Cart extends Model
                         }
                         break;
                     case "designer":
-                        $mainItem = DesginerItems::where('id', $item->item_id)->first();
+                        $mainItem = DesignerItems::where('id', $item->item_id)->first();
                         if ($mainItem) {
                             $itemDes = false;
                             if (isset($mainItem->items) && count($mainItem->items) > 0) {
@@ -107,7 +107,7 @@ class Cart extends Model
                             if (!$itemDes) {
                                 $itemDes = $mainItem;
                             }
-                            $itemPrice = DesginerItems::checkPrice($itemDes, TRUE, FALSE);
+                            $itemPrice = DesignerItems::checkPrice($itemDes, TRUE, FALSE);
                             if ($itemPrice != $item->unit_price) {
                                 $item->unit_price = $itemPrice;
                                 $item->total_price = $itemPrice * $item->quantity;

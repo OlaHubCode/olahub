@@ -293,7 +293,7 @@ class OlaHubCartController extends BaseController
             }
             if (count($designerItems) > 0) {
                 foreach ($designerItems as $designerItem) {
-                    $itemData = \OlaHub\UserPortal\Models\DesginerItems::where('id', $designerItem)->first();
+                    $itemData = \OlaHub\UserPortal\Models\DesignerItems::where('id', $designerItem)->first();
                     $return["data"][] = $this->getDesignerItemData($itemData, $designerItem);
                 }
             }
@@ -524,7 +524,7 @@ class OlaHubCartController extends BaseController
                 }
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $this->requestData->itemID)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->requestData->itemID)->first();
                 if ($item) {
                     if (isset($this->requestData->customImage) || isset($this->requestData->customText)) {
                         $custom = [
@@ -540,7 +540,7 @@ class OlaHubCartController extends BaseController
                     $cartItems->item_type = $itemType;
                     $cartItems->created_by = app('session')->get('tempID');
                     $cartItems->updated_by = app('session')->get('tempID');
-                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, true);
+                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, true);
                     $cartItems->quantity = isset($this->requestData->itemQuantity) && $this->requestData->itemQuantity > 0 ? $this->requestData->itemQuantity : 1;
                     $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if ($this->celebration) {

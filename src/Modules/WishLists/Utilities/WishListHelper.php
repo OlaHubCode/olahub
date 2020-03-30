@@ -40,7 +40,7 @@ class WishListHelper extends OlaHubCommonHelper {
             }
             
         } else {
-            $this->item = \OlaHub\UserPortal\Models\DesginerItems::where('id', $this->data->item_id)->first();
+            $this->item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $this->data->item_id)->first();
             $this->getDesignerItemData();
         }
         $this->setDefaultData();

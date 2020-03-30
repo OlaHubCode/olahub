@@ -4,7 +4,7 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DesginerItems extends Model
+class DesignerItems extends Model
 {
     protected $table = 'designer_items';
 

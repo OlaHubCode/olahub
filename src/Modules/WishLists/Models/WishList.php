@@ -74,7 +74,7 @@ class WishList extends Model
 
     public function designersMainData()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\DesginerItems', 'item_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'item_id');
     }
 
     public function setWishlistData($wishlist)
@@ -136,7 +136,7 @@ class WishList extends Model
 
     private function getDesignerItemPrice()
     {
-        $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($this->item);
+        $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($this->item);
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productPrice"] = $itemPrice['productPrice'];
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productDiscountedPrice"] = $itemPrice['productDiscountedPrice'];
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productHasDiscount"] = $itemPrice['productHasDiscount'];

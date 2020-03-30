@@ -26,7 +26,7 @@ class CartItems extends Model
 
     public function itemsDesignerData()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\DesginerItems', 'item_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'item_id');
     }
 
     public function itemsData()
@@ -77,7 +77,7 @@ class CartItems extends Model
 
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesginerItems::find($itemID);
+                $item = \OlaHub\UserPortal\Models\DesignerItems::find($itemID);
                 $checkItem = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')
                     ->where('item_id', $itemID)
                     ->where('shopping_cart_id', $cart->id)
@@ -95,7 +95,7 @@ class CartItems extends Model
                     $cartItems->shopping_cart_id = $cart->id;
                     $cartItems->item_type = $cartType;
                     $cartItems->customize_data = serialize($customData);
-                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, TRUE);
+                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, TRUE);
                     $cartItems->quantity = $quantity;
                     $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if (!$cart->user_id) {

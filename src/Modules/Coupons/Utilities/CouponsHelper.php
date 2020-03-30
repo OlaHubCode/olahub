@@ -170,8 +170,8 @@ class CouponsHelper extends OlaHubCommonHelper
                         }
                         $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
                     } else {
-                        $mainItem = \OlaHub\UserPortal\Models\DesginerItems::where('id', $item->item_id)->first();
-                        $price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice(@$mainItem, TRUE, FALSE) * $item->quantity;
+                        $mainItem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
+                        $price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice(@$mainItem, TRUE, FALSE) * $item->quantity;
                     }
 
                     switch ($this->couponData["couponDiscountOn"]) {

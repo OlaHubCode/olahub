@@ -349,7 +349,7 @@ class OlaHubPaymentsMainController extends BaseController
                 case "designer":
                     $oneItem = $this->cartItem->itemsDesignerData;
                     $billingDetails = new \OlaHub\UserPortal\Models\UserBillDetails;
-                    $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($oneItem, false, FALSE);
+                    $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($oneItem, false, FALSE);
                     if (isset($itemPrice['productHasDiscount']) && $itemPrice['productHasDiscount']) {
                         $price = $itemPrice['productDiscountedPrice'];
                         $originalPrice = $oneItem->price;

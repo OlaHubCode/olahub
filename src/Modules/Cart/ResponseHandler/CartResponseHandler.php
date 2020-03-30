@@ -56,7 +56,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
                         }
                         break;
                     case "designer":
-                        $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $cartItem->item_id)->first();
+                        $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $cartItem->item_id)->first();
                         if ($item) {
                             $this->getDesignerItem($item, $cartItem);
                         }
@@ -68,7 +68,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
 
     private function getDesignerItem($item, $cartItem)
     {
-        $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item);
+        $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item);
         $itemOwner = $this->setDesignerItemOwnerData($item);
         $this->return['products'][] = array(
             "productID" => isset($item->id) ? $item->id : 0,
@@ -82,7 +82,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
             "productDiscountedPrice" => $itemPrice['productDiscountedPrice'],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => $cartItem->quantity,
-            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, true, false) * $cartItem->quantity),
+            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, true, false) * $cartItem->quantity),
             "productImage" => $this->setItemImageData($item),
             "productOwner" => $itemOwner['productOwner'],
             "productOwnerName" => $itemOwner['productOwnerName'],

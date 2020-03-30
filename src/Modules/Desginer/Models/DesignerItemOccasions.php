@@ -8,7 +8,7 @@ class DesignerItemOccasions extends Model {
     protected $table = 'designer_item_occasions';
 
     public function itemsMainData() {
-        return $this->belongsTo('OlaHub\UserPortal\Models\DesginerItems', 'item_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'item_id');
     }
 
     public function occasionMainData() {

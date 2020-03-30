@@ -39,7 +39,7 @@ class CelebrationGiftDoneResponseHandler extends Fractal\TransformerAbstract
                 $this->setDefImageData();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $this->data->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
                 if ($item) {
                     $this->return = [
                         "celebrationGiftId" => isset($this->data->id) ? $this->data->id : 0,

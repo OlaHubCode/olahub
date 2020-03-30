@@ -3,13 +3,9 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-// use Jenssegers\Mongodb\Eloquent\HybridRelations;
 
 class CatalogItem extends Model
 {
-
-    // use HybridRelations;
-
     protected $connection = 'mysql';
 
     public function __construct(array $attributes = array())

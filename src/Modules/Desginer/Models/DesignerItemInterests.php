@@ -10,7 +10,7 @@ class DesignerItemInterests extends Model
 
     public function itemsMainData()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\DesginerItems', 'item_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'item_id');
     }
 
     public function interestMainData()

@@ -85,7 +85,7 @@ class CartHelper extends OlaHubCommonHelper
                             }
                             break;
                         case "designer":
-                            $itemData = \OlaHub\UserPortal\Models\DesginerItems::where('id', $item->item_id)->first();
+                            $itemData = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
                             if ($itemData) {
                                 $inStock = $itemData->item_stock;
                                 if ($inStock < $item->quantity && $inStock > 0) {
@@ -133,9 +133,9 @@ class CartHelper extends OlaHubCommonHelper
         foreach ($cartCookies as $cartCookie) {
             $total = 0;
             if ($cartCookie->productType == 'designer') {
-                $mainItem = \OlaHub\UserPortal\Models\DesginerItems::where('id', $cartCookie->productId)->first();
+                $mainItem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $cartCookie->productId)->first();
                 if ($mainItem) {
-                    $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($mainItem, TRUE, FALSE);
+                    $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($mainItem, TRUE, FALSE);
                     $total += $itemPrice * (isset($cartCookie->productQuantity) ? $cartCookie->productQuantity : 1);
                 }
             } else {

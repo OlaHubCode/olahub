@@ -18,7 +18,7 @@ class GroupSearchResponseHandler extends Fractal\TransformerAbstract {
 
     private function setDefaultData() {
         $this->return = [
-            "itemId" => isset($this->data->{"_id"}) ? $this->data->{"_id"} : 0,
+            "itemId" => isset($this->data->id) ? $this->data->id : 0,
             "itemName" => isset($this->data->name) ? $this->data->name : NULL,
             "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->image),
             "itemCover" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->cover),

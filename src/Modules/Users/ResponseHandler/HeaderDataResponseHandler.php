@@ -41,8 +41,8 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
             "notificationCount" =>$notification > 0 ?$notification:0,
             "userCountry" => app('session')->get('def_country')->id,
             "userCountryName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField(app('session')->get('def_country'), 'name'),
-            "userFriends" =>  0,
-            "userFollowing" => 0,
+            "userFriends" =>  count(\OlaHub\UserPortal\Models\Friends::getFriendsList($this->data->id)),
+            "userFollowing" =>  \OlaHub\UserPortal\Models\Following::where('user_id', $this->data->id)->count(),
             "userBalanceNumber" => \OlaHub\UserPortal\Models\UserVouchers::getUserBalance(),
         ];
     }

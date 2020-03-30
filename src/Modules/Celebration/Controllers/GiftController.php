@@ -118,7 +118,7 @@ class GiftController extends BaseController
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove unselected gifts"]);
             foreach ($cartItems as $cartItem) {
                 if ($cartItem->item_type == 'designer') {
-                    $item = \OlaHub\UserPortal\Models\DesginerItems::where("id", $cartItem->item_id)->first();
+                    $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $cartItem->item_id)->first();
                     if ($item) {
                         if ((int) $item->item_stock <= 0) {
                             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') . 'isOutOfStock', 'code' => 500]]);

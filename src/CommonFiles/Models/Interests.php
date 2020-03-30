@@ -6,10 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Interests extends Model
 {
-
-    // protected $connection = 'mongo';
     protected $table = 'lkp_interests';
-
 
     public function __construct(array $attributes = array())
     {
@@ -64,8 +61,8 @@ class Interests extends Model
 
     static function searchInterests($q = 'a', $count = 15)
     {
-        $interests = Interests::where('name', 'LIKE', "%$q%")
-            ->whereIn('countries', [app('session')->get('def_country')->id])->select("interest_id")->get();
+        $interests = Interests::where('name', 'LIKE', "%$q%")->select("interest_id")->get();
+        // $interests = Interests::where('name', 'LIKE', "%$q%")->whereIn('countries', [app('session')->get('def_country')->id])->select("interest_id")->get();
 
         return $interests;
     }

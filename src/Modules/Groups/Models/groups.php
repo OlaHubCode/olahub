@@ -2,13 +2,19 @@
 
 namespace OlaHub\UserPortal\Models;
 
-use Jenssegers\Mongodb\Eloquent\Model as Eloquent;
+use Illuminate\Database\Eloquent\Model;
 
-class groups extends Eloquent {
+class groups extends Model
+{
 
-    protected $connection = 'mongo';
-    protected $collection = 'groups';
+    protected $table = 'groups';
     static $columnsMaping = [
+        'groupPrivacy' => [
+            'column' => 'privacy',
+            'type' => 'string',
+            'relation' => false,
+            'validation' => 'required|in:1,2,3'
+        ],
         'groupName' => [
             'column' => 'name',
             'type' => 'string',
@@ -16,7 +22,7 @@ class groups extends Eloquent {
             'validation' => 'required'
         ],
         'groupDescription' => [
-            'column' => 'group_desc',
+            'column' => 'description',
             'type' => 'string',
             'relation' => false,
             'validation' => ''
@@ -33,11 +39,11 @@ class groups extends Eloquent {
             'relation' => false,
             'validation' => ''
         ],
-        'groupPrivacy' => [
-            'column' => 'privacy',
+        'groupInterests' => [
+            'column' => 'interests',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'required|in:1,2,3'
+            'validation' => 'required|array|max:2'
         ],
         'groupPostApprove' => [
             'column' => 'posts_approve',
@@ -46,31 +52,30 @@ class groups extends Eloquent {
             'validation' => 'in:1,0'
         ],
         'onlyMyStores' => [
-            'column' => 'onlyMyStores',
+            'column' => 'only_my_stores',
             'type' => 'string',
             'relation' => false,
             'validation' => 'boolean'
         ],
-        'groupInterests' => [
-            'column' => 'interests',
-            'type' => 'string',
-            'relation' => false,
-            'validation' => 'required|array|max:2'
-        ],
     ];
 
-    static function searchGroups($q = 'a', $count = 15, $groupInterests = []) {
+    public function members() {
+        return $this->hasMany('OlaHub\UserPortal\Models\GroupMembers','group_id');
+    }
+
+    static function searchGroups($q = 'a', $count = 15, $groupInterests = [])
+    {
         $interests = [];
         foreach ($groupInterests as $oneInterest) {
             $interests[] = (int) $oneInterest->interest_id;
         }
         if (count($interests) > 0) {
-            $groups = groups::where(function($query) use($q, $interests) {
-                        $query->whereIn("interests", $interests)->orWhere("name", 'LIKE', "%$q%");
-                    })->whereIn("privacy", [2, 3]);
+            $groups = groups::where(function ($query) use ($q, $interests) {
+                $query->whereIn("interests", $interests)->orWhere("name", 'LIKE', "%$q%");
+            })->whereIn("privacy", [2, 3]);
         } else {
             $groups = groups::where("name", 'LIKE', "%$q%")
-                            ->whereIn("privacy", [2, 3]);
+                ->whereIn("privacy", [2, 3]);
         }
         if ($count > 0) {
             return $groups->paginate($count);
@@ -78,5 +83,4 @@ class groups extends Eloquent {
             return $groups->get()->count();
         }
     }
-
 }

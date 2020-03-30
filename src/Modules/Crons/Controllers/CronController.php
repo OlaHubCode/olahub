@@ -330,8 +330,8 @@ class CronController extends BaseController
 
         $posts = \OlaHub\UserPortal\Models\Post::get();
         foreach ($posts as $post) {
-            if (!isset($post->isApprove)) {
-                $post->isApprove = 1;
+            if (!isset($post->is_approve)) {
+                $post->is_approve = 1;
             }
             $post->save();
         }
