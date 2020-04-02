@@ -18,7 +18,6 @@ class OlaHubCartController extends BaseController
     private $userId;
     private $celebration;
     private $cart;
-    private $userMongo;
     private $friends;
     private $calendar;
     protected $userAgent;
@@ -294,7 +293,7 @@ class OlaHubCartController extends BaseController
             }
             if (count($designerItems) > 0) {
                 foreach ($designerItems as $designerItem) {
-                    $itemData = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$designerItem])->first();
+                    $itemData = \OlaHub\UserPortal\Models\DesignerItems::where('id', $designerItem)->first();
                     $return["data"][] = $this->getDesignerItemData($itemData, $designerItem);
                 }
             }
@@ -328,14 +327,7 @@ class OlaHubCartController extends BaseController
             throw new UnauthorizedHttpException(401);
         }
         if ($type == "event" && $this->id > 0 && $this->userId > 0) {
-            $this->userMongo = \OlaHub\UserPortal\Models\UserMongo::where("user_id", $this->userId)->first();
-            $this->friends = $this->userMongo->friends;
-            if (!is_array($this->friends) || count($this->friends) <= 0) {
-                $return['status'] = false;
-                $return['code'] = 404;
-                $return['msg'] = "noData";
-                return $return;
-            }
+            // $this->friends = $this->friends;
             $time = strtotime("+3 Days");
             $minTime = date("Y-m-d", $time);
             $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)
@@ -486,6 +478,12 @@ class OlaHubCartController extends BaseController
     {
         $country = $this->celebration ? $this->celebration->country_id : app('session')->get('def_country')->id;
         $likers['user_id'] = [];
+        $checkItem = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
+        if ($checkItem) {
+            $cartItems = $checkItem;
+        } else {
+            $cartItems = new \OlaHub\UserPortal\Models\CartItems;
+        }
         switch ($itemType) {
             case "store":
                 $item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope("country")->whereHas('merchant', function ($q) use ($country) {
@@ -493,12 +491,6 @@ class OlaHubCartController extends BaseController
                     $q->country_id = $country;
                 })->find($this->requestData->itemID);
                 if ($item) {
-                    $checkItem = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
-                    if ($checkItem) {
-                        $cartItems = $checkItem;
-                    } else {
-                        $cartItems = new \OlaHub\UserPortal\Models\CartItems;
-                    }
                     if (isset($this->requestData->customImage) || isset($this->requestData->customText)) {
                         $custom = [
                             'image' => isset($this->requestData->customImage) ? $this->requestData->customImage : '',
@@ -532,25 +524,8 @@ class OlaHubCartController extends BaseController
                 }
                 break;
             case "designer":
-                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$this->requestData->itemID])->orWhere("_id", $this->requestData->itemID)->first();
-                if ($itemMain) {
-                    $item = false;
-                    if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                        foreach ($itemMain->items as $oneItem) {
-                            if ($oneItem["item_id"] == $this->requestData->itemID) {
-                                $item = (object) $oneItem;
-                            }
-                        }
-                    }
-                    if (!$item) {
-                        $item = $itemMain;
-                    }
-                    $checkItem = $this->cart->cartDetails()->where('item_id', $item->item_id)->where("item_type", $itemType)->first();
-                    if ($checkItem) {
-                        $cartItems = $checkItem;
-                    } else {
-                        $cartItems = new \OlaHub\UserPortal\Models\CartItems;
-                    }
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->requestData->itemID)->first();
+                if ($item) {
                     if (isset($this->requestData->customImage) || isset($this->requestData->customText)) {
                         $custom = [
                             'image' => isset($this->requestData->customImage) ? $this->requestData->customImage : '',
@@ -558,14 +533,14 @@ class OlaHubCartController extends BaseController
                         ];
                         $cartItems->customize_data = serialize($custom);
                     }
-                    $cartItems->item_id = $item->item_id;
+                    $cartItems->item_id = $item->id;
                     $cartItems->shopping_cart_id = $this->cart->id;
-                    $cartItems->merchant_id = $itemMain->designer_id;
-                    $cartItems->store_id = $itemMain->designer_id;
+                    $cartItems->merchant_id = $item->designer_id;
+                    $cartItems->store_id = $item->designer_id;
                     $cartItems->item_type = $itemType;
                     $cartItems->created_by = app('session')->get('tempID');
                     $cartItems->updated_by = app('session')->get('tempID');
-                    $cartItems->unit_price = $item->item_price;
+                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, true);
                     $cartItems->quantity = isset($this->requestData->itemQuantity) && $this->requestData->itemQuantity > 0 ? $this->requestData->itemQuantity : 1;
                     $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if ($this->celebration) {
@@ -615,15 +590,15 @@ class OlaHubCartController extends BaseController
                 $participant->amount_to_pay = $price;
                 $participant->save();
                 if ($participant->user_id != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_addGiftCelebration";
-                    $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    $notification->celebration_title = $this->celebration->title;
+                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
+                    // $notification->celebration_title = $this->celebration->title;
                     $notification->celebration_id = $this->celebration->id;
-                    $notification->avatar_url = app('session')->get('tempData')->profile_picture;
+                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
                     $notification->read = 0;
-                    $notification->for_user = $participant->user_id;
+                    $notification->user_id = $participant->user_id;
                     $notification->save();
                 }
             }
@@ -718,7 +693,7 @@ class OlaHubCartController extends BaseController
 
     private function getDesignerItemData($itemData, $designerItemId)
     {
-
+        $designer = $itemData->designer;
         $return["productID"] = isset($itemData->item_id) ? $itemData->item_id : 0;
         $return["productType"] = 'designer';
         $return["productQuantity"] = 1;
@@ -727,8 +702,8 @@ class OlaHubCartController extends BaseController
         $return["productDescription"] = isset($itemData->item_description) ? $itemData->item_description : null;
         $return["productInStock"] = isset($itemData->item_stock) ? $itemData->item_stock : 0;
         $return["productOwner"] = isset($itemData->designer_id) ? $itemData->designer_id : 0;
-        $return["productOwnerName"] = isset($itemData->designer_name) ? $itemData->designer_name : null;
-        $return["productOwnerSlug"] = isset($itemData->designer_slug) ? $itemData->designer_slug : null;
+        $return["productOwnerName"] = isset($designer->brand_name) ? $designer->brand_name : null;
+        $return["productOwnerSlug"] = isset($designer->designer_slug) ? $designer->designer_slug : null;
         $return["productImage"] = $this->setDesignerItemImageData($itemData);
 
         $itemPrice = $this->setDesignerPriceData($itemData);

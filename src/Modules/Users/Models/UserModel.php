@@ -2,13 +2,11 @@
 
 namespace OlaHub\UserPortal\Models;
 
-use Jenssegers\Mongodb\Eloquent\HybridRelations;
 use Illuminate\Database\Eloquent\Model;
 
 class UserModel extends Model {
 
-    use HybridRelations;
-
+    protected $table = 'users';
     protected $connection = 'mysql';
 
     protected static function boot() {
@@ -43,7 +41,6 @@ class UserModel extends Model {
         });
     }
 
-    protected $table = 'users';
     static $columnsMaping = [
         'userCountry' => [
             'column' => 'country_id',
@@ -112,6 +109,12 @@ class UserModel extends Model {
             'relation' => false,
             'validation' => ''
         ],
+        'userInterests' => [
+            'column' => 'interests',
+            'type' => 'string',
+            'relation' => false,
+            'validation' => ''
+        ],
     ];
     static $columnsInvitationMaping = [
         'userFirstName' => [
@@ -160,6 +163,11 @@ class UserModel extends Model {
         return $this->hasMany('OlaHub\UserPortal\Models\CelebrationParticipantsModel', 'user_id');
     }
 
+    public function friends()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\Friends', 'user_id', 'id');
+    }
+    
     public function getColumns($requestData, $user = false) {
         if ($user) {
             $array = $user;
@@ -190,15 +198,9 @@ class UserModel extends Model {
                      and users.id NOT IN (select user_id from celebrations where celebrations.id="' . (int) $eventId . '")');
         }
         if ($groupId) {
-            $group = groups::find($groupId);
-            if ($group) {
-                $userModel->whereNotIn('id', $group->members);
-                if (isset($group->responses) && count($group->responses) > 0) {
-                    $userModel->WhereNotIn('id', $group->responses);
-                }
-                if (isset($group->requests) && count($group->requests) > 0) {
-                    $userModel->WhereNotIn('id', $group->requests);
-                }
+            $members = GroupMembers::getMembersArr($groupId);
+            if (count($members)) {
+                $userModel->whereNotIn('id', $members);
             }
         }
         if ($active) {
@@ -221,14 +223,6 @@ class UserModel extends Model {
         $user->profile_url = $slug;
         $saved = $user->save();
         if ($saved) {
-            
-            $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $user->id)->first();
-            if($userMongo){
-                $userMongo->profile_url = $user->profile_url;
-                $userMongo->save();
-            }
-            
-            
             return $slug;
         }
         return Null;

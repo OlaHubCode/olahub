@@ -2,15 +2,15 @@
 
 namespace OlaHub\UserPortal\ResponseHandlers;
 
-use OlaHub\UserPortal\Models\DesginerItems;
+use OlaHub\UserPortal\Models\DesignerItems;
 use League\Fractal;
 
-class DesginerItemsSearchResponseHandler extends Fractal\TransformerAbstract {
+class DesignerItemsSearchResponseHandler extends Fractal\TransformerAbstract {
 
     private $return;
     private $data;
 
-    public function transform(DesginerItems $data) {
+    public function transform(DesignerItems $data) {
         $this->data = $data;
         $this->setDefaultData();
         $this->setPriceData($this->data);

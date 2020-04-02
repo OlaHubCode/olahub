@@ -170,17 +170,8 @@ class CouponsHelper extends OlaHubCommonHelper
                         }
                         $price = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
                     } else {
-                        $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$item->item_id])->first();
-                        if ($mainItem) {
-                            if (isset($mainItem->items) && count($mainItem->items) > 0) {
-                                foreach ($mainItem->items as $oneItem) {
-                                    if ($oneItem["item_id"] == $item->item_id) {
-                                        $mainItem = (object) $oneItem;
-                                    }
-                                }
-                            }
-                        }
-                        $price = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($mainItem, TRUE, FALSE) * $item->quantity;
+                        $mainItem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
+                        $price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice(@$mainItem, TRUE, FALSE) * $item->quantity;
                     }
 
                     switch ($this->couponData["couponDiscountOn"]) {
@@ -200,7 +191,7 @@ class CouponsHelper extends OlaHubCommonHelper
                             }
                             break;
                         case "occasion":
-                            $checkOccasions = $this->checkOccasion(@$mainItem->id, $discountOnVal);
+                            $checkOccasions = $this->checkOccasion(@$mainItem->id, $discountOnVal, $item->item_type);
                             if ($checkOccasions) {
                                 $this->saveDiscount = $this->saveDiscount + ($price * $discount);
                             }
@@ -214,6 +205,10 @@ class CouponsHelper extends OlaHubCommonHelper
                             }
                             break;
                         case "interest":
+                            $checkInterests = $this->checkInterests(@$mainItem->id, $discountOnVal, $item->item_type);
+                            if ($checkInterests) {
+                                $this->saveDiscount = $this->saveDiscount + ($price * $discount);
+                            }
                             break;
                     }
                 }
@@ -233,11 +228,27 @@ class CouponsHelper extends OlaHubCommonHelper
         return $categories;
     }
 
-    private function checkOccasion($id, $values)
+    private function checkOccasion($id, $values, $type)
     {
         $check = FALSE;
-        $occasions = \OlaHub\UserPortal\Models\ItemOccasions::where("item_id", $id)->whereIn("occasion_id", $values)->count();
+        if ($type == "store")
+            $occasions = \OlaHub\UserPortal\Models\ItemOccasions::where("item_id", $id)->whereIn("occasion_id", $values)->count();
+        else
+            $occasions = \OlaHub\UserPortal\Models\DesignerItemOccasions::where("item_id", $id)->whereIn("occasion_id", $values)->count();
         if ($occasions) {
+            $check = TRUE;
+        }
+        return $check;
+    }
+
+    private function checkInterests($id, $values, $type)
+    {
+        $check = FALSE;
+        if ($type == "store")
+            $interests = \OlaHub\UserPortal\Models\ItemInterests::where("item_id", $id)->whereIn("interest_id", $values)->count();
+        else
+            $interests = \OlaHub\UserPortal\Models\DesignerItemInterests::where("item_id", $id)->whereIn("interest_id", $values)->count();
+        if ($interests) {
             $check = TRUE;
         }
         return $check;

@@ -43,7 +43,6 @@ class OlaHubPaymentsMainController extends BaseController
     protected $id;
     protected $userId;
     protected $celebration;
-    protected $userMongo;
     protected $friends;
     protected $calendar;
 
@@ -312,8 +311,8 @@ class OlaHubPaymentsMainController extends BaseController
         foreach ($this->cartDetails as $this->cartItem) {
             switch ($this->cartItem->item_type) {
                 case "store":
-                    $billingDetails = new \OlaHub\UserPortal\Models\UserBillDetails;
                     $oneItem = $this->cartItem->itemsMainData;
+                    $billingDetails = new \OlaHub\UserPortal\Models\UserBillDetails;
                     $itemPrice = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($oneItem, false, false);
                     if ($itemPrice['productHasDiscount']) {
                         $price = $itemPrice['productDiscountedPrice'];
@@ -348,52 +347,39 @@ class OlaHubPaymentsMainController extends BaseController
                     $billingDetails->save();
                     break;
                 case "designer":
+                    $oneItem = $this->cartItem->itemsDesignerData;
                     $billingDetails = new \OlaHub\UserPortal\Models\UserBillDetails;
-                    $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$this->cartItem->item_id])->first();
-                    if ($mainItem) {
-                        $itemDes = false;
-                        if (isset($mainItem->items) && count($mainItem->items) > 0) {
-                            foreach ($mainItem->items as $oneItem) {
-                                if ($oneItem["item_id"] == $this->cartItem->item_id) {
-                                    $itemDes = (object) $oneItem;
-                                }
-                            }
-                        }
-                        if (!$itemDes) {
-                            $itemDes = $mainItem;
-                        }
-                        $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($itemDes, false, FALSE);
-                        if (isset($itemPrice['productHasDiscount']) && $itemPrice['productHasDiscount']) {
-                            $price = $itemPrice['productDiscountedPrice'];
-                            $originalPrice = $itemDes->item_price;
-                        } else {
-                            $price = $itemDes->item_price;
-                            $originalPrice = $itemDes->item_price;
-                        }
-                        $exchangedPrice = $itemPrice['productPrice'];
-
-                        $billingDetails->billing_id = $this->billing->id;
-                        $billingDetails->item_name = $mainItem->item_title;
-                        $image = isset($itemDes->item_image) ? $itemDes->item_image : (isset($mainItem->item_images) ? $mainItem->item_images : false);
-                        $billingDetails->item_image = $image && count($image) > 0 ? $image[0] : NULL;
-                        $details = (new \OlaHub\UserPortal\Helpers\PaymentHelper)->getBillDesignerDetails($itemDes, $mainItem, $price);
-                        $billingDetails->item_details = serialize($details);
-                        $billingDetails->item_price = $price;
-                        $billingDetails->item_original_price = $originalPrice;
-                        $billingDetails->country_paid = $exchangedPrice;
-                        $billingDetails->from_sale = $itemPrice['productHasDiscount'] ? 1 : 0;
-                        $billingDetails->quantity = $this->cartItem->quantity;
-                        $billingDetails->customize_data = $this->cartItem->customize_data;
-                        $billingDetails->merchant_id = $this->cartItem->merchant_id;
-                        $billingDetails->store_id = $this->cartItem->store_id;
-                        $billingDetails->item_id = $this->cartItem->item_id;
-                        $billingDetails->item_type = "designer";
-                        $billingDetails->from_pickup_id = $this->cartItem->store_id;
-                        $billingDetails->user_paid = $billingDetails->item_price * $billingDetails->quantity;
-                        $billingDetails->merchant_commision_rate = 0;
-                        $billingDetails->merchant_commision = 0;
-                        $billingDetails->save();
+                    $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($oneItem, false, FALSE);
+                    if (isset($itemPrice['productHasDiscount']) && $itemPrice['productHasDiscount']) {
+                        $price = $itemPrice['productDiscountedPrice'];
+                        $originalPrice = $oneItem->price;
+                    } else {
+                        $price = $oneItem->price;
+                        $originalPrice = $oneItem->price;
                     }
+                    $exchangedPrice = $itemPrice['productPrice'];
+
+                    $billingDetails->billing_id = $this->billing->id;
+                    $billingDetails->item_name = $oneItem->name;
+                    $image = \OlaHub\UserPortal\Models\DesignerItemImages::where('item_id', $oneItem->id)->first();
+                    $billingDetails->item_image = $image ? $image->content_ref : NULL;
+                    $details = (new \OlaHub\UserPortal\Helpers\PaymentHelper)->getBillDesignerDetails($oneItem, $price);
+                    $billingDetails->item_details = serialize($details);
+                    $billingDetails->item_price = $price;
+                    $billingDetails->item_original_price = $originalPrice;
+                    $billingDetails->country_paid = $exchangedPrice;
+                    $billingDetails->from_sale = $itemPrice['productHasDiscount'] ? 1 : 0;
+                    $billingDetails->quantity = $this->cartItem->quantity;
+                    $billingDetails->customize_data = $this->cartItem->customize_data;
+                    $billingDetails->merchant_id = $this->cartItem->merchant_id;
+                    $billingDetails->store_id = $this->cartItem->store_id;
+                    $billingDetails->item_id = $this->cartItem->item_id;
+                    $billingDetails->item_type = "designer";
+                    $billingDetails->from_pickup_id = $this->cartItem->store_id;
+                    $billingDetails->user_paid = $billingDetails->item_price * $billingDetails->quantity;
+                    $billingDetails->merchant_commision_rate = 0;
+                    $billingDetails->merchant_commision = 0;
+                    $billingDetails->save();
                     break;
             }
         }
@@ -683,26 +669,6 @@ class OlaHubPaymentsMainController extends BaseController
             throw new UnauthorizedHttpException(401);
         }
         if ($type == "event" && $this->id > 0 && $this->userId > 0) {
-            $this->userMongo = \OlaHub\UserPortal\Models\UserMongo::where("user_id", $this->userId)->first();
-            $this->friends = $this->userMongo->friends;
-            if (!is_array($this->friends) || count($this->friends) <= 0) {
-                $return['status'] = false;
-                $return['code'] = 404;
-                $return['msg'] = "noData";
-                return $return;
-            }
-            $time = strtotime("+3 Days");
-            $minTime = date("Y-m-d", $time);
-            $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)
-                ->where("id", $this->id)
-                ->where("calender_date", ">=", $minTime)
-                ->first();
-            if (!$this->calendar) {
-                $return['status'] = false;
-                $return['code'] = 404;
-                $return['msg'] = "noData";
-                return $return;
-            }
         } elseif ($type == "celebration" && $this->id > 0 && $this->userId > 0) {
             $userId = $this->userId;
             $this->celebration = \OlaHub\UserPortal\Models\CelebrationModel::whereHas("celebrationParticipants", function ($q) use ($userId) {

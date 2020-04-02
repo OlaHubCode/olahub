@@ -107,34 +107,24 @@ class OlaHubItemController extends BaseController
                 }
             }
             foreach ($filters['relations'] as $model => $data) {
-                if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
-                    $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
-                    if ($interest && count($interest->items) > 0) {
-                        $itemsQuery->whereIn("catalog_items.id", $interest->items);
-                    } else {
-                        $itemsQuery->where("catalog_items.id", 0);
+                if ($model == 'brand') {
+                    $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
+                        ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
+                    $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    foreach ($data as $input => $value) {
+                        $itemsQuery->where("merchant_stors." . $input, $value);
                     }
                 } else {
-                    if ($model == 'brand') {
-                        $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
-                            ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
-                        $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    $same = true;
+                    $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
                         foreach ($data as $input => $value) {
-                            $itemsQuery->where("merchant_stors." . $input, $value);
-                        }
-                    } else {
-                        // print_r($data);
-                        $same = true;
-                        $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
-                            foreach ($data as $input => $value) {
-                                if (is_array($value) && count($value)) {
-                                    $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
-                                } elseif (is_string($value) && strlen($value) > 0) {
-                                    $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
-                                }
+                            if (is_array($value) && count($value)) {
+                                $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
+                            } elseif (is_string($value) && strlen($value) > 0) {
+                                $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             }
         }
@@ -290,34 +280,34 @@ class OlaHubItemController extends BaseController
                 }
             }
             foreach ($filters['relations'] as $model => $data) {
-                if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
-                    $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
-                    if ($interest && count($interest->items) > 0) {
-                        $itemsQuery->whereIn("catalog_items.id", $interest->items);
-                    } else {
-                        $itemsQuery->where("catalog_items.id", 0);
+                // if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
+                //     $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
+                //     if ($interest && count($interest->items) > 0) {
+                //         $itemsQuery->whereIn("catalog_items.id", $interest->items);
+                //     } else {
+                //         $itemsQuery->where("catalog_items.id", 0);
+                //     }
+                // } else {
+                if ($model == 'brand') {
+                    $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
+                        ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
+                    $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    foreach ($data as $input => $value) {
+                        $itemsQuery->where("merchant_stors." . $input, $value);
                     }
                 } else {
-                    if ($model == 'brand') {
-                        $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
-                            ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
-                        $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    $same = true;
+                    $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
                         foreach ($data as $input => $value) {
-                            $itemsQuery->where("merchant_stors." . $input, $value);
-                        }
-                    } else {
-                        $same = true;
-                        $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
-                            foreach ($data as $input => $value) {
-                                if (is_array($value) && count($value)) {
-                                    $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
-                                } elseif (is_string($value) && strlen($value) > 0) {
-                                    $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
-                                }
+                            if (is_array($value) && count($value)) {
+                                $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
+                            } elseif (is_string($value) && strlen($value) > 0) {
+                                $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                             }
-                        });
-                    }
+                        }
+                    });
                 }
+                // }
             }
         }
         $itemsQuery->groupBy('catalog_items.id');
@@ -1052,24 +1042,24 @@ class OlaHubItemController extends BaseController
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "setFilterRelationData"]);
 
         foreach ($filters['relations'] as $model => $data) {
-            if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
-                $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
-                if ($interest && count($interest->items) > 0) {
-                    $this->itemsModel->whereIn("catalog_items.id", $interest->items);
-                } else {
-                    $this->itemsModel->where("catalog_items.id", 0);
-                }
-            } else {
-                $this->itemsModel->whereHas($model, function ($q) use ($data, $same) {
-                    foreach ($data as $input => $value) {
-                        if (is_array($value) && count($value)) {
-                            $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
-                        } elseif (is_string($value) && strlen($value) > 0) {
-                            $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
-                        }
+            // if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
+            //     $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
+            //     if ($interest && count($interest->items) > 0) {
+            //         $this->itemsModel->whereIn("catalog_items.id", $interest->items);
+            //     } else {
+            //         $this->itemsModel->where("catalog_items.id", 0);
+            //     }
+            // } else {
+            $this->itemsModel->whereHas($model, function ($q) use ($data, $same) {
+                foreach ($data as $input => $value) {
+                    if (is_array($value) && count($value)) {
+                        $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
+                    } elseif (is_string($value) && strlen($value) > 0) {
+                        $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                     }
-                });
-            }
+                }
+            });
+            // }
         }
     }
 

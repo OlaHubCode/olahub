@@ -85,37 +85,26 @@ class CartHelper extends OlaHubCommonHelper
                             }
                             break;
                         case "designer":
-                            // $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$item->item_id])->first();
-                            // if ($itemMain) {
-                            //     $itemData = false;
-                            //     if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                            //         foreach ($itemMain->items as $oneItem) {
-                            //             if ($oneItem["item_id"] == $item->item_id) {
-                            //                 $itemData = (object) $oneItem;
-                            //             }
-                            //         }
-                            //     }
-                            //     if (!$itemData) {
-                            //         $itemData = $itemMain;
-                            //     }
-                            //     $inStock = (int) $itemData->item_stock;
-                            //     if ($inStock < $item->quantity && $inStock > 0) {
-                            //         $item->quantity = $inStock;
-                            //         $item->save();
-                            //     } elseif ($inStock < 1) {
-                            //         if ($celebration) {
-                            //             if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
-                            //                 $item->delete();
-                            //         } else
-                            //             $item->delete();
-                            //     }
-                            // } else {
-                            //     if ($celebration) {
-                            //         if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
-                            //             $item->delete();
-                            //     } else
-                            //         $item->delete();
-                            // }
+                            $itemData = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
+                            if ($itemData) {
+                                $inStock = $itemData->item_stock;
+                                if ($inStock < $item->quantity && $inStock > 0) {
+                                    $item->quantity = $inStock;
+                                    $item->save();
+                                } elseif ($inStock < 1) {
+                                    if ($celebration) {
+                                        if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                                            $item->delete();
+                                    } else
+                                        $item->delete();
+                                }
+                            } else {
+                                if ($celebration) {
+                                    if ($celebration->celebration_status < 3 && !isset($paiedParticipant))
+                                        $item->delete();
+                                } else
+                                    $item->delete();
+                            }
                             break;
                     }
                 }
@@ -144,20 +133,9 @@ class CartHelper extends OlaHubCommonHelper
         foreach ($cartCookies as $cartCookie) {
             $total = 0;
             if ($cartCookie->productType == 'designer') {
-                $mainItem = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$cartCookie->productId])->first();
+                $mainItem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $cartCookie->productId)->first();
                 if ($mainItem) {
-                    $itemDes = false;
-                    if (isset($mainItem->items) && count($mainItem->items) > 0) {
-                        foreach ($mainItem->items as $oneItem) {
-                            if ($oneItem["item_id"] == $cartCookie->productId) {
-                                $itemDes = (object) $oneItem;
-                            }
-                        }
-                    }
-                    if (!$itemDes) {
-                        $itemDes = $mainItem;
-                    }
-                    $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($itemDes, TRUE, FALSE);
+                    $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($mainItem, TRUE, FALSE);
                     $total += $itemPrice * (isset($cartCookie->productQuantity) ? $cartCookie->productQuantity : 1);
                 }
             } else {

@@ -31,7 +31,7 @@ class WishListsResponseHandler extends Fractal\TransformerAbstract {
             }
             
         } else {
-            $this->item = \OlaHub\UserPortal\Models\DesginerItems::whereIn('item_ids', [$this->data->item_id])->first();
+            $this->item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $this->data->item_id)->first();
             $this->getDesignerItemData();
         }
     }
@@ -110,9 +110,6 @@ class WishListsResponseHandler extends Fractal\TransformerAbstract {
     
     
     private function getDesignerItemData() {
-
-        $user = app('session')->get('tempID') ? \OlaHub\DesignerCorner\Additional\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first() : false;
-
         $this->return["productID"] = isset($this->item->item_id) ? $this->item->item_id : 0;
         $this->return["productSlug"] = isset($this->item->item_slug) ? $this->item->item_slug : null;
         $this->return["productName"] = isset($this->item->item_title) ? $this->item->item_title : null;

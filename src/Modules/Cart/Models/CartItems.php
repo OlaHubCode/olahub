@@ -24,6 +24,11 @@ class CartItems extends Model
         return $this->belongsTo('OlaHub\UserPortal\Models\CatalogItem', 'item_id');
     }
 
+    public function itemsDesignerData()
+    {
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'item_id');
+    }
+
     public function itemsData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'id', 'item_id');
@@ -44,6 +49,7 @@ class CartItems extends Model
                 })->find($itemID);
                 $checkItem = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')
                     ->where('item_id', $itemID)
+                    ->where('item_type', 'store')
                     ->where('shopping_cart_id', $cart->id)
                     ->first();
                 $customData = [
@@ -71,37 +77,25 @@ class CartItems extends Model
 
                 break;
             case "designer":
-                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [(string) $itemID, (int) $itemID])->first();
-                if ($itemMain) {
-                    $item = false;
-                    if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                        foreach ($itemMain->items as $oneItem) {
-                            if ($oneItem["item_id"] == $itemID) {
-                                $item = (object) $oneItem;
-                            }
-                        }
-                    }
-                    if (!$item) {
-                        $item = $itemMain;
-                    }
-                    $checkItem = $cart->cartDetails()->where('item_id', $item->item_id)->where("item_type", $cartType)->first();
-                    if ($checkItem) {
-                        $cartItems = $checkItem;
-                    } else {
-                        $cartItems = new \OlaHub\UserPortal\Models\CartItems;
-                    }
-
-                    $customData = [
-                        'image' => $customImage,
-                        'text' => $customeText
-                    ];
-                    $cartItems->customize_data = serialize($customData);
-                    $cartItems->item_id = $item->item_id;
+                $item = \OlaHub\UserPortal\Models\DesignerItems::find($itemID);
+                $checkItem = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')
+                    ->where('item_id', $itemID)
+                    ->where('shopping_cart_id', $cart->id)
+                    ->where('item_type', 'designer')
+                    ->first();
+                $customData = [
+                    'image' => $customImage,
+                    'text' => $customeText
+                ];
+                if ($item) {
+                    $cartItems = $checkItem ? $checkItem : new \OlaHub\UserPortal\Models\CartItems;
+                    $cartItems->item_id = $item->id;
+                    $cartItems->merchant_id = $item->designer_id;
+                    $cartItems->store_id = $item->designer_id;
                     $cartItems->shopping_cart_id = $cart->id;
-                    $cartItems->merchant_id = $itemMain->designer_id;
-                    $cartItems->store_id = $itemMain->designer_id;
                     $cartItems->item_type = $cartType;
-                    $cartItems->unit_price = $item->item_price;
+                    $cartItems->customize_data = serialize($customData);
+                    $cartItems->unit_price = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, TRUE);
                     $cartItems->quantity = $quantity;
                     $cartItems->total_price = (float) $cartItems->unit_price * $cartItems->quantity;
                     if (!$cart->user_id) {

@@ -19,7 +19,7 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
     {
         $this->request = $request;
         $requestAll = $request->all();
-        if (!$requestAll['vpc_TransactionNo']) {
+        if (!@$requestAll['vpc_TransactionNo'] && !@$requestAll["TransactionId"]) {
             return redirect()->to(REDIRECT_FRONT . "/payment-status/" . $requestAll['vpc_Message']);
             // return redirect()->to(REDIRECT_FRONT . '/payment-fail?{paymentFail:true,failMsg:"' . $requestAll['vpc_Message'] . '"}');
         }

@@ -57,14 +57,6 @@ class OlaHubHeaderMenuController extends BaseController {
         if ($classesMain->count() >= 1) {
             $return['mainClaasses'] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($classesMain, '\OlaHub\UserPortal\ResponseHandlers\ClassificationResponseHandler');
         }
-//        unset($classesMain);
-//
-//        $classesOther = $this->getClasses('0');
-//        if ($classesOther->count() >= 1) {
-//            $return['otherClaasses'] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($classesOther, '\OlaHub\UserPortal\ResponseHandlers\ClassificationResponseHandler');
-//        }
-//
-//        unset($classesOther);
         $return['status'] = true;
         $return['code'] = 200;
          $log->setLogSessionData(['response' => $return]);

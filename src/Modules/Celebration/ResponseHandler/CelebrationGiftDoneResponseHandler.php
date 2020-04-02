@@ -39,24 +39,13 @@ class CelebrationGiftDoneResponseHandler extends Fractal\TransformerAbstract
                 $this->setDefImageData();
                 break;
             case "designer":
-                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$this->data->item_id])->first();
-                if ($itemMain) {
-                    $item = false;
-                    if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                        foreach ($itemMain->items as $oneItem) {
-                            if ($oneItem["item_id"] == $this->data->item_id) {
-                                $item = (object) $oneItem;
-                            }
-                        }
-                    }
-                    if (!$item) {
-                        $item = $itemMain;
-                    }
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
+                if ($item) {
                     $this->return = [
                         "celebrationGiftId" => isset($this->data->id) ? $this->data->id : 0,
                         "celebrationGiftType" => "designer",
-                        "celebrationItem" => isset($item->item_id) ? $item->item_id : 0,
-                        "celebrationItemName" => $itemMain->item_title,
+                        "celebrationItem" => isset($item->id) ? $item->id : 0,
+                        "celebrationItemName" => $item->name,
                         "celebrationItemSlug" => isset($item->item_slug) ? $item->item_slug : NULL,
                         'celebrationItemPrice' => number_format($this->data->country_paid, 2),
                         'celebrationItemQuantity' => number_format($this->data->quantity, 2),

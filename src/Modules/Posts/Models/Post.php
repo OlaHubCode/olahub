@@ -2,27 +2,34 @@
 
 namespace OlaHub\UserPortal\Models;
 
-use Jenssegers\Mongodb\Eloquent\Model as Eloquent;
+use Illuminate\Database\Eloquent\Model;
 
-class Post extends Eloquent {
+class Post extends Model
+{
 
-    protected $connection = 'mongo';
-    protected $collection = 'posts';
-    
-    protected static function boot() {
+    protected $table = 'posts';
+
+    protected static function boot()
+    {
         parent::boot();
 
         static::addGlobalScope('notDeletedPost', function ($query) {
-            $query->where('delete', '!=' , 1);
+            $query->where('delete', '!=', 1);
         });
     }
 
-    public function author() {
+    public function author()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'user_id', 'id');
     }
 
-    public function groupData() {
+    public function groupData()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\groups', 'group_id');
     }
 
+    public function comments()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\PostComments', 'post_id', 'post_id');
+    }
 }

@@ -56,20 +56,9 @@ class CartResponseHandler extends Fractal\TransformerAbstract
                         }
                         break;
                     case "designer":
-                        $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$cartItem->item_id])->first();
-                        if ($itemMain) {
-                            $item = false;
-                            if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                                foreach ($itemMain->items as $oneItem) {
-                                    if ($oneItem["item_id"] == $cartItem->item_id) {
-                                        $item = (object) $oneItem;
-                                    }
-                                }
-                            }
-                            if (!$item) {
-                                $item = $itemMain;
-                            }
-                            $this->getDesignerItem($item, $cartItem, $itemMain);
+                        $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $cartItem->item_id)->first();
+                        if ($item) {
+                            $this->getDesignerItem($item, $cartItem);
                         }
                         break;
                 }
@@ -77,45 +66,35 @@ class CartResponseHandler extends Fractal\TransformerAbstract
         }
     }
 
-    private function getDesignerItem($item, $cartItem, $itemMain)
+    private function getDesignerItem($item, $cartItem)
     {
-        $itemPrice = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item);
-        $itemOwner = $this->setDesignerItemOwnerData($itemMain);
+        $itemPrice = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item);
+        $itemOwner = $this->setDesignerItemOwnerData($item);
         $this->return['products'][] = array(
-            "productID" => isset($item->item_id) ? $item->item_id : 0,
-            "productValue" => isset($item->_id) ? $item->_id : 0,
+            "productID" => isset($item->id) ? $item->id : 0,
+            "productValue" => isset($item->id) ? $item->id : 0,
             "productType" => "designer",
-            "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'item_title')),
-            "productName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($itemMain, 'item_title'),
-            "productDescription" => str_limit(strip_tags(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($itemMain, 'item_description')), 350, '.....'),
+            "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name')),
+            "productName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name'),
+            "productDescription" => str_limit(strip_tags(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description')), 350, '.....'),
             "productInStock" => isset($item->item_stock) && $item->item_stock ? $item->item_stock : "1",
             "productPrice" => $itemPrice['productPrice'],
             "productDiscountedPrice" => $itemPrice['productDiscountedPrice'],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => $cartItem->quantity,
-            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, true, false) * $cartItem->quantity),
-            "productImage" => $this->setDesignerItemImageData($item),
+            "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, true, false) * $cartItem->quantity),
+            "productImage" => $this->setItemImageData($item),
             "productOwner" => $itemOwner['productOwner'],
             "productOwnerName" => $itemOwner['productOwnerName'],
             "productOwnerSlug" => $itemOwner['productOwnerSlug'],
             "productselectedAttributes" => $this->setDesignerItemSelectedAttrData($item),
             "productCustomeItem" => $this->setItemCustomData($cartItem->customize_data),
         );
-        if ($this->minShipDate == 0 || ($itemMain->item_min_shipping_days > 0 && $itemMain->item_min_shipping_days < $this->minShipDate)) {
-            $this->minShipDate = $itemMain->item_min_shipping_days;
+        if ($this->minShipDate == 0 || ($item->min_shipping_days > 0 && $item->min_shipping_days < $this->minShipDate)) {
+            $this->minShipDate = $item->min_shipping_days;
         }
-        if ($this->maxShipDate == 0 || ($itemMain->item_max_shipping_days > 0 && $itemMain->item_max_shipping_days > $this->maxShipDate)) {
-            $this->maxShipDate = $itemMain->item_max_shipping_days;
-        }
-    }
-
-    private function setDesignerItemImageData($item)
-    {
-        $images = isset($item->item_image) ? $item->item_image : (isset($item->item_images) ? $item->item_images : false);
-        if ($images && is_array($images) && count($images) > 0) {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]);
-        } else {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
+        if ($this->maxShipDate == 0 || ($item->max_shipping_days > 0 && $item->max_shipping_days > $this->maxShipDate)) {
+            $this->maxShipDate = $item->max_shipping_days;
         }
     }
 
@@ -140,7 +119,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
     {
         $designer = \OlaHub\UserPortal\Models\Designer::find($item->designer_id);
         $return["productOwner"] = isset($designer->id) ? $designer->id : NULL;
-        $return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($designer, 'designer_name');
+        $return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($designer, 'brand_name');
         $return["productOwnerSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($designer, 'designer_slug', $return["productOwnerName"]);
 
         return $return;

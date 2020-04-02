@@ -130,14 +130,14 @@ class PaymentHelper extends OlaHubCommonHelper
         return $return;
     }
 
-    function getBillDesignerDetails($oneItem, $mainItem, $itemPrice)
+    function getBillDesignerDetails($oneItem, $itemPrice)
     {
         $details = [];
         if ($oneItem) {
-            $details['merchant'] = $this->getBillOwnerDetails($mainItem);
-            $details['category'] = $this->getBillDesignerCategoryDetails($mainItem);
-            $details['classification'] = $this->getBillDesignerClassifcationDetails($mainItem);
-            $details['occasions'] = $this->getBillDesignerOccasionsDetails($mainItem);
+            $details['merchant'] = $this->getBillOwnerDetails($oneItem);
+            $details['category'] = $this->getBillDesignerCategoryDetails($oneItem);
+            $details['classification'] = $this->getBillDesignerClassifcationDetails($oneItem);
+            $details['occasions'] = $this->getBillDesignerOccasionsDetails($oneItem);
             $details['attributes'] = $this->getBillDesignerAttributesDetails($oneItem);
             $details['price'] = $itemPrice;
             $details['is_voucher'] = isset($oneItem->is_voucher) ? $oneItem->is_voucher : 0;
@@ -162,12 +162,12 @@ class PaymentHelper extends OlaHubCommonHelper
     private function getBillDesignerCategoryDetails($mainItem)
     {
         $return = [];
-        $category = \OlaHub\UserPortal\Models\ItemCategory::where("id", $mainItem->item_parent_category_id)->first();
-        $subCategory = \OlaHub\UserPortal\Models\ItemCategory::where("id", $mainItem->item_sub_category_id)->first();
+        $subCategory = \OlaHub\UserPortal\Models\ItemCategory::where("id", $mainItem->category_id)->first();
+        $category = \OlaHub\UserPortal\Models\ItemCategory::where("id", (isset($subCategory->parent_id) ? $subCategory->parent_id : $subCategory->id))->first();
         if ($category && $subCategory) {
-            $return['parent_name'] = $category->name;
+            $return['parent_name'] = OlaHubCommonHelper::returnCurrentLangField($category, 'name');
             $return['parent_slug'] = $category->category_slug;
-            $return['child_name'] = $category->name;
+            $return['child_name'] = OlaHubCommonHelper::returnCurrentLangField($category, 'name');
             $return['child_slug'] = $category->category_slug;
         }
         return $return;
@@ -176,9 +176,9 @@ class PaymentHelper extends OlaHubCommonHelper
     private function getBillDesignerClassifcationDetails($mainItem)
     {
         $return = [];
-        $classification = \OlaHub\UserPortal\Models\Classification::where("id", $mainItem->item_classification_id)->first();
+        $classification = \OlaHub\UserPortal\Models\Classification::where("id", $mainItem->clasification_id)->first();
         if ($classification) {
-            $return['name'] = isset($classification->name) ? $classification->name : null;
+            $return['name'] = isset($classification->name) ? OlaHubCommonHelper::returnCurrentLangField($classification, 'name') : null;
             $return['slug'] = isset($classification->class_slug) ? $classification->class_slug : null;
         }
         return $return;
@@ -187,8 +187,8 @@ class PaymentHelper extends OlaHubCommonHelper
     private function getBillDesignerOccasionsDetails($mainItem)
     {
         $return = [];
-        if (is_array($mainItem->item_occasion_ids) && count($mainItem->item_occasion_ids) > 0) {
-            $occasions = \OlaHub\UserPortal\Models\Occasion::withoutGlobalScope("country")->whereIn("id", $mainItem->item_occasion_ids)->get();
+        if (is_array($mainItem->occasions) && count($mainItem->occasions) > 0) {
+            $occasions = \OlaHub\UserPortal\Models\Occasion::withoutGlobalScope("country")->whereIn("id", $mainItem->occasions)->get();
             foreach ($occasions as $occasionDetails) {
                 $return[] = array(
                     'name' => isset($occasionDetails->name) ? $occasionDetails->name : null,
@@ -202,8 +202,8 @@ class PaymentHelper extends OlaHubCommonHelper
     private function getBillDesignerAttributesDetails($oneItem)
     {
         $return = [];
-        if (isset($oneItem->item_attr) && is_array($oneItem->item_attr) && count($oneItem->item_attr)) {
-            $valuesData = \OlaHub\UserPortal\Models\AttrValue::whereIn("id", $oneItem->item_attr)->get();
+        if (isset($oneItem->valuesData) && is_array($oneItem->valuesData) && count($oneItem->valuesData)) {
+            $valuesData = \OlaHub\UserPortal\Models\AttrValue::whereIn("id", $oneItem->valuesData)->get();
             foreach ($valuesData as $valueMain) {
                 $attribute = $valueMain->attributeMainData;
                 $return[] = array(
@@ -295,25 +295,14 @@ class PaymentHelper extends OlaHubCommonHelper
                             $customItem = unserialize($item->customize_data);
                         }
                         if ($toDelete) {
-                            $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$item->item_id])->first();
+                            $itemMain = \OlaHub\UserPortal\Models\DesignerItems::where("id", $item->item_id)->first();
                             if ($itemMain) {
-                                $itemData = false;
-                                if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                                    foreach ($itemMain->items as $oneItem) {
-                                        if ($oneItem["item_id"] == $item->item_id) {
-                                            $itemData = $oneItem;
-                                        }
-                                    }
-                                }
-                                if (!$itemData) {
-                                    $itemData = $itemMain;
-                                }
-                                // $itemData->item_stock--;
-                                // $itemData->save();
+                                $itemMain->item_stock--;
+                                $itemMain->save();
                             }
                         }
-                        $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price, true, $designer->country_id);
-                        $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price * $item->quantity, true, $designer->country_id);
+                        $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price, true, $designer->country_id);
+                        $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price * $item->quantity, true, $designer->country_id);
                         $return[$item->store_id]['items'][] = [
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),

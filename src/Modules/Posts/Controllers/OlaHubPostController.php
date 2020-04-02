@@ -5,6 +5,8 @@ namespace OlaHub\UserPortal\Controllers;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\PostComments;
+use OlaHub\UserPortal\Models\PostReplies;
 
 class OlaHubPostController extends BaseController
 {
@@ -33,7 +35,7 @@ class OlaHubPostController extends BaseController
             return ['status' => false, 'message' => 'someData', 'code' => 406, 'errorData' => []];
         }
         if ($type == 'group') {
-            $postsTemp = Post::where('group_id', $this->requestData['groupId'])->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(15);
+            $postsTemp = Post::where('group_id', $this->requestData['groupId'])->where('is_approve', 1)->orderBy('created_at', 'desc')->paginate(15);
             $posts = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($postsTemp, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $sponsers_arr = [];
             try {
@@ -102,12 +104,10 @@ class OlaHubPostController extends BaseController
                 $q->orWhere(function ($userPost) use ($friednId) {
                     $userPost->where('friend_id', $friednId);
                 });
-            })->where('privacy', 3)
-                ->where('isApprove', 1)
+            })->where('is_approve', 1)
                 ->orderBy('created_at', 'desc')
                 ->whereNull('group_id')
                 ->paginate(20);
-            // $posts = Post::where('user_id', (int) $this->requestData['userId'])->orWhere('friend_id', (int) $this->requestData['userId'])->where('privacy', 3)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
         } else {
             $userID = app('session')->get('tempID');
             $posts = Post::where(function ($q) use ($userID) {
@@ -118,10 +118,9 @@ class OlaHubPostController extends BaseController
                 $q->orWhere(function ($userPost) use ($userID) {
                     $userPost->where('friend_id', $userID);
                 });
-            })->where('isApprove', 1)
+            })->where('is_approve', 1)
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
-            // $posts = Post::where('user_id', $userID)->orWhere('friend_id', $userID)->where('isApprove', 1)->orderBy('created_at', 'desc')->paginate(10);
         }
         if ($posts->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
@@ -140,7 +139,7 @@ class OlaHubPostController extends BaseController
 
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
-            $post = Post::where('_id', $this->requestData['postId'])->first();
+            $post = Post::where('post_id', $this->requestData['postId'])->first();
 
             if ($post) {
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
@@ -160,33 +159,25 @@ class OlaHubPostController extends BaseController
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
-            $postMongo = new Post;
-            $postMongo->user_id = app('session')->get('tempID');
+            $post = new Post;
+            $post->user_id = app('session')->get('tempID');
+            $post->post_id = uniqid(app('session')->get('tempID'));
+            $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
+            $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
             $groupData = NULL;
             if (isset($this->requestData['group']) && $this->requestData['group']) {
-                $groupData = \OlaHub\UserPortal\Models\groups::where('_id', $this->requestData["group"])->first();
-                $postMongo->group_id = $this->requestData['group'];
-                $postMongo->privacy = $groupData->privacy;
-                $postMongo->group_title = $groupData->name;
+                $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
+                $post->group_id = $this->requestData['group'];
                 if ($groupData->posts_approve && $groupData->creator != app('session')->get('tempID')) {
-                    $postMongo->isApprove = 0;
+                    $post->is_approve = 0;
                 } else {
-                    $postMongo->isApprove = 1;
+                    $post->is_approve = 1;
                 }
             } else {
-                $postMongo->group_id = NULL;
-                $postMongo->privacy = 3;
-                $postMongo->group_title = NULL;
-                $postMongo->isApprove = 1;
+                $post->group_id = NULL;
+                $post->is_approve = 1;
             }
-            $postMongo->likes = [];
-            $postMongo->shares = [];
-            $postMongo->comments = [];
-            $postMongo->commenters = [app('session')->get('tempID')];
-            $postMongo->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            $postMongo->type = 'post';
-            $postMongo->color = isset($this->requestData['color']) ? $this->requestData['color'] : NULL;
-            $postMongo->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
 
             if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
                 $postImage = [];
@@ -198,7 +189,7 @@ class OlaHubPostController extends BaseController
                     }
                     array_push($postImage, $file);
                 }
-                $postMongo->post_image = !count($postImage) ? NULL : $postImage;
+                $post->post_images = !count($postImage) ? NULL : implode(",", $postImage);
             }
             if ($this->requestData['post_video'] && count($this->requestData['post_video']) > 0) {
                 $postVideo = [];
@@ -210,46 +201,34 @@ class OlaHubPostController extends BaseController
                     }
                     array_push($postVideo, $fileVideo);
                 }
-                $postMongo->post_video = !count($postVideo) ? NULL : $postVideo;
+                $post->post_videos = !count($postVideo) ? NULL : implode(",", $postVideo);
             }
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $group = $groupData;
                 if ($group->posts_approve && $group->creator != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'group';
                     $notification->content = "notifi_postGroup";
-                    $notification->user_name = "";
-                    $notification->community_title = $group->name;
+                    $notification->user_id = $group->creator;
+                    $notification->friend_id = app('session')->get('tempID');
                     $notification->group_id = $this->requestData['group'];
-                    $notification->avatar_url = $group->avatar_url;
-                    $notification->read = 0;
-                    $notification->for_user = $group->creator;
                     $notification->save();
                 } else {
                     foreach ($group->members as $member) {
                         if ($member != app('session')->get('tempID')) {
-
-                            $existNotifi = \OlaHub\UserPortal\Models\NotificationMongo::where('for_user', $member)->where('content', 'notifi_postGroup')->where('read', 0)->first();
-                            if ($existNotifi) {
-                                continue;
-                            } else {
-                                $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
-                                $notification->type = 'group';
-                                $notification->content = "notifi_postGroup";
-                                $notification->user_name = "";
-                                $notification->community_title = $group->name;
-                                $notification->group_id = $this->requestData['group'];
-                                $notification->avatar_url = $group->avatar_url;
-                                $notification->read = 0;
-                                $notification->for_user = $member;
-                                $notification->save();
-                            }
+                            $notification = new \OlaHub\UserPortal\Models\Notifications();
+                            $notification->type = 'group';
+                            $notification->content = "notifi_postGroup";
+                            $notification->user_id = $member->user_id;
+                            $notification->friend_id = app('session')->get('tempID');
+                            $notification->group_id = $this->requestData['group'];
+                            $notification->save();
                         }
                     }
                 }
             }
-            $postMongo->save();
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($postMongo, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+            $post->save();
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
@@ -266,40 +245,39 @@ class OlaHubPostController extends BaseController
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $postID = $this->requestData['post_id'];
-            $comment = $this->requestData['content']['comment'];
-            $postMongo = Post::find($postID);
-            if ($postMongo) {
-                $commentData = [
-                    'comment_id' => count($postMongo->comments),
-                    'user_id' => app('session')->get('tempID'),
-                    'comment' => $comment,
-                    'created_at' => date('Y-m-d H:i:s'),
-                ];
-                $postMongo->push('comments', $commentData, true);
-                $postMongo->push('commenters', app('session')->get('tempID'), true);
+            $post = Post::where('post_id', $postID)->first();
+            if ($post) {
+                $comment = new PostComments();
+                $comment->post_id = $postID;
+                $comment->user_id = app('session')->get('tempID');
+                $comment->comment = $this->requestData['content']['comment'];
+                $comment->save();
+
                 $author = app('session')->get('tempData');
                 $authorName = "$author->first_name $author->last_name";
-                $commentData['post'] = $postID;
-                $commentData['time'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($commentData['created_at']);
-                $commentData['user_info'] = [
-                    'user_id' => $author->id,
-                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                    'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                    'username' => $authorName,
+                $commentData = [
+                    'comment_id' => $comment->id,
+                    'user_id' => app('session')->get('tempID'),
+                    'comment' => $comment->comment,
+                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
+                    'user_info' => [
+                        'user_id' => $author->id,
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
+                        'username' => $authorName,
+                    ]
                 ];
                 $return['data'] = $commentData;
                 $return['status'] = TRUE;
                 $return['code'] = 200;
 
-                if ($postMongo->user_id != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
+                if ($post->user_id != app('session')->get('tempID')) {
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'post';
                     $notification->content = "notifi_comment";
-                    $notification->user_name = $authorName;
+                    $notification->user_id = $post->user_id;
+                    $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $postID;
-                    $notification->avatar_url = $author->profile_picture;
-                    $notification->read = 0;
-                    $notification->for_user = $postMongo->user_id;
                     $notification->save();
                 }
             }
@@ -315,40 +293,40 @@ class OlaHubPostController extends BaseController
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getPostComments"]);
 
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
-            $post = Post::where('_id', $this->requestData['postId'])->first();
+            $post = Post::where('post_id', $this->requestData['postId'])->first();
             if ($post) {
-                if (isset($post->comments) && count($post->comments) > 0) {
+                if (isset($post->comments)) {
                     $return = [];
                     foreach ($post->comments as $comment) {
-                        $userData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $comment['user_id'])->first();
+                        $userData = $comment->author;
                         $repliesData = [];
-                        if (isset($comment['replies']) && $comment['replies']) {
-                            foreach ($comment['replies'] as $reply) {
-                                $userReplyData = \OlaHub\UserPortal\Models\UserMongo::where('user_id', $reply['user_id'])->first();
+                        if (isset($comment->replies)) {
+                            foreach ($comment->replies as $reply) {
+                                $userReplyData = $reply->author;
                                 $repliesData[] = [
-                                    'reply_id' => $reply['reply_id'],
-                                    'user_id' => $reply['user_id'],
-                                    'reply' => $reply['reply'],
-                                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($reply['created_at']),
+                                    'reply_id' => $reply->id,
+                                    'user_id' => $reply->user_id,
+                                    'reply' => $reply->reply,
+                                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($reply->created_at),
                                     'user_info' => [
                                         'user_id' => $userReplyData->id,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userReplyData->avatar_url),
-                                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($userReplyData, 'profile_url', $userReplyData->username, '.'),
-                                        'username' => $userReplyData->username,
+                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userReplyData->profile_picture),
+                                        'profile_url' => $userReplyData->profile_url,
+                                        'username' => $userReplyData->first_name . " " . $userReplyData->last_name,
                                     ]
                                 ];
                             }
                         }
                         $return["data"][] = [
-                            'comment_id' => $comment['comment_id'],
-                            'user_id' => $comment['user_id'],
-                            'comment' => $comment['comment'],
-                            'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment['created_at']),
+                            'comment_id' => $comment->id,
+                            'user_id' => $comment->user_id,
+                            'comment' => $comment->comment,
+                            'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
                                 'user_id' => $userData->id,
-                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url),
-                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($userData, 'profile_url', $userData->username, '.'),
-                                'username' => $userData->username,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture),
+                                'profile_url' => $userData->profile_url,
+                                'username' => $userData->first_name . " " . $userData->last_name,
                             ],
                             'replies' => $repliesData
                         ];
@@ -372,60 +350,39 @@ class OlaHubPostController extends BaseController
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
-            $postID = $this->requestData['post_id'];
-            $reply = $this->requestData['content']['reply'];
-            $postMongo = Post::find($postID);
-            if ($postMongo) {
-                foreach ($postMongo->comments as $comment) {
-                    if ($comment["comment_id"] == $this->requestData['comment_id']) {
-                        $replyData = [
-                            'reply_id' => isset($comment['replies']) ? count($comment['replies']) : 0,
-                            'user_id' => app('session')->get('tempID'),
-                            'reply' => $reply,
-                            'created_at' => date('Y-m-d H:i:s'),
-                        ];
-                        $postMongo->pull('comments', $comment);
-                        $comment["replies"][] = $replyData;
-                        $postMongo->push('comments', $comment);
-                        if ($comment['user_id'] != app('session')->get('tempID')) {
-                            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
-                            $notification->type = 'post';
-                            $notification->content = "notifi_reply";
-                            $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                            $notification->post_id = $postID;
-                            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                            $notification->read = 0;
-                            $notification->for_user = $comment['user_id'];
-                            $notification->save();
-                        }
-
-
-                        if ($postMongo->user_id != app('session')->get('tempID')) {
-                            $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
-                            $notification->type = 'post';
-                            $notification->content = "notifi_comment";
-                            $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                            $notification->post_id = $postID;
-                            $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                            $notification->read = 0;
-                            $notification->for_user = $postMongo->user_id;
-                            $notification->save();
-                        }
-                    }
-                }
-
-                $postMongo->push('commenters', app('session')->get('tempID'), true);
+            $commentId = $this->requestData['comment_id'];
+            $comment = PostComments::find($commentId);
+            if ($comment) {
+                $reply = new PostReplies();
+                $reply->comment_id = $commentId;
+                $reply->user_id = app('session')->get('tempID');
+                $reply->reply = $this->requestData['content']['reply'];
+                $reply->save();
 
                 $author = app('session')->get('tempData');
                 $authorName = "$author->first_name $author->last_name";
-                $replyData['post'] = $postID;
-                $replyData['time'] = date('Y-m-d H:i:s');
-                $replyData['user_info'] = [
-                    'user_id' => $author->id,
-                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                    'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                    'username' => $authorName,
+
+                $replyData = [
+                    'reply_id' => $reply->id,
+                    'user_id' => app('session')->get('tempID'),
+                    'reply' => $reply->reply,
+                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($reply->created_at),
+                    'user_info' => [
+                        'user_id' => $author->id,
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
+                        'username' => $authorName,
+                    ]
                 ];
+                if ($comment->user_id != app('session')->get('tempID')) {
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
+                    $notification->type = 'post';
+                    $notification->content = "notifi_reply";
+                    $notification->user_id = $comment->user_id;
+                    $notification->friend_id = app('session')->get('tempID');
+                    $notification->post_id = $this->requestData['post_id'];
+                    $notification->save();
+                }
                 $return['data'] = $replyData;
                 $return['status'] = TRUE;
                 $return['code'] = 200;
@@ -446,7 +403,7 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
-        $post = Post::find($this->requestData['postId']);
+        $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
             if ($post->user_id != app('session')->get('tempID')) {
                 if (isset($post->group_id) && $post->group_id > 0) {
@@ -488,18 +445,15 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]], 200);
         }
-        $post = Post::find($this->requestData['postId']);
+        $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
             if ($post->user_id != app('session')->get('tempID')) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400]]);
                 $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
             }
-            if ($post->post != $this->requestData['content']) {
-                $post->push('history', [date("Y-m-d H:i:s") => $post->post], true);
-            }
 
-            $post->post = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;

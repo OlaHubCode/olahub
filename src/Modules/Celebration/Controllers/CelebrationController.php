@@ -254,16 +254,6 @@ class CelebrationController extends BaseController
                     $participantData = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $Participant->user_id)->first();
                     $celebrationOwner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $celebration->user_id)->first();
 
-                    /* $notification = new \OlaHub\UserPortal\Models\NotificationMongo();
-                      $notification->type = 'celebration';
-                      $notification->content = app('session')->get('tempData')->first_name .' '. app('session')->get('tempData')->last_name . " delete $celebration->title celebration";
-                      $notification->celebration_id = $this->requestData['celebrationId'];
-                      $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                      $notification->read = 0;
-                      $notification->for_user = $Participant->user_id;
-                      $notification->save(); */
-
-
                     if ($participantData->mobile_no && $participantData->email) {
                         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedCelebration($participantData, app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name, $celebration->title, $celebrationOwner->first_name . ' ' . $celebrationOwner->last_name);
                         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedCelebration($participantData, app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name, $celebration->title, $celebrationOwner->first_name . ' ' . $celebrationOwner->last_name);
@@ -275,7 +265,7 @@ class CelebrationController extends BaseController
                 }
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to celebration"]);
-            $removeNotifications = \OlaHub\UserPortal\Models\NotificationMongo::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->get();
+            $removeNotifications = \OlaHub\UserPortal\Models\Notifications::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->get();
             foreach ($removeNotifications as $removeNotification) {
                 if ($removeNotification) {
                     $removeNotification->delete();
@@ -347,10 +337,6 @@ class CelebrationController extends BaseController
         $participant->is_approved = 1;
         $participant->is_creator = 1;
         $participant->save();
-        $userMongo = \OlaHub\UserPortal\Models\UserMongo::where('user_id', (int) $participant->user_id)->first();
-        if ($userMongo) {
-            $userMongo->push('celebrations', (int) $this->celebration->id, true);
-        }
     }
 
     private function saveCelebrationData()

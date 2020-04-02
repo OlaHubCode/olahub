@@ -18,10 +18,10 @@ class CommunitiesForLandingPageResponseHandler extends Fractal\TransformerAbstra
 
     private function setDefaultData() {
         $this->return = [
-            "itemSlug" => isset($this->data->_id) ? $this->data->_id : 0,
+            "itemSlug" => isset($this->data->slug) ? $this->data->slug : 0,
             "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->image, "community"),
             "itemName" => isset($this->data->name) ? $this->data->name : 0,
-            "itemDesc" => isset($this->data->group_desc) ? $this->data->group_desc : 0,
+            "itemDesc" => isset($this->data->description) ? $this->data->description : 0,
         ];
     }
 

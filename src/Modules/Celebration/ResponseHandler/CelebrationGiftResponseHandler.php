@@ -37,27 +37,16 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
                 $this->setPriceData();
                 break;
             case "designer":
-                $itemMain = \OlaHub\UserPortal\Models\DesginerItems::whereIn("item_ids", [$this->data->item_id])->first();
-                if ($itemMain) {
-                    $item = false;
-                    if (isset($itemMain->items) && count($itemMain->items) > 0) {
-                        foreach ($itemMain->items as $oneItem) {
-                            if ($oneItem["item_id"] == $this->data->item_id) {
-                                $item = (object) $oneItem;
-                            }
-                        }
-                    }
-                    if (!$item) {
-                        $item = $itemMain;
-                    }
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
+                if ($item) {
                     $this->return = [
                         "celebrationGiftId" => isset($this->data->id) ? $this->data->id : 0,
                         "celebrationGiftType" => "designer",
                         "celebrationGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
-                        "celebrationItem" => isset($item->item_id) ? $item->item_id : 0,
-                        "celebrationItemName" => $itemMain->item_title,
+                        "celebrationItem" => isset($item->id) ? $item->id : 0,
+                        "celebrationItemName" => $item->name,
                         "celebrationItemSlug" => isset($item->item_slug) ? $item->item_slug : NULL,
-                        "celebrationItemSKU" => isset($itemMain->sku) ? $itemMain->sku : NULL,
+                        "celebrationItemSKU" => isset($item->sku) ? $item->sku : NULL,
                         "celebrationItemInStock" => isset($item->item_stock) ? $item->item_stock : 1,
                     ];
                     $this->setDesignerDefImageData($item);
@@ -111,7 +100,7 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('id', $this->data->shopping_cart_id)->first();
         $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)->where('item_id', $item->item_id)->first();
         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
-        $return = \OlaHub\UserPortal\Models\DesginerItems::checkPrice($item, false, true, $celebration->country_id);
+        $return = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, false, true, $celebration->country_id);
         $this->return['celebrationItemPrice'] = $return['productPrice'];
         $this->return['celebrationItemQuantity'] = $cartDetails->quantity;
         $this->return['celebrationItemTotalPrice'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cartDetails->total_price, true, $celebration->country_id);

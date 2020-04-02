@@ -39,12 +39,11 @@ class Brand extends Model {
         $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $brand = Brand::where('store_slug', $slug)->first();
         if ($brand) {
-            $user = app('session')->get('tempID') ? \OlaHub\UserPortal\Models\UserMongo::where('user_id', app('session')->get('tempID'))->first() : false;
             $return['id'] = $brand->id;
             $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->banner_ref, 'shop_banner')];
             $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name');
             $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref);
-            $return['followed'] = $user && isset($user->followed_brands) && is_array($user->followed_brands) && in_array($brand->id, $user->followed_brands) ? true : false;
+            // $return['followed'] = $user && isset($user->followed_brands) && is_array($user->followed_brands) && in_array($brand->id, $user->followed_brands) ? true : false;
         }
         return $return;
     }
