@@ -89,6 +89,20 @@ class DesignerItems extends Model
         return $return;
     }
 
+    static function searchItem($q = 'a', $count = 15)
+    {
+        $items = DesignerItems::where('name', 'LIKE', "%$q%")->orWhereRaw('name sounds like ?', $q)
+            ->where(function ($q) {
+                $q->whereNull("parent_item_id");
+                $q->orWhere("parent_item_id", 0);
+            });
+        if ($count > 0) {
+            return $items->paginate($count);
+        } else {
+            return $items->count();
+        }
+    }
+
     public function images()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\DesignerItemImages', 'item_id');
