@@ -539,17 +539,19 @@ class OlaHubGeneralController extends BaseController
                     "type" => "desginer_items"
                 ];
             }
-            // users
-            if ($handle[4]->search > 0) {
-                $searchData[] = [
-                    "type" => "users"
-                ];
-            }
-            // groups
-            if ($handle[5]->search > 0) {
-                $searchData[] = [
-                    "type" => "groups"
-                ];
+            if (app('session')->get('tempID')) {
+                // users
+                if ($handle[4]->search > 0) {
+                    $searchData[] = [
+                        "type" => "users"
+                    ];
+                }
+                // groups
+                if ($handle[5]->search > 0) {
+                    $searchData[] = [
+                        "type" => "groups"
+                    ];
+                }
             }
 
             $ditems = [];
