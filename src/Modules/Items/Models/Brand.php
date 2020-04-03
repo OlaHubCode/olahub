@@ -4,9 +4,11 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Brand extends Model {
+class Brand extends Model
+{
 
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
 
         static::addGlobalScope('country', function (\Illuminate\Database\Eloquent\Builder $builder) {
@@ -22,19 +24,23 @@ class Brand extends Model {
 
     protected $table = 'merchant_stors';
 
-    public function itemsMainData() {
+    public function itemsMainData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'store_id');
     }
 
-    public function merchant() {
+    public function merchant()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Merchant', 'merchant_id');
     }
 
-    public function brandMerRelation() {
+    public function brandMerRelation()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemBrandMer', 'brand_id');
     }
 
-    static function getBannerBySlug($slug) {
+    static function getBannerBySlug($slug)
+    {
         $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner')];
         $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $brand = Brand::where('store_slug', $slug)->first();
@@ -48,7 +54,8 @@ class Brand extends Model {
         return $return;
     }
 
-    static function getBannerByIDS($ids) {
+    static function getBannerByIDS($ids)
+    {
         $brands = Brand::whereIn('id', $ids)->whereNotNull('banner_ref')->get();
         $return = [];
         if ($brands->count() > 1) {
@@ -64,20 +71,14 @@ class Brand extends Model {
         return $return;
     }
 
-    static function searchBrands($q = 'a', $count = 15) {
-        $brands = Brand::where('name', 'LIKE', "%$q%")
-                ->whereHas("itemsMainData", function($itemQ) use($q) {
-                    //$itemQ->where("name", "like", "%$q%");
-                    $itemQ->where("is_published", "1");
-            $itemQ->whereHas('merchant', function($merQ) {
-                $merQ->where('country_id', 5);
-            });
-        });
+    static function searchBrands($q = 'a', $count = 15)
+    {
+        $brands = Brand::whereRaw('LOWER(`name`) sounds like ?', $q)
+            ->orWhereRaw('LOWER(`name`)  like ?', array("%" . $q . "%"));
         if ($count > 0) {
             return $brands->paginate($count);
-        }else{
+        } else {
             return $brands->count();
         }
     }
-
 }

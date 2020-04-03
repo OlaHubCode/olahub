@@ -483,71 +483,92 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search all"]);
         if (isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) {
             $q = mb_strtolower($this->requestFilter->word);
+            $searchQuery = [];
+
+            // brands
+            $searchQuery[] = "select count(id) as search from merchant_stors 
+            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
+
+            // designers
+            $searchQuery[] = "select count(id) as search from designers 
+            where LOWER(`brand_name`) like '%" . $q . "%' or LOWER(`brand_name`) sounds like '" . $q . "'";
+
+            // items
+            $searchQuery[] = "select count(id) as search from catalog_items 
+            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
+
+            // designer items
+            $searchQuery[] = "select count(id) as search from designer_items 
+            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
 
             if (app('session')->get('tempID')) {
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search users"]);
-                $users = \OlaHub\UserPortal\Models\UserModel::searchUsers($q, false, false, 0, TRUE);
-                if ($users > 0) {
-                    $searchData[] = [
-                        "type" => "users"
-                    ];
-                }
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search interests"]);
-                $groupInterests = \OlaHub\UserPortal\Models\Interests::searchInterests($q, 0);
-                $groups = \OlaHub\UserPortal\Models\groups::searchGroups($q, 0, $groupInterests);
-                if ($groups > 0) {
-                    $searchData[] = [
-                        "type" => "groups"
-                    ];
-                }
+                // users 
+                $searchQuery[] = "select count(id) as search from users 
+                where (LOWER(`email`) like '%" . $q . "%' or mobile_no like '%" . $q . "%' 
+                and LOWER(`first_name`) sounds like '" . $q . "'
+                and LOWER(`last_name`) sounds like '" . $q . "')  
+                and id <> " . app('session')->get('tempID') . " and is_active = 1";
+
+                // groups
+                $searchQuery[] = "select count(id) as search from groups 
+                where LOWER(`name`) sounds like '" . $q . "'
+                or LOWER(`description`) sounds like '" . $q . "'";
             }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search brands"]);
-            $brands = \OlaHub\UserPortal\Models\Brand::searchBrands($q, 0);
-            if ($brands > 0) {
+            $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
+            // brands
+            if ($handle[0]->search > 0) {
                 $searchData[] = [
                     "type" => "brands"
                 ];
             }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items"]);
-            $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, 0);
-            if ($items > 0) {
-                $searchData[] = [
-                    "type" => "items"
-                ];
-            }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search designer items"]);
-            $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItems($q, 0);
-            if ($designerItems > 0) {
-                $searchData[] = [
-                    "type" => "desginer_items"
-                ];
-            }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search designers"]);
-            $desginers = \OlaHub\UserPortal\Models\Designer::searchDesigners($q, 0);
-            if ($desginers > 0) {
+            // designers
+            if ($handle[1]->search > 0) {
                 $searchData[] = [
                     "type" => "designers"
                 ];
             }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search classifications"]);
-            $classifications = \OlaHub\UserPortal\Models\Classification::searchClassifications($q, 0);
-            if ($classifications->count() > 0) {
-                $returnClasses = [];
-                foreach ($classifications as $oneClass) {
-                    $returnClasses[] = [
-                        "label" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($oneClass, "name"),
-                        "slug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($oneClass, "class_slug", $oneClass->name),
-                    ];
-                }
-                if (count($returnClasses) > 0) {
-                    $searchData[] = [
-                        "type" => "classifications",
-                        "typeData" => $returnClasses
-                    ];
-                }
+            // items
+            if ($handle[2]->search > 0) {
+                $searchData[] = [
+                    "type" => "items"
+                ];
+            }
+            // designer items
+            if ($handle[3]->search > 0) {
+                $searchData[] = [
+                    "type" => "desginer_items"
+                ];
+            }
+            // users
+            if ($handle[4]->search > 0) {
+                $searchData[] = [
+                    "type" => "users"
+                ];
+            }
+            // groups
+            if ($handle[5]->search > 0) {
+                $searchData[] = [
+                    "type" => "groups"
+                ];
+            }
+
+            $ditems = [];
+            $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, 5);
+            if ($items) {
+                $ditems["items"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler')['data'];
+            }
+
+            $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItem($q, 5);
+            if ($designerItems) {
+                $ditems["designerItems"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($designerItems, '\OlaHub\UserPortal\ResponseHandlers\DesignerItemsSearchResponseHandler')['data'];
             }
         }
-        $return = ['status' => true, 'data' => $searchData, 'code' => 200];
+        $return = [
+            'status' => true,
+            'data' => $searchData,
+            'items' => $ditems,
+            'code' => 200
+        ];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End search"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
@@ -574,34 +595,15 @@ class OlaHubGeneralController extends BaseController
                         $users = \OlaHub\UserPortal\Models\UserModel::searchUsers($q, false, false, $count, TRUE);
                         if ($users->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($users, '\OlaHub\UserPortal\ResponseHandlers\UserSearchResponseHandler');
-                            //                            foreach ($users as $user) {
-                            //                                $searchData[] = [
-                            //                                    "itemId" => isset($user->id) ? $user->id : 0,
-                            //                                    "itemName" => isset($user->first_name) ? $user->first_name . ' ' . $user->last_name : NULL,
-                            //                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
-                            //                                    "itemSlug" => \OlaHub\UserPortal\Models\UserModel::getUserSlug($user),
-                            //                                    "itemType" => 'user'
-                            //                                ];
-                            //                            }
                         }
                     }
                     break;
                 case "groups":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search groups filter"]);
                     if (app('session')->get('tempID')) {
-                        $groupInterests = \OlaHub\UserPortal\Models\Interests::searchInterests($q, 0);
-                        $groups = \OlaHub\UserPortal\Models\groups::searchGroups($q, $count, $groupInterests);
+                        $groups = \OlaHub\UserPortal\Models\groups::searchGroups($q, $count);
                         if ($groups->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($groups, '\OlaHub\UserPortal\ResponseHandlers\GroupSearchResponseHandler');
-                            //                            foreach ($groups as $group) {
-                            //                                $searchData[] = [
-                            //                                    "itemId" => isset($group->{"_id"}) ? $group->{"_id"} : 0,
-                            //                                    "itemName" => isset($group->name) ? $group->name : NULL,
-                            //                                    "itemImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->image),
-                            //                                    "itemCover" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($group->cover),
-                            //                                    "itemType" => 'group'
-                            //                                ];
-                            //                            }
                         }
                     }
                     break;
@@ -610,21 +612,6 @@ class OlaHubGeneralController extends BaseController
                     $brands = \OlaHub\UserPortal\Models\Brand::searchBrands($q, $count);
                     if ($brands->count() > 0) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandSearchResponseHandler');
-                        //                        foreach ($brands as $brand) {
-                        //                            $brandName = isset($brand->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name') : NULL;
-                        //                            $brandImage = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref);
-                        //                            $merBrand = $brand->merchant()->first();
-                        //                            $searchData[] = [
-                        //                                "itemName" => $brandName,
-                        //                                "itemImage" => $brandImage,
-                        //                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $brandName),
-                        //                                "itemPhone" => isset($brand->contact_phone_no) ? $brand->contact_phone_no : NULL,
-                        //                                "itememail" => isset($brand->contact_email) ? $brand->contact_email : NULL,
-                        //                                "itemWebsite" => isset($merBrand->company_website) ? $merBrand->company_website : null,
-                        //                                "itemAddress" => isset($merBrand->company_street_address) ? $merBrand->company_street_address : null,
-                        //                                "itemType" => 'brand'
-                        //                            ];
-                        //                        }
                     }
                     break;
                 case "items":
@@ -632,24 +619,11 @@ class OlaHubGeneralController extends BaseController
                     $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count);
                     if ($items->count() > 0) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
-                        //                        foreach ($items as $item) {
-                        //                            $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
-                        //                            $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
-                        //                            $itemImage = $this->setDefImageData($item);
-                        //                            $searchData[] = [
-                        //                                "itemName" => $itemName,
-                        //                                "itemDescription" => $itemDescription,
-                        //                                "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
-                        //                                "itemImage" => $itemImage,
-                        //                                "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-                        //                                "itemType" => 'item'
-                        //                            ];
-                        //                        }
                     }
                     break;
                 case "desginer_items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search desginer items filter"]);
-                    $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItems($q, $count);
+                    $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItem($q, $count);
                     if ($designerItems->count() > 0) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($designerItems, '\OlaHub\UserPortal\ResponseHandlers\DesignerItemsSearchResponseHandler');
                     }
@@ -668,20 +642,6 @@ class OlaHubGeneralController extends BaseController
                         $items = \OlaHub\UserPortal\Models\CatalogItem::searchItemByClassification($q, $classification->class_slug, $count);
                         if ($items && $items->count() > 0) {
                             $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ClassificationSearchResponseHandler');
-                            //                            foreach ($items as $item) {
-                            //                                $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
-                            //                                $itemDescription = isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'description') : NULL;
-                            //                                $itemImage = $this->setDefImageData($item);
-                            //                                $searchData[] = [
-                            //                                    "itemName" => $itemName,
-                            //                                    "itemDescription" => $itemDescription,
-                            //                                    "itemPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($item->price),
-                            //                                    "itemImage" => $itemImage,
-                            //                                    "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
-                            //                                    "itemType" => 'classification',
-                            //                                    "itemClassName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($classification, 'name')
-                            //                                ];
-                            //                            }
                         }
                     }
                     break;

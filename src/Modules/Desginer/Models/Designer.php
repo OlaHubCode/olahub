@@ -1,24 +1,22 @@
 <?php
 
 namespace OlaHub\UserPortal\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
-class Designer extends Model {
+class Designer extends Model
+{
 
     protected $table = 'designers';
-    
-    static function searchDesigners($q = 'a', $count = 15) {
-        $designers = DesignerItems::where("brand_name", 'LIKE', "%$q%");
+
+    static function searchDesigners($q = 'a', $count = 15)
+    {
+        $designers = Designer::where("brand_name", 'LIKE', "%$q%")
+            ->orWhereRaw('LOWER(`brand_name`)  like ?', array("%" . $q . "%"));
         if ($count > 0) {
-            $designers = $designers->paginate($count);
-            $designersId = [];
-            foreach ($designers as $des){
-                $designersId[] = $des->designer_id;
-            }
-            return Designer::whereIn('id', $designersId)->get();
-        }else{
+            return $designers->paginate($count);
+        } else {
             return $designers->count();
         }
     }
-
 }

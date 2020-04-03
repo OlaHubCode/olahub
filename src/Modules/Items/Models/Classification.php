@@ -4,9 +4,11 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Classification extends Model {
+class Classification extends Model
+{
 
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
 
         static::addGlobalScope('country', function (\Illuminate\Database\Eloquent\Builder $builder) {
@@ -58,11 +60,13 @@ class Classification extends Model {
         ],
     ];
 
-    public function itemsMainData() {
+    public function itemsMainData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'clasification_id');
     }
 
-    static function getBannerBySlug($slug) {
+    static function getBannerBySlug($slug)
+    {
         $class = Classification::where('class_slug', $slug)->first();
         if ($class && $class->banner_ref) {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($class->banner_ref);
@@ -71,7 +75,8 @@ class Classification extends Model {
         }
     }
 
-    static function getBannerByIDS($ids) {
+    static function getBannerByIDS($ids)
+    {
         $classes = Classification::whereIn('id', $ids)->whereNotNull('banner_ref')->get();
         $return = [];
         if ($classes->count() > 1) {
@@ -87,7 +92,8 @@ class Classification extends Model {
         return $return;
     }
 
-    static function getStoreForAdsBySlug($slug) {
+    static function getStoreForAdsBySlug($slug)
+    {
         $classes = Classification::where('class_slug', $slug)->first();
         $return = [
             'storeName' => NULL,
@@ -103,18 +109,18 @@ class Classification extends Model {
         return $return;
     }
 
-    static function searchClassifications($q = 'a') {
-        $classifications = Classification::whereHas("itemsMainData", function($itemQ) use($q) {
-                    $itemQ->where('name', 'LIKE', "%$q%");
-                    $itemQ->whereHas('merchant', function($merQ) {
-                        $merQ->where('country_id', 5);
-                    });
-                    $itemQ->where(function($itemQW) {
-                        $itemQW->whereNull("parent_item_id");
-                        $itemQW->orWhere("parent_item_id", 0);
-                    });
-                })->groupBy('id');
+    static function searchClassifications($q = 'a')
+    {
+        $classifications = Classification::whereHas("itemsMainData", function ($itemQ) use ($q) {
+            $itemQ->where('name', 'LIKE', "%$q%");
+            $itemQ->whereHas('merchant', function ($merQ) {
+                $merQ->where('country_id', 5);
+            });
+            $itemQ->where(function ($itemQW) {
+                $itemQW->whereNull("parent_item_id");
+                $itemQW->orWhere("parent_item_id", 0);
+            });
+        })->groupBy('id');
         return $classifications->get();
     }
-
 }

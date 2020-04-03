@@ -59,28 +59,26 @@ class groups extends Model
         ],
     ];
 
-    public function members() {
-        return $this->hasMany('OlaHub\UserPortal\Models\GroupMembers','group_id');
+    public function members()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\GroupMembers', 'group_id');
     }
 
-    static function searchGroups($q = 'a', $count = 15, $groupInterests = [])
+    static function searchGroups($q = 'a', $count = 15)
     {
-        $interests = [];
-        foreach ($groupInterests as $oneInterest) {
-            $interests[] = (int) $oneInterest->interest_id;
-        }
-        if (count($interests) > 0) {
-            $groups = groups::where(function ($query) use ($q, $interests) {
-                $query->whereIn("interests", $interests)->orWhere("name", 'LIKE', "%$q%");
-            })->whereIn("privacy", [2, 3]);
-        } else {
-            $groups = groups::where("name", 'LIKE', "%$q%")
-                ->whereIn("privacy", [2, 3]);
-        }
+        $groupsModel = (new groups)->newQuery();
+        $groupsModel->where(function ($query) use ($q) {
+            $query->whereRaw('LOWER(`name`) sounds like ?', $q)
+                ->orWhereRaw('LOWER(`name`)  like ?', "%" . $q . "%")
+                ->orWhereRaw('LOWER(`description`) sounds like ?', $q)
+                ->orWhereRaw('LOWER(`description`)  like ?', "%" . $q . "%");
+        })->whereIn("privacy", [2, 3]);
+
+
         if ($count > 0) {
-            return $groups->paginate($count);
+            return $groupsModel->paginate($count);
         } else {
-            return $groups->get()->count();
+            return $groupsModel->get()->count();
         }
     }
 }

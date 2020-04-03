@@ -219,7 +219,7 @@ class CatalogItem extends Model
 
     static function searchItem($q = 'a', $count = 15)
     {
-        $items = CatalogItem::where('name', 'LIKE', "%$q%")
+        $items = CatalogItem::where('name', 'LIKE', "%$q%")->orWhereRaw('name sounds like ?', $q)
             ->whereHas("merchant", function ($merQ) {
                 $merQ->where('country_id', app('session')->get('def_country')->id);
             })->where(function ($q) {

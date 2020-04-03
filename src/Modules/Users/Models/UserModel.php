@@ -4,12 +4,14 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class UserModel extends Model {
+class UserModel extends Model
+{
 
     protected $table = 'users';
     protected $connection = 'mysql';
 
-    protected static function boot() {
+    protected static function boot()
+    {
         parent::boot();
 
         static::addGlobalScope('notTemp', function ($query) {
@@ -19,7 +21,7 @@ class UserModel extends Model {
                     $temp->whereNotNull('invitation_accepted_date');
                 });
                 $q->orWhere(function ($temp) {
-                    $temp->where(function($tempNull){
+                    $temp->where(function ($tempNull) {
                         $tempNull->where('invited_by', "0");
                         $tempNull->orWhereNull('invited_by');
                     });
@@ -143,23 +145,28 @@ class UserModel extends Model {
         ]
     ];
 
-    public function country() {
+    public function country()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\Country');
     }
 
-    public function shippingAddress() {
+    public function shippingAddress()
+    {
         return $this->hasOne('OlaHub\UserPortal\Models\UserShippingAddressModel', 'user_id');
     }
 
-    public function calendars() {
+    public function calendars()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CalendarModel', 'user_id');
     }
 
-    public function wishLish() {
+    public function wishLish()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\WishList', 'user_id');
     }
 
-    public function celebrationParticipants() {
+    public function celebrationParticipants()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CelebrationParticipantsModel', 'user_id');
     }
 
@@ -167,8 +174,9 @@ class UserModel extends Model {
     {
         return $this->hasMany('OlaHub\UserPortal\Models\Friends', 'user_id', 'id');
     }
-    
-    public function getColumns($requestData, $user = false) {
+
+    public function getColumns($requestData, $user = false)
+    {
         if ($user) {
             $array = $user;
         } else {
@@ -183,15 +191,16 @@ class UserModel extends Model {
         return $array;
     }
 
-    static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false) {
+    static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false)
+    {
         $userModel = (new UserModel)->newQuery();
         // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
-        $userModel->where(function($query) use ($q) {
-                    $query->whereRaw('LOWER(`email`) like ?', array("%" . $q . "%"))
-                    ->orWhereRaw('CONCAT(LOWER(`first_name`), " ", LOWER(`last_name`)) like ?', array("%" . $q . "%"))
-                    ->orWhere("users.mobile_no", 'like', "%" . $q . "%");
-                })
-                ->where('users.id', '!=', app('session')->get('tempID'));
+        $userModel->where(function ($query) use ($q) {
+            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
+                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
+                ->WhereRaw('LOWER(`first_name`) sounds like ?', $q)
+                ->WhereRaw('LOWER(`last_name`) sounds like ?', $q);
+        })->where('users.id', '<>', app('session')->get('tempID'));
         if ($eventId) {
             $userModel->whereRaw('users.id NOT IN (select user_id from celebration_participants
                      where celebration_participants.celebration_id = "' . (int) $eventId . '" )
@@ -207,15 +216,15 @@ class UserModel extends Model {
             $userModel->where('is_active', '1');
         }
         if ($count > 0) {
-
             return $userModel->paginate($count);
         } else {
             return $userModel->count();
         }
     }
 
-    static function getUserSlug($user) {
-        
+    static function getUserSlug($user)
+    {
+
         if ($user->profile_url && !preg_match('/^[.][.][0-9]+$/', $user->profile_url)) {
             return $user->profile_url;
         }
@@ -228,7 +237,8 @@ class UserModel extends Model {
         return Null;
     }
 
-    static function checkTempUser($user) {
+    static function checkTempUser($user)
+    {
         $return = true;
         if ($user->invited_by > 0 && $user->invitation_accepted_date != NULL) {
             $return = false;
@@ -237,5 +247,4 @@ class UserModel extends Model {
         }
         return $return;
     }
-
 }
