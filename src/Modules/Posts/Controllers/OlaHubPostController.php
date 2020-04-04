@@ -205,14 +205,30 @@ class OlaHubPostController extends BaseController
             }
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $group = $groupData;
+                $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
                 if ($group->posts_approve && $group->creator != app('session')->get('tempID')) {
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'group';
                     $notification->content = "notifi_postGroup";
                     $notification->user_id = $group->creator;
                     $notification->friend_id = app('session')->get('tempID');
-                    $notification->group_id = $this->requestData['group'];
+                    $notification->group_id = $group->id;
                     $notification->save();
+
+                    $userData = app('session')->get('tempData');
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $group->creator,
+                        "add_post",
+                        array(
+                            "type" => "add_post",
+                            "groupId" => $group->id,
+                            "postId" => $post->post_id,
+                            "user_data" => $userData,
+                        ),
+                        $owner->lang,
+                        $group->name,
+                        "$userData->first_name $userData->last_name"
+                    );
                 } else {
                     foreach ($group->members as $member) {
                         if ($member != app('session')->get('tempID')) {
@@ -279,6 +295,22 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $postID;
                     $notification->save();
+
+                    $userData = app('session')->get('tempData');
+                    $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $post->user_id,
+                        "post_comment",
+                        array(
+                            "type" => "post_comment",
+                            "commentId" => $comment->id,
+                            "postId" => $postID,
+                            "subject" => $post->content,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $owner->lang,
+                        "$userData->first_name $userData->last_name"
+                    );
                 }
             }
         }
@@ -382,6 +414,22 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $this->requestData['post_id'];
                     $notification->save();
+                    
+                    $userData = app('session')->get('tempData');
+                    $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $comment->user_id)->first();
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $comment->user_id,
+                        "post_reply",
+                        array(
+                            "type" => "post_reply",
+                            "commentId" => $comment->id,
+                            "post_id" => $comment->post_id,
+                            "replyId" => $reply->id,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $owner->lang,
+                        "$userData->first_name $userData->last_name"
+                    );
                 }
                 $return['data'] = $replyData;
                 $return['status'] = TRUE;

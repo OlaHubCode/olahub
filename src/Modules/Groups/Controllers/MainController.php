@@ -227,6 +227,20 @@ class MainController extends BaseController
                 $notification->friend_id = $inviterData->id;
                 $notification->save();
 
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $user->id,
+                    "invite_group",
+                    array(
+                        "type" => "invite_group",
+                        "groupId" => $group->id,
+                        "user_data" => $inviterData,
+                    ),
+                    $user->lang,
+                    $group->name,
+                    "$inviterData->first_name $inviterData->last_name",
+                    $group->name
+                );
+
                 $member = (new GroupMembers)->where('user_id', $user->id)->where('group_id', $group->id)->first();
                 if (!$member) {
                     $member = new GroupMembers;
@@ -304,6 +318,22 @@ class MainController extends BaseController
             $notification->friend_id = app('session')->get('tempID');
             $notification->group_id = $group->id;
             $notification->save();
+
+            $userData = app('session')->get('tempData');
+            $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData["userId"])->first();
+            \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                $this->requestData["userId"],
+                "accept_member",
+                array(
+                    "type" => "accept_member",
+                    "groupId" => $group->id,
+                    "user_data" => $userData,
+                ),
+                $owner->lang,
+                $group->name,
+                "$userData->first_name $userData->last_name",
+                $group->name
+            );
 
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;
@@ -565,6 +595,21 @@ class MainController extends BaseController
             $notification->friend_id = app('session')->get('tempID');
             $notification->group_id = $group->id;
             $notification->save();
+            
+            $userData = app('session')->get('tempData');
+            $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
+            \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                $group->creator,
+                "ask_group",
+                array(
+                    "type" => "ask_group",
+                    "groupId" => $group->id,
+                    "user_data" => $userData,
+                ),
+                $owner->lang,
+                $group->name,
+                "$userData->first_name $userData->last_name"
+            );
 
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;

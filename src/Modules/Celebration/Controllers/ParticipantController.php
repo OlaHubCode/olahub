@@ -42,18 +42,29 @@ class ParticipantController extends BaseController {
                 $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'ThisUserAlreadyParticipant', 'code' => 500], 200);
             }
-            $creatorData = $this->celebration->creatorUser;
-            $celebrationTitle = $this->celebration->title;
             $notification = new \OlaHub\UserPortal\Models\Notifications();
             $notification->type = 'celebration';
             $notification->content = "notifi_addParticipantCelebration";
-            // $notification->user_name = $creatorData->first_name . " " . $creatorData->last_name;
-            // $notification->celebration_title = $celebrationTitle;
             $notification->celebration_id = $this->celebration->id;
-            // $notification->avatar_url = $creatorData->profile_picture;
-            $notification->read = 0;
             $notification->user_id = $this->requestData['userId'];
+            $notification->friend_id = app('session')->get('tempID');
             $notification->save();
+            
+            $userData = app('session')->get('tempData');
+            $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
+            \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                $targe->id,
+                "cel_part_add",
+                array(
+                    "type" => "cel_part_add",
+                    "celebrationId" => $this->celebration->id,
+                    "celebrationTitle" => $this->celebration->title,
+                    "username" => "$userData->first_name $userData->last_name",
+                ),
+                $targe->lang,
+                "$userData->first_name $userData->last_name",
+                $this->celebration->title
+            );
 
             return $this->participant();
         }
@@ -79,17 +90,31 @@ class ParticipantController extends BaseController {
             $participant = CelebrationParticipantsModel::where('user_id', $this->requestData['userId'])->where('celebration_id', $this->requestData['celebrationId'])->first();
             if ($participant && $this->celebration->created_by != $this->requestData['userId'] && $this->celebration->user_id != $this->requestData['userId']) {
                 $participant->delete();
+
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
-                $celebrationTitle = $this->celebration->title;
                 $notification->type = 'celebration';
                 $notification->content = "notifi_removeParticipantCelebration";
-                // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                // $notification->celebration_title = $celebrationTitle;
                 $notification->celebration_id = $this->requestData['celebrationId'];
-                // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                $notification->read = 0;
                 $notification->user_id = $this->requestData['userId'];
+                $notification->friend_id = app('session')->get('tempID');
                 $notification->save();
+
+                $userData = app('session')->get('tempData');
+                $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $targe->id,
+                    "cel_part_remove",
+                    array(
+                        "type" => "cel_part_remove",
+                        "celebrationId" => $this->celebration->id,
+                        "celebrationTitle" => $this->celebration->title,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $targe->lang,
+                    "$userData->first_name $userData->last_name",
+                    $this->celebration->title
+                );
+
                 $this->celebration->participant_count = $this->celebration->participant_count - 1;
                 $this->celebration->save();
                 (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
@@ -134,19 +159,30 @@ class ParticipantController extends BaseController {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'celebration';
                 $notification->content = "notifi_acceptParticipantCelebration";
-                // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                // $notification->celebration_title = $celebration->title;
                 $notification->celebration_id = $this->requestData['celebrationId'];
-                // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                $notification->read = 0;
-                $notification->user_id = $celebration->created_by;
+                $notification->user_id = $creator->id;
+                $notification->friend_id =  app('session')->get('tempID');
                 $notification->save();
+
+                $userData = app('session')->get('tempData');
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $creator->id,
+                    "accept_celebration",
+                    array(
+                        "type" => "accept_celebration",
+                        "celebrationId" => $celebration->id,
+                        "celebrationTitle" => $celebration->title,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $creator->lang,
+                    "$userData->first_name $userData->last_name",
+                    $celebration->title
+                );
 
                 $removeNotification = \OlaHub\UserPortal\Models\Notifications::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->where('user_id', app('session')->get('tempID'))->first();
                 if ($removeNotification) {
                     $removeNotification->delete();
                 }
-
 
                 $log->setLogSessionData(['response' => ['status' => true, 'data' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler'), 'code' => 200]]);
                 $log->saveLogSessionData();
@@ -183,7 +219,21 @@ class ParticipantController extends BaseController {
                     $removeNotification->delete();
                 }
 
-
+                $userData = app('session')->get('tempData');
+                $creatorUser = $this->celebration->creatorUser;
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $this->celebration->created_by,
+                    "reject_celebration",
+                    array(
+                        "type" => "reject_celebration",
+                        "celebrationId" => $this->celebration->id,
+                        "celebrationTitle" => $this->celebration->title,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $creatorUser->lang,
+                    "$userData->first_name $userData->last_name",
+                    $this->celebration->title
+                );
 
                 return response(['status' => true, 'msg' => 'RejectCelebration', 'code' => 200], 200);
             }
@@ -213,13 +263,26 @@ class ParticipantController extends BaseController {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'celebration';
                 $notification->content = "notifi_leaveCelebration";
-                // $notification->user_name = $userData->first_name . " " . $userData->last_name;
-                // $notification->celebration_title = $this->celebration->title;
                 $notification->celebration_id = $this->requestData['celebrationId'];
-                // $notification->avatar_url = $userData->profile_picture;
-                $notification->read = 0;
                 $notification->user_id = $this->celebration->created_by;
+                $notification->friend_id = app('session')->get('tempID');
                 $notification->save();
+                
+                $userData = app('session')->get('tempData');
+                $creatorUser = $this->celebration->creatorUser;
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $this->celebration->created_by,
+                    "leave_celebration",
+                    array(
+                        "type" => "leave_celebration",
+                        "celebrationId" => $this->celebration->id,
+                        "celebrationTitle" => $this->celebration->title,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $creatorUser->lang,
+                    "$userData->first_name $userData->last_name",
+                    $this->celebration->title
+                );
 
                 (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
                 $log->setLogSessionData(['response' =>['status' => true, 'msg' => 'You Leave Celebration', 'code' => 200]]);

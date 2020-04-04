@@ -109,7 +109,6 @@ class CelebrationContentsController extends BaseController
                 return response(['status' => false, 'msg' => 'uploadImagesAndViedoToCelebration', 'code' => 400], 200);
             }
 
-
             $uploadResult = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData['celebrationMedia'], DEFAULT_IMAGES_PATH . "celebrations/" . $this->requestData['celebrationId'], "celebrations/" . $this->requestData['celebrationId'], false);
 
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Checking if array key exists for upload media to published celebration", "action_startData" => $uploadResult]);
@@ -128,6 +127,27 @@ class CelebrationContentsController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
                 response($uploadResult, 200);
+            }
+
+            $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->get();
+            $userData = app('session')->get('tempData');
+            foreach ($participants as $participant) {
+                if ($participant->user_id != $userData->id) {
+                    $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $participantData->id,
+                        "upload_media",
+                        array(
+                            "type" => "upload_media",
+                            "celebrationId" => $celebration->id,
+                            "celebrationTitle" => $celebration->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $participantData->lang,
+                        "$userData->first_name $userData->last_name",
+                        $celebration->title
+                    );
+                }
             }
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []]]);
@@ -178,6 +198,7 @@ class CelebrationContentsController extends BaseController
                 foreach ($participantsData as $participant) {
                     $participantsId[] = $participant->user_id;
                 }
+                $userData = app('session')->get('tempData');
                 $celebrationParticipants = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $participantsId)->get();
                 $celebrationOwner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $celebration->user_id)->first();
                 foreach ($celebrationParticipants as $oneUser) {
@@ -188,6 +209,22 @@ class CelebrationContentsController extends BaseController
                         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendScheduleCelebration($oneUser, $celebration->title, $celebration->id, $celebrationOwner->first_name . ' ' . $celebrationOwner->last_name);
                     } else if ($oneUser->email) {
                         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendScheduleCelebration($oneUser, $celebration->title, $celebration->id, $celebrationOwner->first_name . ' ' . $celebrationOwner->last_name);
+                    }
+
+                    if ($oneUser->id != $userData->id) {
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                            $oneUser->id,
+                            "upload_media",
+                            array(
+                                "type" => "upload_media",
+                                "celebrationId" => $celebration->id,
+                                "celebrationTitle" => $celebration->title,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $oneUser->lang,
+                            "$userData->first_name $userData->last_name",
+                            $celebration->title
+                        );
                     }
                 }
 

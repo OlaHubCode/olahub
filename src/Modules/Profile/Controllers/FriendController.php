@@ -174,9 +174,18 @@ class FriendController extends BaseController
                 $notification->type = 'user';
                 $notification->content = "notifi_friendRequest";
                 $notification->friend_id = $user->id;
-                $notification->read = 0;
                 $notification->user_id = $friendID;
                 $notification->save();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $friendID,
+                    "friend_request",
+                    array(
+                        "type" => "friend_add",
+                        "slug" => $user->profile_url,
+                        "username" => "$user->first_name $user->last_name"
+                    ),
+                    $friend->lang
+                );
                 $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'sentSuccessfully', 'code' => 200]]);
                 $log->saveLogSessionData();
                 return response(['status' => TRUE, 'msg' => 'sentSuccessfully', 'code' => 200], 200);
@@ -242,13 +251,27 @@ class FriendController extends BaseController
             $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['profile_url'])->first();
             $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
             if ($user && $friend) {
-                $accept = \OlaHub\UserPortal\Models\Friends::where('user_id', $friend->id)->where('friend_id', $user->id);
+                $accept = \OlaHub\UserPortal\Models\Friends::where('user_id', $friend->id)->where('friend_id', $user->id)->first();
                 $accept->status = 1;
                 $accept->save();
 
-                $noti = \OlaHub\UserPortal\Models\Notifications::where('user_id', $user->id)->where('friend_id', $friend->id)->where('type', 'user');
-                $noti->content = 'notifi_acceptFriend';
-                $noti->save();
+                \OlaHub\UserPortal\Models\Notifications::where('user_id', $user->id)->where('friend_id', $friend->id)->where('type', 'user')->delete();
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
+                $notification->type = 'user';
+                $notification->content = "notifi_acceptFriend";
+                $notification->friend_id = $user->id;
+                $notification->user_id = $friend->id;
+                $notification->save();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $friend->id,
+                    "accept_request",
+                    array(
+                        "type" => "friend_accept",
+                        "slug" => $user->profile_url,
+                        "username" => "$user->first_name $user->last_name"
+                    ),
+                    $friend->lang
+                );
                 $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'acceptedSuccessfully', 'code' => 200]]);
                 $log->saveLogSessionData();
                 return response(['status' => TRUE, 'msg' => 'acceptedSuccessfully', 'code' => 200], 200);

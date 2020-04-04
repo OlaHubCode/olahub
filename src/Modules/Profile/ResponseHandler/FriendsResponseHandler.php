@@ -73,7 +73,7 @@ class FriendsResponseHandler extends Fractal\TransformerAbstract
 
     private function setFriendsOfFriend()
     {
-        $friends = \OlaHub\UserPortal\Models\Friends::getFriends($this->data->id)->first();
+        $friends = \OlaHub\UserPortal\Models\Friends::getFriends($this->data->id)->get();
         $friendsData = [];
         foreach ($friends as $friend) {
             $country = \OlaHub\UserPortal\Models\Country::where('id', $friend->country_id)->first();
