@@ -653,10 +653,30 @@ class OlaHubPaymentsMainController extends BaseController
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderCelebration($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         }
 
-        $participantsCount = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->get()->count();
+        $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebrationDetails->id)->get();
+        $participantsCount = count($participants);
         if ($participantPaids == $participantsCount) {
             $this->celebrationDetails->celebration_status = 3;
             $this->celebrationDetails->save();
+        }
+        $userData = app('session')->get('tempData');
+        foreach ($participants as $participant) {
+            if($participant->user_id != $userData->id){
+                $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $participantData->id,
+                    "payment_celebration",
+                    array(
+                        "type" => "payment_celebration",
+                        "celebrationId" => $this->celebrationDetails->id,
+                        "celebrationTitle" => $this->celebrationDetails->title,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $participantData->lang,
+                    "$userData->first_name $userData->last_name",
+                    $this->celebrationDetails->title
+                );
+            }
         }
     }
 

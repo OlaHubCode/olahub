@@ -571,9 +571,26 @@ class OlaHubCartController extends BaseController
             $this->celebration->participant_count = $participants->count();
             $this->celebration->gifts_count = \OlaHub\UserPortal\Models\CartItems::where("shopping_cart_id", $this->cart->id)->count();
             $this->celebration->save();
+            $userData = app('session')->get('tempData');
             foreach ($participants as $participant) {
                 $participant->amount_to_pay = $price;
                 $participant->save();
+                if($participant->user_id != $userData->id){
+                    $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $participantData->id,
+                        "remove_gift",
+                        array(
+                            "type" => "remove_gift",
+                            "celebrationId" => $this->celebration->id,
+                            "celebrationTitle" => $this->celebration->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $participantData->lang,
+                        "$userData->first_name $userData->last_name",
+                        $this->celebration->title
+                    );
+                }
             }
         }
     }
@@ -586,20 +603,33 @@ class OlaHubCartController extends BaseController
             $this->celebration->participant_count = $participants->count();
             $this->celebration->gifts_count = \OlaHub\UserPortal\Models\CartItems::where("shopping_cart_id", $this->cart->id)->count();
             $this->celebration->save();
+            $userData = app('session')->get('tempData');
             foreach ($participants as $participant) {
                 $participant->amount_to_pay = $price;
                 $participant->save();
                 if ($participant->user_id != app('session')->get('tempID')) {
+                    $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_addGiftCelebration";
-                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    // $notification->celebration_title = $this->celebration->title;
                     $notification->celebration_id = $this->celebration->id;
-                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                    $notification->read = 0;
                     $notification->user_id = $participant->user_id;
+                    $notification->friend_id = $participant->user_id;
                     $notification->save();
+
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $participantData->id,
+                        "add_gift",
+                        array(
+                            "type" => "add_gift",
+                            "celebrationId" => $this->celebration->id,
+                            "celebrationTitle" => $this->celebration->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $participantData->lang,
+                        "$userData->first_name $userData->last_name",
+                        $this->celebration->title
+                    );
                 }
             }
         }

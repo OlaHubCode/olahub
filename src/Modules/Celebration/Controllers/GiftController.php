@@ -50,18 +50,30 @@ class GiftController extends BaseController
 
             $participants = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])->where('user_id', '!=', app('session')->get('tempID'))->get();
             if (!empty($participants)) {
+                $userData = app('session')->get('tempData');
                 foreach ($participants as $participant) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_commitCelebration";
-                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    // $notification->celebration_title =  $this->celebration->title;
                     $notification->celebration_id = $this->requestData['celebrationId'];
-                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                    $notification->read = 0;
                     $notification->user_id = $participantData->id;
+                    $notification->friend_id = app('session')->get('tempID');
                     $notification->save();
+
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $participantData->id,
+                        "commit_celebration",
+                        array(
+                            "type" => "commit_celebration",
+                            "celebrationId" => $this->celebration->id,
+                            "celebrationTitle" => $this->celebration->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $participantData->lang,
+                        "$userData->first_name $userData->last_name",
+                        $this->celebration->title
+                    );
                 }
             }
 
@@ -77,7 +89,6 @@ class GiftController extends BaseController
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
 
     private function updateCommitParticipant()
     {
@@ -169,18 +180,30 @@ class GiftController extends BaseController
             $this->celebration->save();
             $participants = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])->where('user_id', '!=', app('session')->get('tempID'))->get();
             if (!empty($participants)) {
+                $userData = app('session')->get('tempData');
                 foreach ($participants as $participant) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'celebration';
                     $notification->content = "notifi_uncommitCelebration";
-                    // $notification->user_name = app('session')->get('tempData')->first_name . ' ' . app('session')->get('tempData')->last_name;
-                    // $notification->celebration_title =  $this->celebration->title;
                     $notification->celebration_id = $this->requestData['celebrationId'];
-                    // $notification->avatar_url = app('session')->get('tempData')->profile_picture;
-                    $notification->read = 0;
                     $notification->user_id = $participantData->id;
+                    $notification->friend_id = app('session')->get('tempID');
                     $notification->save();
+
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $participantData->id,
+                        "uncommit_celebration",
+                        array(
+                            "type" => "uncommit_celebration",
+                            "celebrationId" => $this->celebration->id,
+                            "celebrationTitle" => $this->celebration->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $participantData->lang,
+                        "$userData->first_name $userData->last_name",
+                        $this->celebration->title
+                    );
                 }
             }
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');

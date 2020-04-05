@@ -265,12 +265,8 @@ class CelebrationController extends BaseController
                 }
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to celebration"]);
-            $removeNotifications = \OlaHub\UserPortal\Models\Notifications::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->get();
-            foreach ($removeNotifications as $removeNotification) {
-                if ($removeNotification) {
-                    $removeNotification->delete();
-                }
-            }
+            \OlaHub\UserPortal\Models\Notifications::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->delete();
+           
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'celebrationDeletedSuccessfully', 'code' => 200]]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
