@@ -246,43 +246,33 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
-        $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
+        $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         if ($notification->count() > 0) {
-            $i = 0;
+            $allNotifications = [];
             foreach ($notification as $one) {
-                $image = $one->avatar_url;
-                if (strstr($image, "http://23.97.242.159:8080/images/")) {
-                    $one->avatar_url = str_replace("http://23.97.242.159:8080/images/", "", $one->avatar_url);
-                    $one->save();
-                } elseif (strstr($image, "http://23.100.10.45:8080/images/")) {
-                    $one->avatar_url = str_replace("http://23.100.10.45:8080/images/", "", $one->avatar_url);
-                    $one->save();
-                } elseif (strstr($image, "http://localhost/userproject/images/defaults/5b5d862798ff2.png")) {
-                    $one->avatar_url = str_replace("http://localhost/userproject/images/defaults/5b5d862798ff2.png", false, $one->avatar_url);
-                    $one->save();
-                } elseif (strstr($image, "http://localhost/userproject/images/")) {
-                    $one->avatar_url = str_replace("http://localhost/userproject/images/", "", $one->avatar_url);
-                    $one->save();
-                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg")) {
-                    $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg", "", $one->avatar_url);
-                    $one->save();
-                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/")) {
-                    $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/", "", $one->avatar_url);
-                    $one->save();
-                }
-
-                $notification[$i]->avatar_url = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->avatar_url);
-                $i++;
+                $userData = $one["userData"][0];
+                $allNotifications[] = [
+                    "id" => $one->id,
+                    "type" => $one->type,
+                    "content" => $one->content,
+                    "celebration_id" => $one->celebration_id,
+                    "post_id" => $one->post_id,
+                    "group_id" => $one->group_id,
+                    "user_name" => $userData["first_name"] . " " . $userData["last_name"],
+                    "profile_url" => $userData["profile_url"],
+                    "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : NULL,
+                    "read" => $one->read,
+                    "for_user" => $one->user_id,
+                ];
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $notification]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End check notification existance"]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End fetch user notification"]);
-            return $notification;
+            return $allNotifications;
         } else {
-
             $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();

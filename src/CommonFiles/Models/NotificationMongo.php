@@ -8,6 +8,13 @@ class Notifications extends Model
 {
 
     protected $table = 'users_notifications';
+    
+
+    public function userData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'user_id');
+    }
+
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
         $user = app('session')->get('tempData');
@@ -52,7 +59,7 @@ class Notifications extends Model
             "chat_seconds" => ($word > 5 ? $word . " Seconds ago" : "Just now"),
             "friend_request" => "Sent you a friend request",
             "accept_request" => "Accepted your friend request",
-            "liked_post" => "Liked your post " . $word,
+            "post_like" => "Liked your post",
             "post_comment" => "Commented on your post",
             "post_reply" => "Replied to your comment in a post",
             "cel_part_add" => "Added you to the " . $word . " celebration",
@@ -81,7 +88,7 @@ class Notifications extends Model
             "chat_seconds" => "منذ " . ($word > 10 ? $word . " ثانية" : ($word > 5 ? $word . " ثوان" : " لحظات")),
             "friend_request" => "أرسل لك طلب صداقة",
             "accept_request" => "وافق على طلب الصداقة",
-            "liked_post" => "أعجب بمنشورك " . $word,
+            "post_like" => "أعجب بمنشورك",
             "post_comment" => "قام بالتعليق على منشورك",
             "post_reply" => "رد على تعليق لك في منشور",
             "cel_part_add" => "قام بإضافتك إلى الإحتفال " . $word,
