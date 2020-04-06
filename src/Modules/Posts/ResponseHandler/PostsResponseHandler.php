@@ -20,25 +20,18 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->userData();
         $this->friendData();
         $this->groupData();
-        // $this->likersData();
+        $this->likersData();
         return $this->return;
     }
 
     private function setDefaultData()
     {
-        $liked = 0;
-        // if (in_array(app('session')->get('tempID'), $this->data->likes)) {
-        //     $liked = 1;
-        // }
         $this->return = [
-            'type' => isset($this->data->group_id) ? 'group' :'post',
+            'type' => isset($this->data->group_id) ? 'group' : 'post',
             'comments_count' => isset($this->data->comments) ? count($this->data->comments) : 0,
             'comments' => [],
             'total_share_count' => 0,
             'shares_count' => 0,
-            'likers_count' => 0,
-            // 'likers_count' => isset($this->data->likes) ? count($this->data->likes) : 0,
-            'liked' => $liked,
             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($this->data->created_at),
             'post' => isset($this->data->post_id) ? $this->data->post_id : 0,
             'color' => isset($this->data->color) ? json_decode($this->data->color) : NULL,
@@ -115,15 +108,20 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     }
     private function likersData()
     {
+        $liked = false;
         $likes = isset($this->data->likes) ? $this->data->likes : [];
         $likerData = [];
         foreach ($likes as $like) {
-            $userData = \OlaHub\UserPortal\Models\UserModel::where('id', $like)->first();
+            if ($like->user_id == app('session')->get('tempID'))
+                $liked = true;
+            $userData = $like->author;
             $likerData[] = [
-                'likerPhoto' => isset($userData->avatar_url) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->avatar_url) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                 'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
             ];
         }
+        $this->return['likers_count'] = isset($likes) ? count($likes) : 0;
+        $this->return['liked'] = $liked;
         $this->return['likersData'] = $likerData;
     }
 }

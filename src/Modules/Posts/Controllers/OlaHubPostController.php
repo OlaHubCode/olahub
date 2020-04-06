@@ -253,6 +253,67 @@ class OlaHubPostController extends BaseController
         return response($return, 200);
     }
 
+    public function likePost()
+    {
+        $status = $this->requestData['status'];
+        $postId = $this->requestData['postId'];
+        $post = Post::where('post_id', $postId)->first();
+        if ($status) {
+            $like = (new \OlaHub\UserPortal\Models\PostLikes);
+            $like->post_id = $postId;
+            $like->user_id = app('session')->get('tempID');
+            $like->save();
+            if ($post->user_id != app('session')->get('tempID')) {
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
+                $notification->type = 'post';
+                $notification->content = "notifi_post_like";
+                $notification->user_id = $post->user_id;
+                $notification->friend_id = app('session')->get('tempID');
+                $notification->post_id = $postId;
+                $notification->save();
+    
+                $userData = app('session')->get('tempData');
+                $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $post->user_id,
+                    "post_like",
+                    array(
+                        "type" => "post_like",
+                        "postId" => $postId,
+                        "subject" => $post->content,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $owner->lang,
+                    "$userData->first_name $userData->last_name"
+                );
+            }
+        } else {
+            \OlaHub\UserPortal\Models\PostLikes::where('post_id', $postId)->where('user_id', app('session')->get('tempID'))->delete();
+            \OlaHub\UserPortal\Models\Notifications::where('type', 'notifi_post_like')->where('user_id', $post->user_id)->where('friend_id', app('session')->get('tempID'))->delete();
+        }
+
+        $return['status'] = TRUE;
+        $return['code'] = 200;
+        return response($return, 200);
+    }
+
+    public function sharePost()
+    {
+        $status = $this->requestData['status'];
+        $postId = $this->requestData['postId'];
+        if ($status) {
+            $share = (new \OlaHub\UserPortal\Models\PostShares);
+            $share->post_id = $postId;
+            $share->user_id = app('session')->get('tempID');
+            $share->save();
+        } else {
+            \OlaHub\UserPortal\Models\PostShares::where('post_id', $postId)->where('user_id', app('session')->get('tempID'))->delete();
+        }
+        $return['status'] = TRUE;
+        $return['code'] = 200;
+        return response($return, 200);
+    }
+
     public function addNewComment()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -414,7 +475,7 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $this->requestData['post_id'];
                     $notification->save();
-                    
+
                     $userData = app('session')->get('tempData');
                     $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $comment->user_id)->first();
                     \OlaHub\UserPortal\Models\Notifications::sendFCM(

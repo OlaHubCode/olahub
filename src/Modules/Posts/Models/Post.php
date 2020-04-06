@@ -32,4 +32,9 @@ class Post extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\PostComments', 'post_id', 'post_id');
     }
+
+    public function likes()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\PostLikes', 'post_id', 'post_id');
+    }
 }
