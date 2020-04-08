@@ -27,7 +27,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $this->return = [
-            'type' => isset($this->data->group_id) ? 'group' : 'post',
+            'type' => 'post',
             'comments_count' => isset($this->data->comments) ? count($this->data->comments) : 0,
             'comments' => [],
             'total_share_count' => 0,

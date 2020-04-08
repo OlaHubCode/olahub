@@ -4,6 +4,7 @@ namespace OlaHub\UserPortal\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
+use OlaHub\UserPortal\Models\groups;
 use OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\PostComments;
 use OlaHub\UserPortal\Models\PostReplies;
@@ -35,7 +36,8 @@ class OlaHubPostController extends BaseController
             return ['status' => false, 'message' => 'someData', 'code' => 406, 'errorData' => []];
         }
         if ($type == 'group') {
-            $postsTemp = Post::where('group_id', $this->requestData['groupId'])->where('is_approve', 1)->orderBy('created_at', 'desc')->paginate(15);
+            $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
+            $postsTemp = Post::where('group_id', $group->id)->where('is_approve', 1)->orderBy('created_at', 'desc')->paginate(15);
             $posts = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($postsTemp, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $sponsers_arr = [];
             try {
