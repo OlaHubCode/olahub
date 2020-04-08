@@ -400,6 +400,7 @@ class OlaHubPaymentsMainController extends BaseController
                 'address' => isset($this->requestData['billAddress']) ? $this->requestData['billAddress'] : null,
                 'zipcode' => isset($this->requestData['billZipCode']) ? $this->requestData['billZipCode'] : null,
                 'typeID' => isset($this->typeID) ? $this->typeID : null,
+                'location' =>  isset($this->requestData['billLocation']) ? json_encode($this->requestData['billLocation']) : null
             ];
             if ($this->typeID == 2) {
                 $return['for_user'] = $this->requestData['billUserID'];
@@ -415,6 +416,7 @@ class OlaHubPaymentsMainController extends BaseController
                 'address' => $celebrationAddress->shipping_address_address_line1,
                 'zipcode' => $celebrationAddress->shipping_address_zip_code,
                 'typeID' => isset($this->typeID) ? $this->typeID : null,
+                'location' => NULL
             ];
         }
         return $return;
@@ -661,7 +663,7 @@ class OlaHubPaymentsMainController extends BaseController
         }
         $userData = app('session')->get('tempData');
         foreach ($participants as $participant) {
-            if($participant->user_id != $userData->id){
+            if ($participant->user_id != $userData->id) {
                 $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
                 \OlaHub\UserPortal\Models\Notifications::sendFCM(
                     $participantData->id,
