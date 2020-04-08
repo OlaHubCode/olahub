@@ -129,7 +129,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "updateGroup"]);
 
         if (isset($this->requestData) && $this->requestData && isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -158,9 +158,9 @@ class MainController extends BaseController
 
             if ($oldGroupPostApprove == 1 && $this->requestData['groupPostApprove'] == 0) {
                 if (isset($this->requestData['isChangeApprovePost']) && $this->requestData['isChangeApprovePost'])
-                    \OlaHub\UserPortal\Models\Post::where('group_id', $this->requestData["groupId"])->update(['is_approve' => 1]);
+                    \OlaHub\UserPortal\Models\Post::where('group_id', $group->id)->update(['is_approve' => 1]);
                 else
-                    \OlaHub\UserPortal\Models\Post::where('group_id', $this->requestData["groupId"])->where('is_approve', 0)->delete();
+                    \OlaHub\UserPortal\Models\Post::where('group_id', $group->id)->where('is_approve', 0)->delete();
             }
 
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
@@ -181,7 +181,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "deleteGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -193,7 +193,8 @@ class MainController extends BaseController
                 return response(['status' => false, 'msg' => 'deleteThisGroup', 'code' => 400], 200);
             }
             $group->delete();
-            GroupMembers::where('group_id', $this->requestData["groupId"])->delete();
+            GroupMembers::where('group_id', $group->id)->delete();
+            \OlaHub\UserPortal\Models\Post::where('group_id', $group->id)->delete();
             $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200]]);
             $log->saveLogSessionData();
             return response(['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200], 200);
@@ -209,7 +210,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && count($this->requestData["userId"]) > 0) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -266,7 +267,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && $this->requestData["userId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -297,7 +298,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "approveAdminGroupRequest"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && $this->requestData["userId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -353,7 +354,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "approveUserGroupRequest"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -387,7 +388,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "rejectAdminGroupRequest"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && $this->requestData["userId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -417,7 +418,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "cancelAdminInvite"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && $this->requestData["userId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -447,7 +448,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "rejectUserGroupRequest"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -469,7 +470,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "leaveGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -496,7 +497,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listGroupMembers"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -533,7 +534,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "joinPublicGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->where('privacy', 3)->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->where('privacy', 3)->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -569,7 +570,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "joinClosedGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->where('privacy', 2)->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->where('privacy', 2)->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -630,7 +631,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "cancelJoinClosedGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
-            $group = groups::where('id', $this->requestData["groupId"])->where('privacy', 2)->first();
+            $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->where('privacy', 2)->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -657,7 +658,7 @@ class MainController extends BaseController
 
         $this->requestData = isset($this->uploadImage) ? $this->uploadImage : [];
         if (isset($this->requestData['groupImage']) && $this->requestData['groupImage'] && isset($this->requestData['groupId']) && $this->requestData['groupId']) {
-            $group = groups::where('id', $this->requestData['groupId'])->first();
+            $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -701,7 +702,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "getBrandsRelatedGroupInterests"]);
 
         if (isset($this->requestData['groupId']) && $this->requestData['groupId']) {
-            $group = groups::where('id', $this->requestData['groupId'])->first();
+            $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -765,7 +766,7 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "getDesignersRelatedGroupInterests"]);
 
         if (isset($this->requestData['groupId']) && $this->requestData['groupId']) {
-            $group = groups::where('id', $this->requestData['groupId'])->first();
+            $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
                 $log->saveLogSessionData();
@@ -775,7 +776,7 @@ class MainController extends BaseController
 
             if ($group && $group->only_my_stores) {
                 $creatorUser = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
-                // $designers = \OlaHub\UserPortal\Models\DesignerItems::whereHas('designer')->where('designer_id', $creatorUser->for_merchant)->get();
+                $designers = \OlaHub\UserPortal\Models\DesignerItems::whereHas('designer')->where('designer_id', $creatorUser->for_merchant)->get();
             } else {
                 $designers = \OlaHub\UserPortal\Models\Designer::whereRaw("CONCAT(',', interests, ',') REGEXP ',(" . $gInts . "),'")->get();
             }
@@ -886,9 +887,9 @@ class MainController extends BaseController
         $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "listPendingGroupPost"]);
 
         if (isset($this->requestData['groupId']) && $this->requestData['groupId']) {
-            $group = groups::where('id', $this->requestData['groupId'])->where('posts_approve', 1)->first();
+            $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->where('posts_approve', 1)->first();
             if ($group) {
-                $posts = \OlaHub\UserPortal\Models\Post::where('group_id', (int) $this->requestData['groupId'])->where('is_approve', 0)->get();
+                $posts = \OlaHub\UserPortal\Models\Post::where('group_id', $group->id)->where('is_approve', 0)->get();
                 if ($posts->count() > 0) {
                     $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                     $return['status'] = TRUE;
