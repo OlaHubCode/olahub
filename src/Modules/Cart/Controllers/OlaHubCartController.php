@@ -294,7 +294,8 @@ class OlaHubCartController extends BaseController
             if (count($designerItems) > 0) {
                 foreach ($designerItems as $designerItem) {
                     $itemData = \OlaHub\UserPortal\Models\DesignerItems::where('id', $designerItem)->first();
-                    $return["data"][] = $this->getDesignerItemData($itemData, $designerItem);
+                    if ($itemData->item_stock > 0)
+                        $return["data"][] = $this->getDesignerItemData($itemData);
                 }
             }
             if (count($storeItems) > 0) {
@@ -575,7 +576,7 @@ class OlaHubCartController extends BaseController
             foreach ($participants as $participant) {
                 $participant->amount_to_pay = $price;
                 $participant->save();
-                if($participant->user_id != $userData->id){
+                if ($participant->user_id != $userData->id) {
                     $participantData = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
                     \OlaHub\UserPortal\Models\Notifications::sendFCM(
                         $participantData->id,
@@ -651,7 +652,6 @@ class OlaHubCartController extends BaseController
         $currency = isset($currency) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency("JOD");
         $return = [
             "productID" => isset($item->id) ? $item->id : 0,
-            "productType" => 'store',
             "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($item, 'item_slug', $itemName),
             "productName" => $itemName,
             "productDescription" => str_limit(strip_tags($itemDescription), 350, '.....'),
@@ -721,15 +721,15 @@ class OlaHubCartController extends BaseController
         return response(["status" => true], 200)->withCookie(new Cookie("userCheck", $this->NotLoginCartItems["cookieId"], 2592000, "/", "localhost"));
     }
 
-    private function getDesignerItemData($itemData, $designerItemId)
+    private function getDesignerItemData($itemData)
     {
         $designer = $itemData->designer;
-        $return["productID"] = isset($itemData->item_id) ? $itemData->item_id : 0;
+        $return["productID"] = isset($itemData->id) ? $itemData->id : 0;
         $return["productType"] = 'designer';
         $return["productQuantity"] = 1;
         $return["productSlug"] = isset($itemData->item_slug) ? $itemData->item_slug : null;
-        $return["productName"] = isset($itemData->item_title) ? $itemData->item_title : null;
-        $return["productDescription"] = isset($itemData->item_description) ? $itemData->item_description : null;
+        $return["productName"] = isset($itemData->name) ? $itemData->name : null;
+        $return["productDescription"] = isset($itemData->description) ? str_limit(strip_tags($itemData->description), 350, '.....') : null;
         $return["productInStock"] = isset($itemData->item_stock) ? $itemData->item_stock : 0;
         $return["productOwner"] = isset($itemData->designer_id) ? $itemData->designer_id : 0;
         $return["productOwnerName"] = isset($designer->brand_name) ? $designer->brand_name : null;
@@ -742,43 +742,14 @@ class OlaHubCartController extends BaseController
         $return["productHasDiscount"] = $itemPrice["productHasDiscount"];
         $return["productTotalPrice"] = $itemPrice["productPrice"];
 
-        $item = false;
-
-        if ($itemData->item_id != $designerItemId) {
-
-            foreach ($itemData->items as $one) {
-                $oneItem = (object) $one;
-                if (isset($oneItem->item_id) && $oneItem->item_id == $designerItemId) {
-                    $item = $oneItem;
-                }
-            }
-        }
-
-        if ($item) {
-            $return["productID"] = isset($item->item_id) ? $item->item_id : 0;
-            $return["productSlug"] = isset($item->item_slug) ? $item->item_slug : null;
-            $return["productImage"] = $this->setDesignerItemImageData($item);
-
-            $itemPrice = $this->setDesignerPriceData($item);
-            $return["productPrice"] = $itemPrice["productPrice"];
-            $return["productTotalPrice"] = $itemPrice["productPrice"];
-            $return["productDiscountedPrice"] = $itemPrice["productDiscountedPrice"];
-            $return["productHasDiscount"] = $itemPrice["productHasDiscount"];
-        }
-
         return $return;
     }
 
     private function setDesignerItemImageData($item)
     {
-        $images = [];
-        if (isset($item->item_images)) {
-            $images = $item->item_images;
-        } elseif (isset($item->item_image)) {
-            $images = $item->item_image;
-        }
-        if (count($images) > 0 && $images[0]) {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]);
+        $images = $item->images;
+        if ($images) {
+            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
         } else {
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
@@ -786,12 +757,12 @@ class OlaHubCartController extends BaseController
 
     private function setDesignerPriceData($item)
     {
-        $return["productPrice"] = isset($item->item_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price) : 0;
-        $return["productDiscountedPrice"] = isset($item->item_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price) : 0;
+        $return["productPrice"] = isset($item->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price) : 0;
+        $return["productDiscountedPrice"] = isset($item->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price) : 0;
         $return["productHasDiscount"] = false;
-        if (isset($item->item_original_price) && $item->item_original_price && strtotime($item->discount_start_date) <= time() && strtotime($item->discount_end_date) >= time()) {
-            $return["productDiscountedPrice"] = isset($item->item_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_price) : 0;
-            $return["productPrice"] = isset($item->item_original_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->item_original_price) : 0;
+        if (isset($item->discounted_price) && $item->discounted_price && strtotime($item->discounted_price_end_date) <= time() && strtotime($item->discounted_price_end_date) >= time()) {
+            $return["productDiscountedPrice"] = isset($item->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price) : 0;
+            $return["productPrice"] = isset($item->discounted_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->discounted_price) : 0;
             $return["productHasDiscount"] = true;
         }
 

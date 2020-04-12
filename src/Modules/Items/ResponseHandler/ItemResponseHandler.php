@@ -95,10 +95,12 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
     private function setMerchantData()
     {
         $brand = $this->parentData->brand;
+        $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $brand->id)
+            ->where('type', 1)->first();
         $this->return["productOwner"] = isset($brand->id) ? $brand->id : NULL;
         $this->return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name');
         $this->return["productOwnerSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $this->return["productOwnerName"]);
-        // $this->return["followed"] = $user && isset($user->followed_brands) && is_array($user->followed_brands) && in_array($brand->id, $user->followed_brands) ? true : false;
+        $this->return['followed'] = isset($follow) ? true : false;
     }
 
     private function setBrandData()
@@ -130,7 +132,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
     private function setAddData()
     {
         $this->return['productWishlisted'] = '0';
-        $this->return['productLiked'] = '0';
+        $this->return['productLiked'] = 0;
         $this->return['productShared'] = '0';
         $this->return['productInCart'] = 0;
 
@@ -140,10 +142,12 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
         }
 
         //like
-        // $post = \OlaHub\UserPortal\Models\Post::where('item_slug', $this->data->item_slug)->where('type', 'item_post')->first();
-        // if ($post && isset($post->likes) && in_array(app('session')->get('tempID'), $post->likes)) {
-        //     $this->return['productLiked'] = '1';
-        // }
+        $liked = \OlaHub\UserPortal\Models\LikedItems::where('item_id', $this->data->id)
+            ->where('item_type', 'store')
+            ->where('user_id', app('session')->get('tempID'))->first();
+        if ($liked) {
+            $this->return['productLiked'] = 1;
+        }
 
         //share
         // if ($post && isset($post->shares) && in_array(app('session')->get('tempID'), $post->shares)) {
