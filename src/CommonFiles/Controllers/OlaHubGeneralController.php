@@ -959,19 +959,72 @@ class OlaHubGeneralController extends BaseController
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($likedItems->count()) {
+                    $filteredStoreItems = [];
+                    $filteredDesignerItems = [];
                     foreach ($likedItems as $litem) {
-                        $uInfo = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
-                        $fInfo = [
-                            'user_id' => $uInfo->id,
-                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($uInfo->profile_picture),
-                            'profile_url' => $uInfo->profile_url,
-                            'username' => "$uInfo->first_name $uInfo->last_name",
-                        ];
                         if ($litem->item_type == 'store') {
-                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_store', $fInfo);
+                            if (!isset($filteredStoreItems[$litem->item_id]))
+                                $filteredStoreItems[$litem->item_id] = [];
+                            array_push($filteredStoreItems[$litem->item_id], $litem->user_id);
                         } else {
-                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            if (!isset($filteredDesignerItems[$litem->item_id]))
+                                $filteredDesignerItems[$litem->item_id] = [];
+                            array_push($filteredDesignerItems[$litem->item_id], $litem->user_id);
+                        }
+                    }
+                    if (count($filteredStoreItems)) {
+                        foreach ($filteredStoreItems as $item_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->get();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                                'other' => 0
+                            ];
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
+                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_store', $fInfo);
+                        }
+                    }
+                    if (count($filteredDesignerItems)) {
+                        foreach ($filteredDesignerItems as $item_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->get();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                                'other' => 0
+                            ];
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
+                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item_id)->first();
                             $timeline[] = $this->handlePostTimeline($item, 'item_liked_designer', $fInfo);
                         }
                     }
@@ -990,19 +1043,72 @@ class OlaHubGeneralController extends BaseController
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
-                    foreach ($sharedItems as $sitem) {
-                        $uInfo = \OlaHub\UserPortal\Models\UserModel::find($sitem->user_id);
-                        $fInfo = [
-                            'user_id' => $uInfo->id,
-                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($uInfo->profile_picture),
-                            'profile_url' => $uInfo->profile_url,
-                            'username' => "$uInfo->first_name $uInfo->last_name",
-                        ];
-                        if ($sitem->item_type == 'store') {
-                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $sitem->item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_store', $fInfo);
+                    $filteredStoreItems = [];
+                    $filteredDesignerItems = [];
+                    foreach ($sharedItems as $litem) {
+                        if ($litem->item_type == 'store') {
+                            if (!isset($filteredStoreItems[$litem->item_id]))
+                                $filteredStoreItems[$litem->item_id] = [];
+                            array_push($filteredStoreItems[$litem->item_id], $litem->user_id);
                         } else {
-                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $sitem->item_id)->first();
+                            if (!isset($filteredDesignerItems[$litem->item_id]))
+                                $filteredDesignerItems[$litem->item_id] = [];
+                            array_push($filteredDesignerItems[$litem->item_id], $litem->user_id);
+                        }
+                    }
+                    if (count($filteredStoreItems)) {
+                        foreach ($filteredStoreItems as $item_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->get();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                                'other' => 0
+                            ];
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
+                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_store', $fInfo);
+                        }
+                    }
+                    if (count($filteredDesignerItems)) {
+                        foreach ($filteredDesignerItems as $item_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->get();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                                'other' => 0
+                            ];
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
+                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item_id)->first();
                             $timeline[] = $this->handlePostTimeline($item, 'item_shared_designer', $fInfo);
                         }
                     }
