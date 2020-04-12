@@ -76,12 +76,12 @@ class UserBill extends Model {
             'relation' => false,
             'validation' => 'required_if:billType,1,2'
         ],
-        'billZipCode' => [
-            'column' => 'type_id',
-            'type' => 'number',
-            'relation' => false,
-            'validation' => 'required_if:billType,1,2'
-        ],
+        // 'billZipCode' => [
+        //     'column' => 'type_id',
+        //     'type' => 'number',
+        //     'relation' => false,
+        //     'validation' => 'required_if:billType,1,2'
+        // ],
     ];
     
     function billDetails(){

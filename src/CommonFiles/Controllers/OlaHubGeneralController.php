@@ -253,6 +253,8 @@ class OlaHubGeneralController extends BaseController
             $allNotifications = [];
             foreach ($notification as $one) {
                 $userData = $one["userData"][0];
+                $groupData = @$one["groupData"][0];
+                $celebrationData = @$one["celebrationData"][0];
                 $allNotifications[] = [
                     "id" => $one->id,
                     "type" => $one->type,
@@ -261,6 +263,8 @@ class OlaHubGeneralController extends BaseController
                     "post_id" => $one->post_id,
                     "group_id" => $one->group_id,
                     "user_name" => $userData["first_name"] . " " . $userData["last_name"],
+                    "community_title" => @$groupData["name"],
+                    "celebration_title" => @$celebrationData["title"],
                     "profile_url" => $userData["profile_url"],
                     "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : NULL,
                     "read" => $one->read,
@@ -943,6 +947,68 @@ class OlaHubGeneralController extends BaseController
                 }
             } catch (Exception $ex) {
             }
+
+            // liked items
+            try {
+                if (!$friends)
+                    $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
+                $likedItems = \OlaHub\UserPortal\Models\LikedItems::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($friends) {
+                        $q->where(function ($query) use ($friends) {
+                            $query->whereIn('user_id', $friends);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($likedItems->count()) {
+                    foreach ($likedItems as $litem) {
+                        $uInfo = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $fInfo = [
+                            'user_id' => $uInfo->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($uInfo->profile_picture),
+                            'profile_url' => $uInfo->profile_url,
+                            'username' => "$uInfo->first_name $uInfo->last_name",
+                        ];
+                        if ($litem->item_type == 'store') {
+                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_store', $fInfo);
+                        } else {
+                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_designer', $fInfo);
+                        }
+                    }
+                }
+            } catch (Exception $ex) {
+            }
+
+            // shared items
+            try {
+                if (!$friends)
+                    $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
+                $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($friends) {
+                        $q->where(function ($query) use ($friends) {
+                            $query->whereIn('user_id', $friends);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedItems->count()) {
+                    foreach ($sharedItems as $sitem) {
+                        $uInfo = \OlaHub\UserPortal\Models\UserModel::find($sitem->user_id);
+                        $fInfo = [
+                            'user_id' => $uInfo->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($uInfo->profile_picture),
+                            'profile_url' => $uInfo->profile_url,
+                            'username' => "$uInfo->first_name $uInfo->last_name",
+                        ];
+                        if ($sitem->item_type == 'store') {
+                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $sitem->item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_store', $fInfo);
+                        } else {
+                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $sitem->item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_designer', $fInfo);
+                        }
+                    }
+                }
+            } catch (Exception $ex) {
+            }
         }
 
         // merchants
@@ -1077,14 +1143,14 @@ class OlaHubGeneralController extends BaseController
             }
             $return['data'] = $all;
         }
-        // if (!$page) {
-        //     $return['celebrations'] = $celebrations;
-        //     $return['upcoming'] = $upcoming;
-        // }
+        if (!$page) {
+            $return['celebrations'] = $celebrations;
+            $return['upcoming'] = $upcoming;
+        }
         return response($return, 200);
     }
 
-    private function handlePostTimeline($data, $type)
+    private function handlePostTimeline($data, $type, $fInfo = NULL)
     {
         $liked = 0;
         $likerData = [];
@@ -1096,12 +1162,47 @@ class OlaHubGeneralController extends BaseController
             'liked' => $liked,
             'likersData' => $likerData,
             'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($data->created_at) : NULL,
-            'user_info' => $this->userInfo
+            'user_info' => $fInfo ? $fInfo : $this->userInfo
         ];
         switch ($type) {
+            case 'item_liked_store':
+            case 'item_shared_store':
+                $brand = $data->brand;
+                $images = $data->images;
+                $return['type'] = $type == 'item_liked_store' ? 'item_liked' : 'item_shared';
+                $return['target'] = 'store';
+                $return['item_slug'] = $data->item_slug;
+                $return['item_title'] = $data->name;
+                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
+                $return['merchant_info'] = [
+                    'type' => 'brand',
+                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref),
+                    'merchant_slug' => isset($brand->store_slug) ? $brand->store_slug : NULL,
+                    'merchant_title' => isset($brand->name) ? $brand->name : NULL,
+                ];
+                break;
+            case 'item_liked_designer':
+            case 'item_shared_designer':
+                $designer = $data->designer;
+                $images = $data->images;
+                $return['type'] = $type == 'item_liked_designer' ? 'item_liked' : 'item_shared';
+                $return['target'] = 'designer';
+                $return['item_slug'] = $data->item_slug;
+                $return['item_title'] = $data->name;
+                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
+                $return['merchant_info'] = [
+                    'type' => 'designer',
+                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($designer->logo_ref),
+                    'merchant_slug' => isset($designer->designer_slug) ? $designer->designer_slug : NULL,
+                    'merchant_title' => isset($designer->brand_name) ? $designer->brand_name : NULL,
+                ];
+                break;
             case 'item':
                 $brand = $data->brand;
                 $images = $data->images;
+                $return['target'] = 'store';
                 $return['item_slug'] = $data->item_slug;
                 $return['item_title'] = $data->name;
                 $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
@@ -1116,6 +1217,7 @@ class OlaHubGeneralController extends BaseController
             case 'designer_item':
                 $designer = $data->designer;
                 $images = $data->images;
+                $return['target'] = 'designer';
                 $return['item_slug'] = $data->item_slug;
                 $return['item_title'] = $data->name;
                 $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;

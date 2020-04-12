@@ -724,7 +724,7 @@ class MainController extends BaseController
 
             $return = [];
             foreach ($merchants as $merchant) {
-                $items = \OlaHub\UserPortal\Models\CatalogItem::where('merchant_id', $merchant->merchant_id)->where("store_id", $merchant->id)->where("is_parent", 1)->paginate(5);
+                $items = \OlaHub\UserPortal\Models\CatalogItem::where('merchant_id', $merchant->merchant_id)->where("store_id", $merchant->id)->where("parent_item_id", NULL)->paginate(5);
                 $itemData = [];
                 foreach ($items as $item) {
                     $itemName = isset($item->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($item, 'name') : NULL;
