@@ -187,11 +187,10 @@ class WishList extends Model
 
     private function setItemOwnerData()
     {
-        $merchant = $this->item->merchant;
-        $ownerName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($merchant, 'company_legal_name');
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwner"] = isset($merchant->id) ? $merchant->id : NULL;
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwnerName"] = $ownerName;
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwnerSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($merchant, 'merchant_slug', $ownerName);
+        $brand = $this->item->brand;
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwner"] = $brand->id;
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwnerName"] = $brand->name;
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwnerSlug"] = @$brand->store_slug;
     }
 
     private function setAddData($itemID)
