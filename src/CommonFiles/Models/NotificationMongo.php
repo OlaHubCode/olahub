@@ -12,7 +12,7 @@ class Notifications extends Model
 
     public function userData()
     {
-        return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'user_id');
+        return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'friend_id');
     }
 
     public function groupData()
