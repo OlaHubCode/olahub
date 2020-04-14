@@ -252,7 +252,7 @@ class OlaHubGeneralController extends BaseController
         if ($notification->count() > 0) {
             $allNotifications = [];
             foreach ($notification as $one) {
-                $userData = $one["userData"][0];
+                $userData = @$one["userData"][0];
                 $groupData = @$one["groupData"][0];
                 $celebrationData = @$one["celebrationData"][0];
                 $allNotifications[] = [
@@ -262,7 +262,7 @@ class OlaHubGeneralController extends BaseController
                     "celebration_id" => $one->celebration_id,
                     "post_id" => $one->post_id,
                     "group_id" => $one->group_id,
-                    "user_name" => $userData["first_name"] . " " . $userData["last_name"],
+                    "user_name" => isset($userData) ? $userData["first_name"] . " " . $userData["last_name"] : NULL,
                     "community_title" => @$groupData["name"],
                     "celebration_title" => @$celebrationData["title"],
                     "profile_url" => $userData["profile_url"],
