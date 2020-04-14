@@ -297,7 +297,7 @@ class OlaHubPostController extends BaseController
                     );
                 } else {
                     foreach ($group->members as $member) {
-                        if ($member != app('session')->get('tempID')) {
+                        if ($member->user_id != app('session')->get('tempID')) {
                             $notification = new \OlaHub\UserPortal\Models\Notifications();
                             $notification->type = 'group';
                             $notification->content = "notifi_postGroup";
