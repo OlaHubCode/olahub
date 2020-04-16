@@ -113,7 +113,7 @@ class WishListHelper extends OlaHubCommonHelper
         $itemID = $this->item->id;
         if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID, $type) {
             $q->where('item_id', $itemID);
-            $q->where('type', $type);
+            $q->where('item_type', $type);
         })->count() > 0) {
             $this->return['productInCart'] = '1';
         }

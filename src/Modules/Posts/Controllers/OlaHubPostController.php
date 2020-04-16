@@ -161,17 +161,17 @@ class OlaHubPostController extends BaseController
             'user_info' => $userInfo,
             'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($data->created_at) : NULL,
         ];
+        $images = $data->images;
+        $return['type'] = 'item_shared';
+        $return['item_id'] = $data->id;
+        $return['item_slug'] = $data->item_slug;
+        $return['item_title'] = $data->name;
+        $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+        $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
         switch ($type) {
             case 'item_shared_store':
                 $brand = $data->brand;
-                $images = $data->images;
-                $return['type'] = 'item_shared';
                 $return['target'] = 'store';
-                $return['item_id'] = $data->id;
-                $return['item_slug'] = $data->item_slug;
-                $return['item_title'] = $data->name;
-                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
-                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
                 $return['merchant_info'] = [
                     'type' => 'brand',
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref),
@@ -181,13 +181,7 @@ class OlaHubPostController extends BaseController
                 break;
             case 'item_shared_designer':
                 $designer = $data->designer;
-                $images = $data->images;
-                $return['type'] = 'item_shared';
                 $return['target'] = 'designer';
-                $return['item_slug'] = $data->item_slug;
-                $return['item_title'] = $data->name;
-                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
-                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
                 $return['merchant_info'] = [
                     'type' => 'designer',
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($designer->logo_ref),

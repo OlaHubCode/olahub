@@ -211,7 +211,7 @@ class WishList extends Model
         //Cart
         if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID, $type) {
             $q->where('item_id', $itemID);
-            $q->where('type', $type);
+            $q->where('item_type', $type);
         })->count() > 0) {
             $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = 1;
         }
