@@ -92,7 +92,6 @@ class WishList extends Model
                         $this->setPriceData();
                         $this->setItemOwnerData();
                     }
-
                     break;
                 case "designer":
                     $this->item = $this->data->designersMainData;
@@ -104,7 +103,7 @@ class WishList extends Model
             }
             $this->setItemMainData($item->item_type);
             $this->setItemImageData();
-            $this->setAddData($this->item->id);
+            $this->setAddData($this->item->id, $item->item_type);
         }
 
         return $this->return;
@@ -167,7 +166,7 @@ class WishList extends Model
     private function setItemImageData()
     {
         $images = isset($this->item->images) ? $this->item->images : [];
-        if (count($images) > 0 && $images->count() > 0) {
+        if (count($images)) {
             $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
         } else {
             $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
@@ -193,27 +192,28 @@ class WishList extends Model
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]["productOwnerSlug"] = @$brand->store_slug;
     }
 
-    private function setAddData($itemID)
+    private function setAddData($itemID, $type)
     {
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = '0';
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = '0';
-        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = '0';
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = 0;
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = 0;
+        $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = 0;
 
         //wishlist
-        if (\OlaHub\UserPortal\Models\WishList::where('item_id', $itemID)->count() > 0) {
-            $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = '1';
-        }
+        // if (\OlaHub\UserPortal\Models\WishList::where('item_id', $itemID)->count() > 0) {
+        //     $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = 1;
+        // }
 
         //like
-        if (\OlaHub\UserPortal\Models\LikedItems::where('item_id', $itemID)->count() > 0) {
-            $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = '1';
-        }
+        // if (\OlaHub\UserPortal\Models\LikedItems::where('item_id', $itemID)->count() > 0) {
+        //     $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = 1;
+        // }
 
         //Cart
-        if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID) {
+        if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID, $type) {
             $q->where('item_id', $itemID);
+            $q->where('type', $type);
         })->count() > 0) {
-            $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = '1';
+            $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = 1;
         }
     }
 }
