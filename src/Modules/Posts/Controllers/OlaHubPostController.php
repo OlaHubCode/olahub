@@ -122,8 +122,8 @@ class OlaHubPostController extends BaseController
             })->orderBy('created_at', 'desc')->paginate(20);
         }
         if ($posts->count() > 0) {
-            $posts = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-            $posts = $posts['data'];
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+            // $posts = $posts['data'];
             if ($type != 'group') {
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
                     ->where(function ($q) use ($userID) {
@@ -135,19 +135,19 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $posts[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                            $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            $posts[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
                 }
             }
-            shuffle($posts);
-            $return['data'] = $posts;
+            shuffle($return['data']);
+            // $return['data'] = $posts;
             $return['status'] = TRUE;
             $return['code'] = 200;
-            unset($return['message']);
+            // unset($return['message']);
         }
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
@@ -161,16 +161,17 @@ class OlaHubPostController extends BaseController
             'user_info' => $userInfo,
             'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($data->created_at) : NULL,
         ];
+        $images = $data->images;
+        $return['type'] = 'item_shared';
+        $return['item_id'] = $data->id;
+        $return['item_slug'] = $data->item_slug;
+        $return['item_title'] = $data->name;
+        $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+        $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
         switch ($type) {
             case 'item_shared_store':
                 $brand = $data->brand;
-                $images = $data->images;
-                $return['type'] = 'item_shared';
                 $return['target'] = 'store';
-                $return['item_slug'] = $data->item_slug;
-                $return['item_title'] = $data->name;
-                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
-                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
                 $return['merchant_info'] = [
                     'type' => 'brand',
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brand->image_ref),
@@ -180,13 +181,7 @@ class OlaHubPostController extends BaseController
                 break;
             case 'item_shared_designer':
                 $designer = $data->designer;
-                $images = $data->images;
-                $return['type'] = 'item_shared';
                 $return['target'] = 'designer';
-                $return['item_slug'] = $data->item_slug;
-                $return['item_title'] = $data->name;
-                $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
-                $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
                 $return['merchant_info'] = [
                     'type' => 'designer',
                     'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($designer->logo_ref),
@@ -571,7 +566,7 @@ class OlaHubPostController extends BaseController
     public function deletePost()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "deletePost"]);
 
         if (empty($this->requestData['postId'])) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
@@ -608,7 +603,7 @@ class OlaHubPostController extends BaseController
     public function updatePost()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "updatePost"]);
 
         if (empty($this->requestData['postId'])) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
