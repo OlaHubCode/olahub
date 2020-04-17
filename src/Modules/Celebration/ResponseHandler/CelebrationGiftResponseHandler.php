@@ -5,13 +5,15 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 use OlaHub\UserPortal\Models\CartItems;
 use League\Fractal;
 
-class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
+class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract
+{
 
     private $return;
     private $data;
     private $item;
 
-    public function transform(CartItems $data) {
+    public function transform(CartItems $data)
+    {
         $this->data = $data;
         $this->setDefaultData();
         $this->setGiftOwnerImageData();
@@ -19,7 +21,8 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         return $this->return;
     }
 
-    private function setDefaultData() {
+    private function setDefaultData()
+    {
         switch ($this->data->item_type) {
             case "store":
                 $this->item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $this->data->item_id)->first();
@@ -56,7 +59,8 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setDefImageData() {
+    private function setDefImageData()
+    {
         $images = $this->item->images;
         if ($images->count() > 0) {
             $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
@@ -65,7 +69,8 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setDesignerDefImageData($item) {
+    private function setDesignerDefImageData($item)
+    {
         $images = isset($item->item_image) ? $item->item_image : (isset($item->item_images) ? $item->item_images : false);
         if ($images && count($images) > 0) {
             $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]);
@@ -74,7 +79,8 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setGiftOwnerImageData() {
+    private function setGiftOwnerImageData()
+    {
         $giftOwner = \OlaHub\UserPortal\Models\UserModel::where('id', $this->data->created_by)->first();
         $this->return["celebrationGiftOwnerName"] = isset($giftOwner) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($giftOwner, 'name') : NULL;
         if (isset($giftOwner->profile_picture)) {
@@ -84,9 +90,11 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         }
     }
 
-    private function setPriceData() {
+    private function setPriceData()
+    {
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('id', $this->data->shopping_cart_id)->first();
-        $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)->where('item_id', $this->item->id)->first();
+        $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)
+            ->where('item_id', $this->item->id)->where('item_type', 'store')->first();
         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
         $return = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($this->item, false, true, $celebration->country_id);
         $this->return['celebrationItemPrice'] = $return['productPrice'];
@@ -96,19 +104,22 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         $this->return['celebrationItemHasDiscount'] = $return['productHasDiscount'];
     }
 
-    private function setDesignerPrice($item) {
+    private function setDesignerPrice($item)
+    {
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('id', $this->data->shopping_cart_id)->first();
-        $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)->where('item_id', $item->item_id)->first();
+        $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->data->shopping_cart_id)
+            ->where('item_id', $item->id)->where('item_type', 'designer')->first();
         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
         $return = \OlaHub\UserPortal\Models\DesignerItems::checkPrice($item, false, true, $celebration->country_id);
         $this->return['celebrationItemPrice'] = $return['productPrice'];
-        $this->return['celebrationItemQuantity'] = $cartDetails->quantity;
+        $this->return['celebrationItemQuantity'] = isset($cartDetails->quantity) ? $cartDetails->quantity : 1;
         $this->return['celebrationItemTotalPrice'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cartDetails->total_price, true, $celebration->country_id);
         $this->return['celebrationItemDiscountedPrice'] = $return['productDiscountedPrice'];
         $this->return['celebrationItemHasDiscount'] = $return['productHasDiscount'];
     }
 
-    private function setLikersData() {
+    private function setLikersData()
+    {
         $participantLikers = unserialize($this->data->paricipant_likers);
         $this->return['currentLike'] = FALSE;
         $this->return['totalLikers'] = 0;
@@ -130,5 +141,4 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract {
         }
         $this->return['Likers'] = $likers;
     }
-
 }

@@ -198,8 +198,7 @@ class UserModel extends Model
         $userModel->where(function ($query) use ($q) {
             $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
                 ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
-                ->WhereRaw('LOWER(`first_name`) sounds like ?', $q)
-                ->WhereRaw('LOWER(`last_name`) sounds like ?', $q);
+                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
         })->where('users.id', '<>', app('session')->get('tempID'));
         if ($eventId) {
             $userModel->whereRaw('users.id NOT IN (select user_id from celebration_participants
