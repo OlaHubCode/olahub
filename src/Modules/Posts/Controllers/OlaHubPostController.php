@@ -450,7 +450,7 @@ class OlaHubPostController extends BaseController
             $post = Post::where('post_id', $this->requestData['postId'])->first();
             if ($post) {
                 if (isset($post->comments)) {
-                    $return = [];
+                    $return["data"] = [];
                     foreach ($post->comments as $comment) {
                         $userData = $comment->author;
                         $repliesData = [];
