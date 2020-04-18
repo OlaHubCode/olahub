@@ -823,7 +823,7 @@ class OlaHubGeneralController extends BaseController
 
     public function getUserTimeline(Request $request)
     {
-        $page = $request->input('page');
+        $page = (int) $request->input('page') || 1;
         $now = date('Y-m-d');
         $month = 'created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
         $timeline = [];
@@ -841,7 +841,7 @@ class OlaHubGeneralController extends BaseController
                 'profile_url' => $user->profile_url,
                 'username' => "$user->first_name $user->last_name",
             ];
-            if (!$page) {
+            if ($page == 1) {
                 $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
                 if (count($friends)) {
                     $friendsCalendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn('user_id', $friends)->where('calender_date', "<=", date("Y-m-d H:i:s", strtotime("+7 days")))->where('calender_date', ">", date("Y-m-d H:i:s"))->orderBy('calender_date', 'desc')->get();
@@ -1249,7 +1249,7 @@ class OlaHubGeneralController extends BaseController
             }
             $return['data'] = $all;
         }
-        if (!$page) {
+        if ($page == 1) {
             $return['celebrations'] = $celebrations;
             $return['upcoming'] = $upcoming;
         }

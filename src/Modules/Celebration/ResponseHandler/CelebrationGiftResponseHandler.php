@@ -36,44 +36,33 @@ class CelebrationGiftResponseHandler extends Fractal\TransformerAbstract
                     "celebrationItemSKU" => isset($this->item->sku) ? $this->item->sku : NULL,
                     "celebrationItemInStock" => \OlaHub\UserPortal\Models\CatalogItem::checkStock($this->item),
                 ];
-                $this->setDefImageData();
                 $this->setPriceData();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
-                if ($item) {
+                $this->item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $this->data->item_id)->first();
+                if ($this->item) {
                     $this->return = [
                         "celebrationGiftId" => isset($this->data->id) ? $this->data->id : 0,
                         "celebrationGiftType" => "designer",
                         "celebrationGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
-                        "celebrationItem" => isset($item->id) ? $item->id : 0,
-                        "celebrationItemName" => $item->name,
-                        "celebrationItemSlug" => isset($item->item_slug) ? $item->item_slug : NULL,
-                        "celebrationItemSKU" => isset($item->sku) ? $item->sku : NULL,
-                        "celebrationItemInStock" => isset($item->item_stock) ? $item->item_stock : 1,
+                        "celebrationItem" => isset($this->item->id) ? $this->item->id : 0,
+                        "celebrationItemName" => $this->item->name,
+                        "celebrationItemSlug" => isset($this->item->item_slug) ? $this->item->item_slug : NULL,
+                        "celebrationItemSKU" => isset($this->item->sku) ? $this->item->sku : NULL,
+                        "celebrationItemInStock" => isset($this->item->item_stock) ? $this->item->item_stock : 1,
                     ];
-                    $this->setDesignerDefImageData($item);
-                    $this->setDesignerPrice($item);
+                    $this->setDesignerPrice($this->item);
                 }
                 break;
         }
+        $this->setDefImageData();
     }
 
     private function setDefImageData()
     {
-        $images = $this->item->images;
-        if ($images->count() > 0) {
+        $images = @$this->item->images;
+        if (@$images->count() > 0) {
             $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
-        } else {
-            $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
-        }
-    }
-
-    private function setDesignerDefImageData($item)
-    {
-        $images = isset($item->item_image) ? $item->item_image : (isset($item->item_images) ? $item->item_images : false);
-        if ($images && count($images) > 0) {
-            $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]);
         } else {
             $this->return['celebrationItemImages'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
