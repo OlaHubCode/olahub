@@ -48,7 +48,7 @@ class UserModel extends Model
             'column' => 'country_id',
             'type' => 'int',
             'relation' => false,
-            'validation' => 'required'
+            // 'validation' => 'required'
         ],
         'userFirstName' => [
             'column' => 'first_name',
@@ -85,13 +85,13 @@ class UserModel extends Model
             'column' => 'user_birthday',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'max:50|date'
+            // 'validation' => 'max:50|date'
         ],
         'userGender' => [
             'column' => 'user_gender',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'in:m,f'
+            // 'validation' => 'in:m,f'
         ],
         'userPassword' => [
             'column' => 'password',

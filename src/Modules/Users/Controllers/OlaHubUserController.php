@@ -6,6 +6,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Models\UserShippingAddressModel;
+use Illuminate\Support\Facades\Crypt;
 
 class OlaHubUserController extends BaseController
 {
@@ -37,7 +38,8 @@ class OlaHubUserController extends BaseController
 
         $user = app('session')->get('tempData');
         if ($user) {
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+            $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+            $return['data'] = Crypt::encrypt(json_encode($u['data']), false);
             $return['status'] = true;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -75,7 +77,8 @@ class OlaHubUserController extends BaseController
 
         $user = app('session')->get('tempData');
         if ($user) {
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
+            $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
+            $return['data'] = Crypt::encrypt(json_encode($u['data']), false);
             $return['status'] = true;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -183,16 +186,17 @@ class OlaHubUserController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-        if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) <= 0) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]]]);
-            $log->saveLogSessionData();
-            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
-        }
+        // if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) <= 0) {
+        //     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]]]);
+        //     $log->saveLogSessionData();
+        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
+        // }
         $userData = app('session')->get('tempData');
 
         /*** check changes ***/
         if (!empty($this->requestData["userNewPassword"]) && !empty($this->requestData["confirmPassword"])) {
-            $confirm = (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($this->requestData["confirmPassword"], $userData->password);
+            $confirmPassword = json_decode(Crypt::decrypt($this->requestData["confirmPassword"], false));
+            $confirm = (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($confirmPassword, $userData->password);
             if (!$confirm) {
                 return response(['status' => false, 'msg' => 'password_incorrect'], 200);
             }
@@ -267,7 +271,7 @@ class OlaHubUserController extends BaseController
             $this->requestData['userInterests'] = implode(",", $this->requestData['userInterests']);
         foreach ($this->requestData as $input => $value) {
             if (isset($this->requestData['userNewPassword']) && $this->requestData['userNewPassword'] != "") {
-                $userData->password = $this->requestData['userNewPassword'];
+                $userData->password = json_decode(Crypt::decrypt($this->requestData["userNewPassword"], false));
                 if ($userData->is_first_login == "1") {
                     $userData->is_first_login = "0";
                     // $isFirstLogin = TRUE;
@@ -280,7 +284,7 @@ class OlaHubUserController extends BaseController
         $userData->save();
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
         $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
-        $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
+        $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
         return response($return, 200);
