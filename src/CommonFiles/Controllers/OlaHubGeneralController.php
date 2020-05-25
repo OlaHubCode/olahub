@@ -1037,9 +1037,12 @@ class OlaHubGeneralController extends BaseController
                 if (!$friends)
                     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($friends) {
+                    ->where(function ($q) use ($friends, $myGroups) {
                         $q->where(function ($query) use ($friends) {
                             $query->whereIn('user_id', $friends);
+                        });
+                        $q->orWhere(function ($query) use ($myGroups) {
+                            $query->whereIn('group_id', $myGroups);
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {

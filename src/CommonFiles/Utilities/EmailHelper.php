@@ -384,17 +384,18 @@ class EmailHelper extends OlaHubCommonHelper
 
     function sendUserPaymentCelebration($userData, $billing)
     {
+        $paid_by =  @OlaHubCommonHelper::setPayUsed($billing)['paidBy'];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user payment celebration Email", "action_startData" => json_encode($userData) . json_encode($billing)]);
         $template = 'USR009';
         $username = "$userData->first_name $userData->last_name";
-        $amountCollection = "<div><b>Paid by: </b>$billing->paid_by</div>";
+        $amountCollection = "<div><b>Paid by: </b>$paid_by</div>";
         if ($billing->voucher_used > 0) {
             $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($billing->voucher_used, 2) . " " . $billing->billing_currency . "</div>";
             $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($billing->voucher_after_pay, 2) . " " . $billing->billing_currency . "</div>";
         }
 
         if ($billing->voucher_used > 0 && $billing->billing_total > $billing->voucher_used) {
-            $amountCollection .= "<div><b>Paid using ($billing->paid_by): </b>" . number_format(($billing->billing_total - $billing->voucher_used), 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Paid using ($paid_by): </b>" . number_format(($billing->billing_total - $billing->voucher_used), 2) . " " . $billing->billing_currency . "</div>";
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
         $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
