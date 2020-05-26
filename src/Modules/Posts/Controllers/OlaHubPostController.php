@@ -35,6 +35,14 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return ['status' => false, 'message' => 'someData', 'code' => 406, 'errorData' => []];
         }
+        $userID = $type == 'friend' ? $this->requestData['userId'] : app('session')->get('tempID');
+        $user = \OlaHub\UserPortal\Models\UserModel::find($userID);
+        $userInfo = [
+            'user_id' => $user->id,
+            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
+            'profile_url' => $user->profile_url,
+            'username' => "$user->first_name $user->last_name",
+        ];
         if ($type == 'group') {
             $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
             $postsTemp = Post::where('group_id', $group->id)->where('is_approve', 1)->orderBy('created_at', 'desc')->paginate(15);
@@ -91,6 +99,25 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
+
+                $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($group) {
+                        $q->where(function ($query) use ($group) {
+                            $query->where('group_id', $group->id);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedItems->count()) {
+                    foreach ($sharedItems as $litem) {
+                        if ($litem->item_type == 'store') {
+                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                        } else {
+                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                        }
+                    }
+                }
+                shuffle($all);
                 $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             }
             $log->setLogSessionData(['response' => $return]);
@@ -98,14 +125,6 @@ class OlaHubPostController extends BaseController
             return response($return, 200);
         } else {
             $myGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr(app('session')->get('tempID'));
-            $userID = $type == 'friend' ? $this->requestData['userId'] : app('session')->get('tempID');
-            $user = \OlaHub\UserPortal\Models\UserModel::find($userID);
-            $userInfo = [
-                'user_id' => $user->id,
-                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
-                'profile_url' => $user->profile_url,
-                'username' => "$user->first_name $user->last_name",
-            ];
             $posts = Post::where(function ($q) use ($userID, $myGroups) {
                 $q->where(function ($userPost) use ($userID) {
                     $userPost->where('user_id', $userID);
@@ -129,6 +148,7 @@ class OlaHubPostController extends BaseController
                     ->where(function ($q) use ($userID) {
                         $q->where(function ($query) use ($userID) {
                             $query->where('user_id', $userID);
+                            $query->where('group_id', NULL);
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
