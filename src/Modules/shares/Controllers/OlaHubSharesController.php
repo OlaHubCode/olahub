@@ -24,7 +24,9 @@ class OlaHubSharesController extends BaseController
 
     public function newSharedItemsUser()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+          
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "newSharedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
@@ -44,12 +46,15 @@ class OlaHubSharesController extends BaseController
 
         $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedItemsUser', 'code' => 200]]);
         $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Share_Item');
+
         return response(['status' => TRUE, 'code' => 200], 200);
     }
 
     public function removeSharedItemsUser()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "removeSharedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
@@ -62,6 +67,8 @@ class OlaHubSharesController extends BaseController
             ->where('user_id', app('session')->get('tempID'))->delete();
         $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'unlikeProductNow', 'code' => 200]]);
         $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Remove_shared_Item');
+
         return response(['status' => TRUE, 'code' => 200], 200);
     }
 }

@@ -125,19 +125,23 @@ class MainController extends BaseController
 
     public function updateGroup()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "updateGroup"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "updateGroup"]);
 
         if (isset($this->requestData) && $this->requestData && isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
             $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
             if ($group->creator != app('session')->get('tempID')) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'allowUpdateGroup', 'code' => 400]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'allowUpdateGroup', 'code' => 400]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'allowUpdateGroup', 'code' => 400], 200);
             }
             $oldGroupPostApprove = $group->posts_approve;
@@ -151,8 +155,9 @@ class MainController extends BaseController
             }
             $saved = $group->save();
             if (!$saved) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'InternalServerError', 'code' => 500]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'InternalServerError', 'code' => 500]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'InternalServerError', 'code' => 500], 200);
             }
 
@@ -166,54 +171,67 @@ class MainController extends BaseController
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
-            $log->setLogSessionData(['response' => $return]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => $return]);
+            // $log->saveLogSessionData();
+            $log->saveLog($userData->id, $this->requestData, 'Update Community');
+
             return response($return, 200);
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function deleteGroup()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "deleteGroup"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "deleteGroup"]);
 
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
             $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
             if ($group->creator != app('session')->get('tempID')) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'deleteThisGroup', 'code' => 400]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'deleteThisGroup', 'code' => 400]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'deleteThisGroup', 'code' => 400], 200);
             }
             $group->delete();
             GroupMembers::where('group_id', $group->id)->delete();
             \OlaHub\UserPortal\Models\Post::where('group_id', $group->id)->delete();
-            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200]]);
+            // $log->saveLogSessionData();
+            $log->saveLog($userData->id, $this->requestData, 'Delete Group');
+
             return response(['status' => true, 'msg' => 'YouDeleteGroupSuccessfully', 'code' => 200], 200);
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function inviteUserToGroup()
-    {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
-
+     {
+    //     $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+    //     $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "inviteUserToGroup"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"] && isset($this->requestData["userId"]) && count($this->requestData["userId"]) > 0) {
             $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->first();
             if (!$group) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
+                // $log->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
 
@@ -252,12 +270,15 @@ class MainController extends BaseController
                 }
             }
 
-            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouInviteSuccessfully', 'code' => 200]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'YouInviteSuccessfully', 'code' => 200]]);
+            // $log->saveLogSessionData();
+            $log->saveLog($userData->id, $this->requestData, 'Invite User to Community');
+
             return response(['status' => true, 'msg' => 'YouInviteSuccessfully', 'code' => 200], 200);
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
@@ -529,22 +550,19 @@ class MainController extends BaseController
     }
 
     public function joinPublicGroup()
+  
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Groups", 'function_name' => "joinPublicGroup"]);
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         if (isset($this->requestData["groupId"]) && $this->requestData["groupId"]) {
             $group = groups::where('id', $this->requestData["groupId"])->orWhere('slug', $this->requestData["groupId"])->where('privacy', 3)->first();
             if (!$group) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'groupNotExist', 'code' => 204]]);
-                $log->saveLogSessionData();
+               
                 return response(['status' => false, 'msg' => 'groupNotExist', 'code' => 204], 200);
             }
             $member = (new GroupMembers)->where('user_id', app('session')->get('tempID'))->where('group_id', $group->id)->first();
             if ($member) {
-                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'alreadyMemberInGroup', 'code' => 500]]);
-                $log->saveLogSessionData();
-                return response(['status' => false, 'msg' => 'alreadyMemberInGroup', 'code' => 500], 200);
+                      
             } else {
                 $member = new GroupMembers;
                 $member->group_id = $group->id;
@@ -555,14 +573,13 @@ class MainController extends BaseController
             $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseItem($group, '\OlaHub\UserPortal\ResponseHandlers\MainGroupResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
-            $log->setLogSessionData(['response' => $return]);
-            $log->saveLogSessionData();
+            $log->saveLog($userData->id, $this->requestData, 'join Public Group');
+
             return response($return, 200);
-        }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
+}
 
     public function joinClosedGroup()
     {
