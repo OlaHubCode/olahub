@@ -6,6 +6,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Helpers\UserHelper;
+use Illuminate\Support\Facades\Crypt;
 
 class OlaHubGuestController extends BaseController
 {
@@ -40,6 +41,8 @@ class OlaHubGuestController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "registerUser"]);
+        $this->requestData['userPassword'] = json_decode(Crypt::decrypt($this->requestData['userPassword'], false));
+        $this->requestData['userInterests'] = implode(",", $this->requestData['userInterests']);
 
         $validation = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserModel::$columnsMaping, (array) $this->requestData);
         // $this->requestData['userPhoneNumber'] = str_replace("+", "00", $this->requestData['userPhoneNumber']);
@@ -89,7 +92,6 @@ class OlaHubGuestController extends BaseController
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $this->userHelper->addUserLogin($this->requestData, $userData->id, true);
 
-        // \OlaHub\UserPortal\Models\Interests::whereIn('id', $this->requestData['userInterests'])->push('users', $userData->id, true);
         if ($userData->mobile_no && $userData->email) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNewUser($userData, $userData->activation_code);
             (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNewUser($userData, $userData->activation_code);
@@ -118,6 +120,9 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
 
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
+        $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
@@ -270,7 +275,8 @@ class OlaHubGuestController extends BaseController
 
         $userSession = $this->userHelper->createActiveSession($checkUserSession, $userData, $this->userAgent, $this->requestCart);
         app('session')->put('tempData', $userData);
-        $return = ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200];
+        $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+        $return = ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => Crypt::encrypt(json_encode($u), false), 'code' => 200];
         if ($userFirstLogin) {
             $return["userFirstLogin"] = "1";
         }
@@ -683,6 +689,8 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resetGuestPassword"]);
 
+        $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
+
         $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
         $country_id = isset($this->requestData["userCountry"]) ? $this->requestData["userCountry"] : @$country->id;
         $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
@@ -728,7 +736,8 @@ class OlaHubGuestController extends BaseController
             }
             $log->setLogSessionData(['response' => ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200]]);
             $log->saveLogSessionData();
-            return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 200);
+            $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+            return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' =>  Crypt::encrypt(json_encode($u), false), 'code' => 200], 200);
         } else {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'PasswordNotCorrect', 'code' => 204]]);
             $log->saveLogSessionData();
