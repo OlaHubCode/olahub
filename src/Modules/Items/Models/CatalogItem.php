@@ -219,13 +219,9 @@ class CatalogItem extends Model
 
     static function searchItem($q = 'a', $count = 15)
     {
-        $items = CatalogItem::where('name', 'LIKE', "%$q%")->orWhereRaw('name sounds like ?', $q)
-            ->whereHas("merchant", function ($merQ) {
-                $merQ->where('country_id', app('session')->get('def_country')->id);
-            })->where(function ($q) {
-                $q->whereNull("parent_item_id");
-                $q->orWhere("parent_item_id", 0);
-            });
+        $items = CatalogItem::where('name', 'LIKE', "%$q%")
+            ->whereNull("parent_item_id")
+            ->orWhere("parent_item_id", 0);
         if ($count > 0) {
             return $items->paginate($count);
         } else {
