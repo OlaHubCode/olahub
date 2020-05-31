@@ -46,8 +46,8 @@ $router->group([], function () use ($router) {
         $router->post('shareItem', 'OlaHubGeneralController@shareNewItem');
         $router->post('checkUserMerchant', 'OlaHubGeneralController@checkUserMerchant');
         $router->post('getCitiesByRegion/{regionId}', 'OlaHubGeneralController@getCities');
-        $router->post('follow/{type:\bbrands|occassions|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userFollow');
-        $router->post('unfollow/{type:\bbrands|occassions|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userUnFollow');
+        $router->post('follow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userFollow');
+        $router->post('unfollow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userUnFollow');
         $router->post('listFollowing', 'OlaHubGeneralController@listUserFollowing');
     });
 });

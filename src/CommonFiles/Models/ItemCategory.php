@@ -79,11 +79,17 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
 
     static function getBannerBySlug($slug) {
         $category = ItemCategory::where('category_slug', $slug)->first();
+       $return['id']=$category->id;
         if ($category && $category->banner_ref) {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref);
+            $return[]=\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref);
+            return $return;
         } else {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
+            $return[]= \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
+            return $return;
         }
+
+
+
     }
 
     static function getBannerByIDS($ids) {
@@ -137,10 +143,22 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
             'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
         ];
         if ($category) {
+            $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $category->id)
+            ->where('type', 3)->first();
+            if($category->parent_id>0){
+                $return = [
+                    'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name'),
+                    'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref),
+                ];
+            }
+            else{
             $return = [
+                'id' => $category->id,
                 'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name'),
                 'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref),
-            ];
+            ];}
+            $return['followed'] = isset($follow) ? true : false;
+
         }
 
         return $return;

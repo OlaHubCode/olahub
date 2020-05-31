@@ -77,6 +77,7 @@ abstract class OlaHubCommonHelper
 
     static function returnCurrentLangField($objectData, $fieldName)
     {
+    
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Return field depending on current language", "action_startData" => json_encode($objectData) . $fieldName]);
         $return = NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);

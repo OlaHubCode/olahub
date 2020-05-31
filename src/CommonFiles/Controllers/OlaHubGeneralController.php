@@ -6,6 +6,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use \OlaHub\UserPortal\Models\Post;
+use Illuminate\Support\Facades\DB;
 
 class OlaHubGeneralController extends BaseController
 {
@@ -826,6 +827,7 @@ class OlaHubGeneralController extends BaseController
         $page = (int) $request->input('page') || 1;
         $now = date('Y-m-d');
         $month = 'created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
+        $monthC = 'catalog_items.created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
         $timeline = [];
         $friends = NULL;
         $all = [];
@@ -923,6 +925,7 @@ class OlaHubGeneralController extends BaseController
 
             // posts
             try {
+                
                 if (!$friends)
                     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
                 $myGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr($user->id);
@@ -1149,6 +1152,119 @@ class OlaHubGeneralController extends BaseController
                 $timeline[] = $this->handlePostTimeline($im, 'multi_item');
             }
         }
+        // Category items
+        $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
+        ->select('catalog_item_categories.id')
+        ->join('catalog_item_categories','catalog_item_categories.parent_id','following.target_id')->get();
+        $categoryIds=[];
+        foreach ($followedCategory as $followedCategoryID) {
+            $categoryIds[] = $followedCategoryID->id;
+        }
+        
+        $cItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
+            $query->whereNull('parent_item_id');
+            $query->orWhere('parent_item_id', '0');
+            
+        }
+        
+        )->whereRaw($month)->inRandomOrder()->whereIN('category_id',$categoryIds)->paginate(10);
+        $itemsCategory = [];
+        foreach ($cItems as $item) {
+            if (!isset($itemsCategory[$item->category_id]))
+                $itemsCategory[$item->category_id] = [];
+            array_push($itemsCategory[$item->category_id], $item);
+        }
+        
+        foreach ($itemsCategory as $m => $im) {
+            if (count($im) == 1) {
+                if (is_object($im))
+                    $timeline[] = $this->handlePostTimeline($im, 'item_category');
+            } else {
+                
+               
+                $timeline[] = $this->handlePostTimeline($im, 'category_multi_item');
+            }
+        }
+        // occasion items
+        $followedOccasion = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 4)->get();
+        $occasionIds=[];
+        foreach ($followedOccasion as $followedOccasionID) {
+            $occasionIds[] = $followedOccasionID->target_id;
+        }
+        
+        $oItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_occasions','catalog_item_occasions.item_id','catalog_items.id')->
+        select('catalog_item_occasions.occasion_id','catalog_items.*')->
+        whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
+            $query->whereNull('catalog_items.parent_item_id');
+            $query->orWhere('catalog_items.parent_item_id', '0');
+            
+        }
+        
+        )
+        ->whereRaw($monthC)->inRandomOrder()
+        ->whereIn('occasion_id',$occasionIds)
+        ->paginate(10);
+        $itemsOccasion = [];
+        foreach ($oItems as $item) {
+            if (!isset($itemsOccasion[$item->occasion_id]))
+                $itemsOccasion[$item->occasion_id] = [];
+            array_push($itemsOccasion[$item->occasion_id], $item);
+        }
+        
+        foreach ($itemsOccasion as $m => $im) {
+            if (count($im) == 1) {
+                if (is_object($im))
+                    $timeline[] = $this->handlePostTimeline($im, 'occasion_item');
+            } else {
+                
+               
+                $timeline[] = $this->handlePostTimeline($im, 'occasion_multi_item');
+            }
+        }
+        // intrest items
+        $getfollowedInterests = DB::table('users')->where("id", app('session')->get('tempID'))->select('interests')->get();
+        $followedInterests=explode(',', $getfollowedInterests[0]->interests);
+
+        foreach ($followedOccasion as $followedOccasionID) {
+            $occasionIds[] = $followedOccasionID->target_id;
+        }
+        
+        $interestsItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_interests','catalog_item_interests.item_id','catalog_items.id')->
+        select('catalog_item_interests.interest_id','catalog_items.*')->
+        whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
+            $query->whereNull('catalog_items.parent_item_id');
+            $query->orWhere('catalog_items.parent_item_id', '0');
+            
+        }
+        
+        )->whereRaw($monthC)->inRandomOrder()
+        ->whereIn('interest_id',$followedInterests)
+
+        ->paginate(10);
+        // $timeline[] = $this->handlePostTimeline($interestsItems, 'intrests_multi_item');
+        $itemsInterests = [];
+        foreach ($interestsItems as $item) {
+            if (!isset($itemsInterests[$item->interest_id]))
+                $itemsInterests[$item->interest_id] = [];
+            array_push($itemsInterests[$item->interest_id], $item);
+        }
+        
+        foreach ($itemsInterests as $m => $im) {
+            if (count($im) == 1) {
+                if (is_object($im))
+                    $timeline[] = $this->handlePostTimeline($im, 'intrests_item');
+            } else {
+                
+               
+                $timeline[] = $this->handlePostTimeline($im, 'intrests_multi_item');
+            }
+        }
 
         // designer items
         $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
@@ -1258,7 +1374,7 @@ class OlaHubGeneralController extends BaseController
 
     private function handlePostTimeline($data, $type, $fInfo = NULL)
     {
-        $liked = 0;
+     $liked = 0;
         $likerData = [];
         $return = [
             'type' => $type,
@@ -1320,6 +1436,64 @@ class OlaHubGeneralController extends BaseController
                     'merchant_title' => isset($brand->name) ? $brand->name : NULL,
                 ];
                 break;
+           
+                case 'occasion_item':
+                    
+                    $occasion =  DB::table('occasion_types')->where('id',$data[0]['occasion_id'])->get();
+                    $name =isset($occasion[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion[0], 'name') : NULL;
+                    
+                    $images = $data->images;
+                    $return['target'] = 'store';
+                    $return['item_slug'] = $data->item_slug;
+                    $return['item_title'] = $data->name;
+                    $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+                    $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
+                    $return['merchant_info'] = [
+                        'type' => 'occasion',
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion[0]->logo_ref),
+
+                        'merchant_slug' => isset($occasion[0]->occasion_slug) ? $occasion[0]->occasion_slug : NULL,
+                        'merchant_title' => $name,
+                    ];
+            break;
+                case 'intrests_item':
+                    
+                    $interest =  DB::table('lkp_interests')->where('id',$data[0]['interest_id'])->get();
+                    $name =isset($interest[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest[0], 'name') : NULL;
+                    
+                    $images = $data->images;
+                    $return['target'] = 'store';
+                    $return['item_slug'] = $data->item_slug;
+                    $return['item_title'] = $data->name;
+                    $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+                    $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
+                    $return['merchant_info'] = [
+                        'type' => 'interest',
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest[0]->image_ref),
+
+                        'merchant_slug' => isset($interest[0]->interest_slug) ? $interest[0]->interest_slug : NULL,
+                        'merchant_title' => $name,
+                    ];
+            break;
+                case 'item_category':
+                    
+                    $subcategory = $data->category;
+                   
+                    $category =  DB::table('catalog_item_categories')->where('id',$subcategory['parent_id'])->get();
+                    $name =isset($category[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category[0], 'name') : NULL;
+                    
+                    $images = $data->images;
+                    $return['target'] = 'store';
+                    $return['item_slug'] = $data->item_slug;
+                    $return['item_title'] = $data->name;
+                    $return['item_desc'] = isset($data->description) ? strip_tags($data->description) : NULL;
+                    $return['avatar_url'] = count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL;
+                    $return['merchant_info'] = [
+                        'type' => 'category',
+                        'merchant_slug' => isset($category[0]->category_slug) ? $category[0]->category_slug : NULL,
+                        'merchant_title' => $name,
+                    ];
+            break;
             case 'designer_item':
                 $designer = $data->designer;
                 $images = $data->images;
@@ -1334,21 +1508,21 @@ class OlaHubGeneralController extends BaseController
                     'merchant_slug' => isset($designer->designer_slug) ? $designer->designer_slug : NULL,
                     'merchant_title' => isset($designer->brand_name) ? $designer->brand_name : NULL,
                 ];
-                break;
+            break;
             case 'merchant':
                 $return['merchant_title'] = $data->name;
                 $return['merchant_slug'] = isset($data->store_slug) ? $data->store_slug : NULL;
                 $return['avatar_url'] = isset($data->image_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($data->image_ref) : NULL;
-                break;
+            break;
             case 'designer':
                 $return['merchant_title'] = $data->brand_name;
                 $return['merchant_slug'] = isset($data->designer_slug) ? $data->designer_slug : NULL;
                 $return['avatar_url'] = isset($data->logo_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($data->logo_ref) : NULL;
                 break;
-            case 'multi_item':
-                $items = [];
-                $brand = $data[0]->brand;
-                foreach ($data as $item) {
+                case 'multi_item':
+                    $items = [];
+                    $brand = $data[0]->brand;
+                    foreach ($data as $item) {
                     $images = $item->images;
                     $items[] = [
                         'item_slug' => isset($item->item_slug) ? $item->item_slug : NULL,
@@ -1364,7 +1538,80 @@ class OlaHubGeneralController extends BaseController
                     'merchant_slug' => isset($brand->store_slug) ? $brand->store_slug : NULL,
                     'merchant_title' => isset($brand->name) ? $brand->name : NULL,
                 ];
+            break;
+            case 'category_multi_item':
+
+                $items = [];
+                $subcategory = $data[0]->category;
+                $category =  DB::table('catalog_item_categories')->where('id',$subcategory['parent_id'])->get();
+                $name =isset($category[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category[0], 'name') : NULL;
+
+                foreach ($data as $item) {
+                    $images = $item->images;
+                    $items[] = [
+                        'item_slug' => isset($item->item_slug) ? $item->item_slug : NULL,
+                        'avatar_url' => count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL,
+                        'item_title' =>  $item->name,
+                        'item_desc' => isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item->description, 10) : NULL,
+                    ];
+                }
+                $return['items'] = $items;
+                $return['merchant_info'] = [
+                    'type' => 'category',
+                    'merchant_slug' => isset($category[0]->category_slug) ? $category[0]->category_slug : NULL,
+                    'merchant_title' => $name,
+                ];
+                
                 break;
+            case 'occasion_multi_item':
+                $items = [];
+
+                $occasion =  DB::table('occasion_types')->where('id',$data[0]['occasion_id'])->get();
+                $name =isset($occasion[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion[0], 'name') : NULL;
+
+                foreach ($data as $item) {
+                    $images = $item->images;
+                    $items[] = [
+                        'item_slug' => isset($item->item_slug) ? $item->item_slug : NULL,
+                        'avatar_url' => count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL,
+                        'item_title' =>  $item->name,
+                        'item_desc' => isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item->description, 10) : NULL,
+                    ];
+                }
+                $return['items'] = $items;
+                $return['merchant_info'] = [
+                    'type' => 'occasion',
+                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion[0]->logo_ref),
+
+                    'merchant_slug' => isset($occasion[0]->occasion_slug) ? $occasion[0]->occasion_slug : NULL,
+                    'merchant_title' => $name,
+                ];
+                
+                break;
+            case 'intrests_multi_item':
+                $interest =  DB::table('lkp_interests')->where('id',$data[0]['interest_id'])->get();
+                $items = [];
+                
+                $name =isset($interest[0]->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest[0], 'name') : NULL;
+                
+                foreach ($data as $item) {
+                    $images = $item->images;
+                    $items[] = [
+                        'item_slug' => isset($item->item_slug) ? $item->item_slug : NULL,
+                        'avatar_url' => count($images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : NULL,
+                        'item_title' =>  $item->name,
+                        'item_desc' => isset($item->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getWordsFromString($item->description, 10) : NULL,
+                    ];
+                }
+                $return['items'] = $items;
+                $return['merchant_info'] = [
+                    'type' => 'intrests',
+                    'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest[0]->image_ref),
+                    
+                    'merchant_slug' => isset($interest[0]->interest_slug) ? $interest[0]->interest_slug : NULL,
+                    'merchant_title' => $name,
+                ];
+            break;
             case 'designer_multi_item':
                 $items = [];
                 $designer = $data[0]->designer;
@@ -1440,15 +1687,23 @@ class OlaHubGeneralController extends BaseController
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
-        $following->type = ($type == 'brands' ? 1 : 2);
+            if     ($type=='brands')  {$following->type=1;}
+            else if($type=='category')  {$following->type=3;}
+            else if($type=='occasion') {$following->type=4;}
+            else  $following->type=2;
         $following->save();
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 
     public function userUnFollow($type, $id)
     {
+     if($type=='brands') {$typeNum=1;}
+       else if($type=='category') {$typeNum=3;}
+       else if($type=='occasion') {$typeNum=4;}
+       else $typeNum=2;
+      
         \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $id)
-            ->where('type', ($type == 'brands' ? 1 : 2))->delete();
+            ->where('type', $typeNum)->delete();
         return response(['status' => true, 'msg' => 'unfollow successfully', 'code' => 200], 200);
     }
 
@@ -1459,6 +1714,8 @@ class OlaHubGeneralController extends BaseController
         if ($user) {
             $brands = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 1)->get();
             $designers = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 2)->get();
+            $categories = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 3)->get();
+            $occasions = \OlaHub\UserPortal\Models\Following::select('target_id')->where("user_id", app('session')->get('tempID'))->where('type', 4)->get();
             if (isset($brands)) {
                 $brands = \OlaHub\UserPortal\Models\Brand::whereIn('id', $brands)->get();
                 foreach ($brands as $brand) {
@@ -1470,6 +1727,28 @@ class OlaHubGeneralController extends BaseController
                     ];
                 }
             }
+            if (isset($categories)) {
+                $categoryS = DB::table('catalog_item_categories')->whereIn('id', $categories)->get();
+                foreach ($categoryS as $category) {
+                    $return['categories']['data'][] = [
+                        "categoryID" => isset($category->id) ? $category->id : 0,
+                        'categoryName' => isset($category->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name") : NULL,
+                        'categorySlug' => isset($category->category_slug) ? $category->category_slug : null
+                    ];
+                }
+            }
+            if (isset($occasions)) {
+                $occasionS = DB::table('occasion_types')->whereIn('id', $occasions)->get();
+                foreach ($occasionS as $occasion) {
+                    $return['occasions']['data'][] = [
+                        "occasionID" => isset($occasion->id) ? $occasion->id : 0,
+                        'occasionName' => isset($occasion->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion, "name") : NULL,
+                        'occasionLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->logo_ref),
+                        'occasionSlug' => isset($occasion->occasion_slug) ? $occasion->occasion_slug : null
+                    ];
+                }
+            }
+        
             if (isset($designers)) {
                 $designers = \OlaHub\UserPortal\Models\Designer::whereIn('id', $designers)->get();
                 foreach ($designers as $designer) {
