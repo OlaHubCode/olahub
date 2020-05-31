@@ -406,7 +406,8 @@ class OlaHubGuestController extends BaseController
             app('session')->put('tempData', $userData);
             $logHelper->setLog($this->requestData, ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 'loginWithFacebook', $this->userAgent);
 
-            return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 200);
+            $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+            return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => Crypt::encrypt(json_encode($u), false), 'code' => 200], 200);
         }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []]]);
         $log->saveLogSessionData();
@@ -871,7 +872,8 @@ class OlaHubGuestController extends BaseController
                 $this->userHelper->addUserLogin($this->requestData, $userData->id, true);
                 $logHelper->setLog($this->requestData, ['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 'checkSecureActive', $this->userAgent);
 
-                return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' => \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler'), 'code' => 200], 200);
+                $u = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
+                return response(['status' => true, 'logged' => true, 'token' => $userSession->hash_token, 'userInfo' =>  Crypt::encrypt(json_encode($u), false), 'code' => 200], 200);
             }
             // $checkUserSession = $this->userHelper->checkUserSession($userData, $this->userAgent, $this->requestData['userCode']);
 
