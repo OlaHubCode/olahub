@@ -34,6 +34,7 @@ $router->group([], function () use ($router) {
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
+    $router->post('contactUs', 'OlaHubGeneralController@contactUs');
     $router->group([
         'middleware' => ['checkAuth'],
     ], function () use ($router) {

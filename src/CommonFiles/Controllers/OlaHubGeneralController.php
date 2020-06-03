@@ -25,6 +25,12 @@ class OlaHubGeneralController extends BaseController
         $this->requestShareData = $return['requestData'];
         $this->userInfo = NULL;
     }
+    public function contactUs()
+    {
+      
+                (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
+                return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200,], 200);
+    }
 
     public function setAdsStatisticsData($getFrom)
     {
