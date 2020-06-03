@@ -889,6 +889,53 @@ class OlaHubGeneralController extends BaseController
 
                 //celebration
                 try {
+                    $nonSeenCelebrations = \OlaHub\UserPortal\Models\CelebrationModel::whereRaw('celebration_date <= now()')
+                        ->where('seen', 0)
+                        ->where('celebration_status', '>=', 3)
+                        ->where('user_id', app('session')->get('tempID'))
+                        ->orderBy('celebration_date', 'desc')->get();
+                    if ($nonSeenCelebrations->count() > 0) {
+                        foreach ($nonSeenCelebrations as $celebration) {
+                            //users
+                            $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)->get();
+                            $cUsersNames = [];
+                            $cUsers = [];
+                            foreach ($participants as $participant) {
+                                $u = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
+                                $video = \OlaHub\UserPortal\Models\CelebrationContentsModel::where('created_by', $participant->id)->first();
+                                $cUsersNames[] = "$u->first_name $u->last_name";
+                                if (isset($video->reference) || isset($participant->personal_message)) {
+                                    $cUsers[] = [
+                                        "username" => "$u->first_name $u->last_name",
+                                        "video" => isset($video->reference) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($video->reference) : NULL,
+                                        "message" => $participant->personal_message
+                                    ];
+                                }
+                            }
+                            //gifts
+                            $bill = \DB::table('billing_history')->select("*")->where('pay_for', $celebration->id)->first();
+                            $cItems = \OlaHub\UserPortal\Models\UserBillDetails::where('billing_id', $bill->id)->get();
+                            $cGifts = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cItems, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemResponseHandler');
+
+                            $all[] = [
+                                'type' => 'celebration',
+                                'date' => $celebration->celebration_date,
+                                'title' => $celebration->title,
+                                'items' => $cGifts['data'],
+                                'users' => $cUsersNames,
+                                'media' => $cUsers,
+                            ];
+                        }
+                        \OlaHub\UserPortal\Models\CelebrationModel::whereRaw('celebration_date <= now()')
+                            ->where('seen', 0)
+                            ->where('celebration_status', '>=', 3)
+                            ->where('user_id', app('session')->get('tempID'))
+                            ->update(["seen" => 1]);
+                    }
+                } catch (Exception $ex) {
+                }
+                //celebration media
+                try {
                     $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->get();
                     if ($participants->count() > 0) {
                         foreach ($participants as $participant) {
@@ -1046,9 +1093,12 @@ class OlaHubGeneralController extends BaseController
                 if (!$friends)
                     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($friends) {
+                    ->where(function ($q) use ($friends, $myGroups) {
                         $q->where(function ($query) use ($friends) {
                             $query->whereIn('user_id', $friends);
+                        });
+                        $q->orWhere(function ($query) use ($myGroups) {
+                            $query->whereIn('group_id', $myGroups);
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
