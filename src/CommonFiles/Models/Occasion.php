@@ -75,15 +75,20 @@ class Occasion extends Model
     static function getStoreForAdsBySlug($slug)
     {
         $occassions = Occasion::where('occasion_slug', $slug)->first();
+        $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $occassions->id)
+        ->where('type', 4)->first();
         $return = [
             'storeName' => NULL,
             'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
         ];
         if ($occassions) {
             $return = [
+                'id' => $occassions->id,
                 'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassions, 'name'),
                 'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occassions->logo_ref),
             ];
+            $return['followed'] = isset($follow) ? true : false;
+
         }
 
         return $return;
