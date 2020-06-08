@@ -17,6 +17,7 @@ class OlaHubGuestController extends BaseController
     protected $userAgent;
     protected $userHelper;
     protected $ipInfo;
+    protected $lang;
 
     public function __construct(Request $request)
     {
@@ -26,6 +27,7 @@ class OlaHubGuestController extends BaseController
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
         $this->requestCart = $return['requestCart'];
+        $this->lang = $request->header('language');
         if ($request->header('uniquenum')) {
             $this->userAgent = $request->header('uniquenum');
         } else {
@@ -907,6 +909,13 @@ class OlaHubGuestController extends BaseController
         $return['code'] = 200;
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
         $logHelper->setLog("", $return, 'getAllInterests', $this->userAgent);
+        return response($return, 200);
+    }
+
+    public function subscribe()
+    {
+        // $this->requestData['email']
+        $return = ['status' => true, 'msg' => 'successSubscribe'];
         return response($return, 200);
     }
 }

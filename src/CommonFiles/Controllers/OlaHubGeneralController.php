@@ -86,6 +86,7 @@ class OlaHubGeneralController extends BaseController
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
             $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text');
+            // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
         }
         $return['allCountries'] = $allCountries;
         $actionData["action_endData"] = json_encode(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler'));
