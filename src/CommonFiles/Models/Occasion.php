@@ -47,12 +47,27 @@ class Occasion extends Model
 
     static function getBannerBySlug($slug)
     {
+        // $occasion = Occasion::where('occasion_slug', $slug)->first();
+        // if ($occasion && $occasion->banner_ref) {
+        //     return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->banner_ref);
+        // } else {
+        //     return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
+        // }
+
+        
+        $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner')];
+        $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $occasion = Occasion::where('occasion_slug', $slug)->first();
-        if ($occasion && $occasion->banner_ref) {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->banner_ref);
-        } else {
-            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
+        if ($occasion) {
+            $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $occasion->id)
+                ->where('type', 4)->first();
+            $return['id'] = $occasion->id;
+            $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->banner_ref, 'shop_banner')];
+            $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion, 'name');
+            $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->logo_ref);
+            $return['followed'] = isset($follow) ? true : false;
         }
+        return $return;
     }
 
     static function getBannerByIDS($ids)
@@ -76,7 +91,7 @@ class Occasion extends Model
     {
         $occassions = Occasion::where('occasion_slug', $slug)->first();
         $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $occassions->id)
-        ->where('type', 4)->first();
+            ->where('type', 4)->first();
         $return = [
             'storeName' => NULL,
             'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
@@ -88,7 +103,6 @@ class Occasion extends Model
                 'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occassions->logo_ref),
             ];
             $return['followed'] = isset($follow) ? true : false;
-
         }
 
         return $return;

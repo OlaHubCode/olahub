@@ -2,14 +2,16 @@
 
 namespace OlaHub\UserPortal\Models;
 
-class ItemCategory extends \Illuminate\Database\Eloquent\Model {
+class ItemCategory extends \Illuminate\Database\Eloquent\Model
+{
 
     /**
      * The table associated with the model.
      *
      * @var string
      */
-    public function __construct(array $attributes = array()) {
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
     }
 
@@ -30,23 +32,28 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
         ],
     ];
 
-    public function countryRelation() {
+    public function countryRelation()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ManyToMany\ItemCountriesCategory', 'category_id');
     }
 
-    public function childsData() {
+    public function childsData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemCategory', 'parent_id');
     }
 
-    public function parentCategory() {
+    public function parentCategory()
+    {
         return $this->belongsTo('OlaHub\UserPortal\Models\ItemCategory', 'parent_id');
     }
 
-    public function itemsMainData() {
+    public function itemsMainData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'category_id');
     }
 
-    static function setReturnResponse($categories, $itemsIDs = false) {
+    static function setReturnResponse($categories, $itemsIDs = false)
+    {
         $return['data'] = [];
         foreach ($categories as $category) {
             $catData = [
@@ -54,16 +61,16 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
                 "classSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($category, 'category_slug', \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name')),
                 "className" => isset($category->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name') : NULL,
             ];
-            
+
             $catData['childsData'] = [];
             if ($itemsIDs) {
-                $childs = $category->childsData()->whereHas('itemsMainData', function($q) use($itemsIDs) {
-                            $q->whereIn('id', $itemsIDs);
-                        })->get();
+                $childs = $category->childsData()->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                    $q->whereIn('id', $itemsIDs);
+                })->get();
             } else {
-                $childs = $category->childsData()->has('itemsMainData')->whereHas('countryRelation', function($q) {
-                            $q->where('country_id', app('session')->get('def_country')->id);
-                        })->get();
+                $childs = $category->childsData()->has('itemsMainData')->whereHas('countryRelation', function ($q) {
+                    $q->where('country_id', app('session')->get('def_country')->id);
+                })->get();
             }
             foreach ($childs as $child) {
                 $catData['childsData'][] = [
@@ -77,22 +84,36 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
         return (array) $return;
     }
 
-    static function getBannerBySlug($slug) {
+    static function getBannerBySlug($slug)
+    {
+        // $category = ItemCategory::where('category_slug', $slug)->first();
+        // $return['id'] = $category->id;
+        // if ($category && $category->banner_ref) {
+        //     $return[] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref);
+        //     return $return;
+        // } else {
+        //     $return[] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
+        //     return $return;
+        // }
+
+
+        $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner')];
+        $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $category = ItemCategory::where('category_slug', $slug)->first();
-       $return['id']=$category->id;
-        if ($category && $category->banner_ref) {
-            $return[]=\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref);
-            return $return;
-        } else {
-            $return[]= \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
-            return $return;
+        if ($category) {
+            $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $category->id)
+                ->where('type', 3)->first();
+            $return['id'] = $category->id;
+            $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref, 'shop_banner')];
+            $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name');
+            $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->image_ref);
+            $return['followed'] = isset($follow) ? true : false;
         }
-
-
-
+        return $return;
     }
 
-    static function getBannerByIDS($ids) {
+    static function getBannerByIDS($ids)
+    {
         $categories = ItemCategory::whereIn('id', $ids)->whereNotNull('banner_ref')->get();
         $return = [];
         if ($categories->count() > 1) {
@@ -108,7 +129,8 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
         return $return;
     }
 
-    static function getIDsByID($ids) {
+    static function getIDsByID($ids)
+    {
         if (is_array($ids)) {
             $return = $ids;
         } else {
@@ -121,7 +143,8 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
         return $return;
     }
 
-    static function getIDsBySlug($value) {
+    static function getIDsBySlug($value)
+    {
         $return = [];
         $category = ItemCategory::where('category_slug', $value)->first();
         if ($category) {
@@ -135,8 +158,9 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
 
         return $return;
     }
-    
-    static function getStoreForAdsBySlug($slug) {
+
+    static function getStoreForAdsBySlug($slug)
+    {
         $category = ItemCategory::where('category_slug', $slug)->first();
         $return = [
             'storeName' => NULL,
@@ -144,24 +168,22 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model {
         ];
         if ($category) {
             $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $category->id)
-            ->where('type', 3)->first();
-            if($category->parent_id>0){
+                ->where('type', 3)->first();
+            if ($category->parent_id > 0) {
                 $return = [
                     'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name'),
                     'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref),
                 ];
+            } else {
+                $return = [
+                    'id' => $category->id,
+                    'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name'),
+                    'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref),
+                ];
             }
-            else{
-            $return = [
-                'id' => $category->id,
-                'storeName' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name'),
-                'storeLogo' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref),
-            ];}
             $return['followed'] = isset($follow) ? true : false;
-
         }
 
         return $return;
     }
-
 }

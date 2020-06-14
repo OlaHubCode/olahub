@@ -68,10 +68,8 @@ class groups extends Model
     {
         $groupsModel = (new groups)->newQuery();
         $groupsModel->where(function ($query) use ($q) {
-            $query->whereRaw('LOWER(`name`) sounds like ?', $q)
-                ->orWhereRaw('LOWER(`name`)  like ?', "%" . $q . "%")
-                ->orWhereRaw('LOWER(`description`) sounds like ?', $q)
-                ->orWhereRaw('LOWER(`description`)  like ?', "%" . $q . "%");
+            $query->whereRaw('LOWER(`name`)  like ?', "%$q%")
+                ->orWhereRaw('LOWER(`description`)  like ?', "%$q%");
         })->whereIn("privacy", [2, 3]);
 
 

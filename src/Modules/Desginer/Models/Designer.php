@@ -11,8 +11,7 @@ class Designer extends Model
 
     static function searchDesigners($q = 'a', $count = 15)
     {
-        $designers = Designer::where("brand_name", 'LIKE', "%$q%")
-            ->orWhereRaw('LOWER(`brand_name`)  like ?', array("%" . $q . "%"));
+        $designers = Designer::whereRaw('LOWER(`brand_name`) like ?', "%$q%");
         if ($count > 0) {
             return $designers->paginate($count);
         } else {

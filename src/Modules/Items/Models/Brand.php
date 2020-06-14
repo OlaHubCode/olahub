@@ -75,8 +75,7 @@ class Brand extends Model
 
     static function searchBrands($q = 'a', $count = 15)
     {
-        $brands = Brand::whereRaw('LOWER(`name`) sounds like ?', $q)
-            ->orWhereRaw('LOWER(`name`)  like ?', array("%" . $q . "%"));
+        $brands = Brand::whereRaw('LOWER(`name`) like ?', "%$q%");
         if ($count > 0) {
             return $brands->paginate($count);
         } else {

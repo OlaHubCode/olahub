@@ -29,6 +29,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
 
     static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL, $celebration = NULL)
     {
+        $promoSave = CountriesShipping::checkPromoCode($cart);
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($defaultCountry);
         $currency = $country->currencyData;
         $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
@@ -37,7 +38,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         $chkItems = \OlaHub\UserPortal\Models\CartItems::with('itemsData')->where('shopping_cart_id', $cart->id)->get()->toArray();
         $checkVoucherItems = \OlaHub\UserPortal\Models\CartItems::checkIfItemsNotVoucher($chkItems);
 
-        if ($checkVoucherItems) {
+        if ($checkVoucherItems || $promoSave) {
             return array(
                 'total' => 0,
                 'shipping' => array(['country' => NULL, 'amount' => "0.00 " . $transCur]),
@@ -100,5 +101,21 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                 'saving' => $shippingSavings
             );
         }
+    }
+
+    static function checkPromoCode($cart)
+    {
+        if ($cart->promo_code_id) {
+            $coupon = \OlaHub\UserPortal\Models\Coupon::find($cart->promo_code_id);
+            if ($coupon) {
+                $checkValid = (new \OlaHub\UserPortal\Helpers\CouponsHelper)->checkCouponValid($coupon);
+                if ($checkValid == "valid") {
+                    if ($coupon->code_for == "cart" && $coupon->unique_code == 'Pro%916') {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
