@@ -29,6 +29,7 @@ class OlaHubPaymentsMainController extends BaseController
     protected $shippingFees = 0;
     protected $cashOnDeliver = 0;
     protected $promoCodeSave = 0;
+    protected $promoCodeName;
     protected $total;
     protected $currency;
     protected $celebrationID;
@@ -170,10 +171,12 @@ class OlaHubPaymentsMainController extends BaseController
         $promoID = $this->cart ? $this->cart->promo_code_id : $this->billing->promo_code_id;
         if ($promoID) {
             $coupon = \OlaHub\UserPortal\Models\Coupon::find($promoID);
+            
             if ($coupon) {
                 $checkValid = (new \OlaHub\UserPortal\Helpers\CouponsHelper)->checkCouponValid($coupon);
                 if ($checkValid == "valid") {
                     if ($coupon->code_for == "cart") {
+                        $this->promoCodeName = $coupon->unique_code;
                         $this->promoCodeSave = (new \OlaHub\UserPortal\Helpers\CouponsHelper)->checkCouponCart($coupon, $cartSubTotal, $this->cart, $recordUse);
                     }
                 }
@@ -185,16 +188,26 @@ class OlaHubPaymentsMainController extends BaseController
     {
         $this->cartTotal = (float) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
         $this->checkPromoCode($this->cartTotal);
-        $this->shippingFees = $this->cart->shipment_fees;
-        if ($withExtra) {
-            if ($this->paymentMethodCountryData) {
-                $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
+        if($this->promoCodeName == 'June2020'){
+            $this->shippingFees =0;    
+        }else{
+            $this->shippingFees = $this->cart->shipment_fees;
+            if ($withExtra) {
+                if ($this->paymentMethodCountryData) {
+                    $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
+                }
             }
         }
+
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
         if ($this->celebration) {
-            $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration);
-            $this->shippingFees = $shippingFees['total'];
+            if($this->promoCodeName== 'June2020'){
+                $this->shippingFees=0;
+            }else{
+                $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration);
+                $this->shippingFees = $shippingFees['total'];
+            }
+            
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
             // $this->cartTotal = $participant->amount_to_pay - $this->shippingFees;
