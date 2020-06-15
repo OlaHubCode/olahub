@@ -169,29 +169,21 @@ class OlaHubUserController extends BaseController
     public function updateUserData()
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         
-        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "updateUserData"]);
         if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
         }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-        // if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) <= 0) {
-        //     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]]]);
-        //     $log->saveLogSessionData();
-        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
-        // }
+       
         $userData = app('session')->get('tempData');
 
         /*** check changes ***/
@@ -289,18 +281,17 @@ class OlaHubUserController extends BaseController
         $userData->save();
     
         
-    //  $log->UpdateLog($userData->id, $this->requestData);
 
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
         $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
         $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
+       
+        $log->saveLog($userData->id, $this->requestData, 'update_profile');
+        $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
         // $log->setLogSessionData(['response' => $return]);
         // $log->saveLogSessionData();
-        $log->UpdateLog($userData->id, $this->requestData, 'update_profile');
-        // print_r($userData);
-        $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Upload User Data');
+
         return response($return, 200);
     }
 

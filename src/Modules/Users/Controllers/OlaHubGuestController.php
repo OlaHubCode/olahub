@@ -120,8 +120,8 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
 
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
         $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
