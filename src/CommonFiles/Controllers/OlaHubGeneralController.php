@@ -139,7 +139,30 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response($return, 200);
     }
+    // public function getFriendsToMention($FriendNameToFind)
+    // {
+    //     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+    //     if (count($friends) > 0) {
+    //             $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->Where('first_name', 'LIKE',"%$FriendNameToFind%")->take(5)->get();
+    //             foreach ($friends as $friend) {
+    //                 $return['data'][] = [
+    //                     "profile" => $friend->id,
+    //                     "username" =>ucwords($friend->first_name)  . ' ' . ucwords( $friend->last_name),
+    //                     "profile_url" => $friend->profile_url,
+    //                     "user_gender" => isset($friend->user_gender) ? $friend->user_gender : NULL,
+    //                     "avatar_url" => isset($friend->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
+    //                     "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
+    //                 ];
+    //             }
+            
 
+           
+    //     }
+    //     if(count($friends)>0){ $return['status'] = TRUE;
+    //         $return['code'] = 200;
+    //         return response($return, 200);}
+    //     return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    // }
     public function getSocialAccounts()
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get social accounts"]);

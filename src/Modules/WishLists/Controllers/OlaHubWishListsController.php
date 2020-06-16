@@ -167,7 +167,7 @@ class OlaHubWishListsController extends BaseController {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "WishLists", 'function_name' => "getWishlistOccasions"]);
         
-        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->get();
+        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->where('is_published',1)->get();
         if ($occassionsCountry->count() < 1) {
             $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'notInWishlist', 'code' => 204]]);
             $log->saveLogSessionData();
