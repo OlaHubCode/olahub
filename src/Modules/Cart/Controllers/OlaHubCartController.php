@@ -25,10 +25,11 @@ class OlaHubCartController extends BaseController
     protected $uploadVideoData;
     private $countryId;
     private $lang;
-
+    private $request;
     public function __construct(Request $request)
     {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
+        $this->request =  $return['requestData'];
         $this->requestData = (object) $return['requestData'];
         $this->requestFilter = (object) $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
@@ -216,6 +217,8 @@ class OlaHubCartController extends BaseController
 
     public function newCartItem($itemType = "store", $type = "default")
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Cart::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
@@ -230,16 +233,25 @@ class OlaHubCartController extends BaseController
             $return = [];
             $return['status'] = TRUE;
             $return['code'] = 200;
+            //    var_dump($requestData);
+            //     return;
         } else {
             throw new NotAcceptableHttpException(404);
         }
-        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-        $logHelper->setLog($this->requestData, $return, 'newCartItem', $this->userAgent);
+        // var_dump($this->request);
+        // return;
+        $log->saveLog($userData->id, $this->request, 'Add To Cart ');
+
+
+        // $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
+        // $logHelper->setLog($this->requestData, $return, 'newCartItem', $this->userAgent);
         return response($return, 200);
     }
 
     public function removeCartItem($itemType = "store", $type = "default")
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $return = ['status' => FALSE, 'msg' => 'ProductNotCart', 'code' => 204];
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Cart::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -247,6 +259,8 @@ class OlaHubCartController extends BaseController
         }
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
+            $log->saveLog($userData->id, $this->request, 'Add To Cart ');
+
             return response($checkPermission, 200);
         }
         $this->checkCart($type);
@@ -258,6 +272,8 @@ class OlaHubCartController extends BaseController
             if ($data) {
                 if ($this->celebration) {
                     if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {
+                        $log->saveLog($userData->id, $this->request, 'Add To Cart ');
+
                         return response(['status' => false, 'msg' => 'NotAllowToDeleteThisGift', 'code' => 400], 200);
                     }
                 }

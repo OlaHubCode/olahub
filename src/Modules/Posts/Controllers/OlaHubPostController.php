@@ -235,8 +235,11 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
+        
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
@@ -329,8 +332,10 @@ class OlaHubPostController extends BaseController
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => $return]);
+        // $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Add Post');
+
         return response($return, 200);
     }
 
@@ -397,8 +402,8 @@ class OlaHubPostController extends BaseController
 
     public function addNewComment()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewComment"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
@@ -456,8 +461,8 @@ class OlaHubPostController extends BaseController
                 }
             }
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Add Comment');
+
         return response($return, 200);
     }
 
@@ -519,9 +524,8 @@ class OlaHubPostController extends BaseController
 
     public function addNewReply()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $commentId = $this->requestData['comment_id'];
@@ -578,8 +582,8 @@ class OlaHubPostController extends BaseController
                 $return['code'] = 200;
             }
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Reply');
+
         return response($return, 200);
     }
 

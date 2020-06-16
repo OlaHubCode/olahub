@@ -19,7 +19,8 @@ class OlaHubGeneralController extends BaseController
     public function __construct(Request $request)
     {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
-        $this->requestData = (object) $return['requestData'];
+        // $this->requestData = (object) $return['requestData'];
+        $this->requestData = $return['requestData'];
         $this->requestFilter = (object) $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
         $this->requestShareData = $return['requestData'];
@@ -1728,6 +1729,9 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
@@ -1739,6 +1743,7 @@ class OlaHubGeneralController extends BaseController
             $following->type = 4;
         } else  $following->type = 2;
         $following->save();
+        $log->saveLog($userData->id, $this->requestData, 'follow_brand');
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 

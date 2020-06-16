@@ -55,15 +55,16 @@ class CalendarController extends BaseController {
     
     public function createNewCalendar(){
         
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Create new calendar"]);
-        
+        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Create new calendar"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CalendarModel::$columnsMaping, (array) $this->requestData);
         if(isset($validator['status']) && !$validator['status']){
              (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
              (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
-                $loginedUser = app('session')->get('tempData');
+              //  $loginedUser = app('session')->get('tempData');
                 $calendar = new CalendarModel;
                 
                 foreach ($this->requestData as $input => $value){
@@ -75,19 +76,23 @@ class CalendarController extends BaseController {
                     }
 
                 }
-                $calendar->user_id = $loginedUser->id;
+                $calendar->user_id = $userData->id;
                 $saved = $calendar->save();
                 if($saved){
                     $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($calendar, '\OlaHub\UserPortal\ResponseHandlers\CalendarsResponseHandler');
                     $return['status'] = true;
 
                     $return['code'] = 200;
-                    (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
-                    (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                    // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
+                    // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                    $log->saveLog($userData->id, $this->requestData, 'Add Calender');
+
                     return response($return, 200);
                 }
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'Internal Server Error', 'code' => 500]]);
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+        // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'Internal Server Error', 'code' => 500]]);
+        // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Add Calender');
+
         return response(['status' => false, 'msg' => 'InternalServerError', 'code' => 500], 200);
     }
     
@@ -115,31 +120,40 @@ class CalendarController extends BaseController {
     }
     
     public function deleteUserCalendar($id){
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
         
-         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Delete user calendar"]);
+       //  (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Delete user calendar"]);
        
             $calendar = CalendarModel::where('user_id',app('session')->get('tempID'))->where('id',$id)->first();
             $return = $calendar->delete();
+                $log->saveLog($userData->id, $this->requestData, 'Delete Calender');
             if($return){
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete user calender"]);
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete user calender"]);
                 
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'calendarDeletedSuccussfully', 'code' => 200]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'calendarDeletedSuccussfully', 'code' => 200]]);
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
                 return response(['status' => true, 'msg' => 'calendarDeletedSuccussfully', 'code' => 200], 200);
             }
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
     
     public function updateUserCalendar($id){
         
-         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Update user calendar"]);
-       
+        //  (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Update user calendar"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CalendarModel::$columnsMaping, (array) $this->requestData);
         if(isset($validator['status']) && !$validator['status']){
-                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                //  (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                $log->saveLog($userData->id, $this->requestData, 'Update Calender');
+
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
                 $calendar = CalendarModel::where('user_id',app('session')->get('tempID'))->where('id',$id)->first();
@@ -155,18 +169,21 @@ class CalendarController extends BaseController {
                    
                 }
                 $updated = $calendar->save();
+                    $log->saveLog($userData->id, $this->requestData, 'Update Calender');
                 if($updated){
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "User calender updated"]);
                     
                     $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($calendar, '\OlaHub\UserPortal\ResponseHandlers\CalendarsResponseHandler');
                     $return['status'] = true;
                     $return['code'] = 200;
-                    (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
-                    (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                    // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
+                    // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
                     return response($return, 200);
                 }
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'InternalServerError', 'code' => 500]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'InternalServerError', 'code' => 500]]);
+                // (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
                 return response(['status' => false, 'msg' => 'InternalServerError', 'code' => 500], 200);
     }
     
