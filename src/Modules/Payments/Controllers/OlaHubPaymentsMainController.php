@@ -610,7 +610,7 @@ class OlaHubPaymentsMainController extends BaseController
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderDirect($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (!empty(app('session')->get('tempData')->email)) {
-            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
+            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing, $this->grouppedMers);
         }
         if (!empty(app('session')->get('tempData')->mobile_no)) {
             (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderDirect(app('session')->get('tempData'), $this->billing);
