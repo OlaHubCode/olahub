@@ -133,12 +133,11 @@ class OlaHubWishListsController extends BaseController
         }
     }
 
-    public function getWishlistOccasions()
-    {
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
-        $userData = app('session')->get('tempData');
-
-        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->get();
+    public function getWishlistOccasions() {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "WishLists", 'function_name' => "getWishlistOccasions"]);
+        
+        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->where('is_published',1)->get();
         if ($occassionsCountry->count() < 1) {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
