@@ -304,4 +304,40 @@ class FriendController extends BaseController
         $log->saveLogSessionData();
         return response(['status' => FALSE, 'msg' => 'NoData', 'code' => 204], 200);
     }
+    public function blockUser()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "blockUser"]);
+
+        if (isset($this->requestData['user_id'])) {
+            $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['user_id'])->first();
+            $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
+            if ($user && $friend) {
+                $relation = \OlaHub\UserPortal\Models\Friends::whereRaw("user_id = $user->id and  friend_id = $friend->id")
+                ->orWhereRaw("friend_id = $user->id and  user_id = $friend->id")->first();
+                if($relation){
+                  if($relation->status == 1 && $relation->user_id == app('session')->get('tempID')){
+                    $relation->status = 3;
+                  } else {
+                    $relation->status = 4;
+                  }
+                  $relation->save();
+                } else {
+                    $friendID = $friend->id;
+                    $requests = (new \OlaHub\UserPortal\Models\Friends);
+                    $requests->user_id = $user->id;
+                    $requests->friend_id = $friendID;
+                    $requests->status = 3;
+                    $requests->save();
+                }
+                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'blockedSuccessfully', 'code' => 200]]);
+                $log->saveLogSessionData();
+                return response(['status' => TRUE, 'msg' => 'blockedSuccessfully', 'code' => 200], 200);
+            }
+        }
+        $log->setLogSessionData(['response' => ['status' => FALSE, 'message' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        response(['status' => FALSE, 'message' => 'NoData', 'code' => 204], 200);
+    }
+
 }
