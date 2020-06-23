@@ -110,7 +110,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
             if ($coupon) {
                 $checkValid = (new \OlaHub\UserPortal\Helpers\CouponsHelper)->checkCouponValid($coupon);
                 if ($checkValid == "valid") {
-                    if ($coupon->code_for == "cart" && $coupon->unique_code == 'Pro%916') {
+                    if ($coupon->code_for == "cart" && $coupon->unique_code == 'June2020') {
                         return true;
                     }
                 }
