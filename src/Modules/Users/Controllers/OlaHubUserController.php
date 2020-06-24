@@ -5,6 +5,7 @@ namespace OlaHub\UserPortal\Controllers;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
+use OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\UserShippingAddressModel;
 use Illuminate\Support\Facades\Crypt;
 
@@ -321,6 +322,21 @@ class OlaHubUserController extends BaseController
             $user->profile_picture = $imagePath;
             $saved = $user->save();
             if ($saved) {
+                //add photo as post
+                $post = new Post;
+                $post->user_id = app('session')->get('tempID');
+                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->content = NULL;
+                $post->color = NULL;
+                $post->friend_id = NULL;
+                $post->group_id = NULL;
+                $post->is_approve = 1;
+                $post->post_videos = NULL;
+                $file = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageAsPost($imagePath);
+                $post->post_images = $file;
+                $post->save();
+                //end add photo as post
+
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;
@@ -346,6 +362,22 @@ class OlaHubUserController extends BaseController
             $user->cover_photo = $imagePath;
             $saved = $user->save();
             if ($saved) {
+
+                //add photo as post
+                $post = new Post;
+                $post->user_id = app('session')->get('tempID');
+                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->content = NULL;
+                $post->color = NULL;
+                $post->friend_id = NULL;
+                $post->group_id = NULL;
+                $post->is_approve = 1;
+                $post->post_videos = NULL;
+                $file = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageAsPost($imagePath);
+                $post->post_images = $file;
+                $post->save();
+                //end add photo as post
+
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;

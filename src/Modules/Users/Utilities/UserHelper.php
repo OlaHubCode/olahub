@@ -265,6 +265,7 @@ class UserHelper extends OlaHubCommonHelper
                 mkdir($filePath, 0777, true);
             }
             $path = $userPhoto->move($filePath, $fileNameStore);
+
             if ($user->$columnName) {
                 $oldImage = $user->$columnName;
                 @unlink(DEFAULT_IMAGES_PATH . '/' . $oldImage);
@@ -273,6 +274,25 @@ class UserHelper extends OlaHubCommonHelper
         }
         return $userPhoto;
     }
+
+    function uploadUserImageAsPost( $path = false)
+    {
+        if ($path) {
+            $new_path = DEFAULT_IMAGES_PATH . 'posts/' . app('session')->get('tempID');
+            $path = DEFAULT_IMAGES_PATH . $path;
+            $fileName = explode('/', $path);
+
+            if (!file_exists($new_path)) {
+                mkdir($new_path, 0777, true);
+            }
+
+            @copy($path , $new_path .'/'.  end($fileName));
+            return "posts/" . app('session')->get('tempID') . "/". end($fileName);
+
+        }
+        return $path;
+    }
+
 
     function checkEmailOrPhoneNumber($requestData)
     {
