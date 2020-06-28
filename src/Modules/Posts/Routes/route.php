@@ -3,7 +3,7 @@
 /**
  * MerBankInfos routes
  * Handling URL requests with method type to send to Controller
- * 
+ *
  * @copyright (c) 2018, OlaHub LLC
  * @version 1.0.0
  */
@@ -24,4 +24,6 @@ $router->group([
     $router->post('onePost', 'OlaHubPostController@getOnePost');
     $router->delete('deletePost', 'OlaHubPostController@deletePost');
     $router->put('updatePost', 'OlaHubPostController@updatePost');
+    $router->post('hashTag', 'OlaHubPostController@hashPost');
+
 });

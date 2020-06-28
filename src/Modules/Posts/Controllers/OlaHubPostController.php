@@ -776,4 +776,22 @@ if ($post) {
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
+    public function hashPost(){
+
+          $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+          $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getHashPost"]);
+          $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
+          if (isset($this->requestData['postHash']) && $this->requestData['postHash']) {
+            $hashTag = substr_replace($this->requestData['postHash'], '#'.$this->requestData['postHash'], 0);
+            $post = Post::where('content', 'LIKE', '%' . $hashTag . '%')->paginate(15);
+              if ($post) {
+                  $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                  $return['status'] = TRUE;
+                  $return['code'] = 200;
+              }
+          }
+          $log->setLogSessionData(['response' => $return]);
+          $log->saveLogSessionData();
+          return response($return, 200);
+    }
 }
