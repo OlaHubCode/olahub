@@ -33,6 +33,8 @@ class PurchasedItemsController extends BaseController
      */
     public function getUserPurchasedItems()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $payStatusesData = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("is_success", "1")
             ->orWhere("action_id", 0)
             ->orWhere("action_id", 255)->get();
@@ -45,12 +47,11 @@ class PurchasedItemsController extends BaseController
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($purchasedItem, '\OlaHub\UserPortal\ResponseHandlers\PurchasedItemsResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
-            $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-            $logHelper->setLog($this->requestData, $return, 'getUserPurchasedItems', $this->userAgent);
+            $log->saveLog($userData->id, $this->requestData, 'Remove Friend');
+
             return response($return, 200);
         }
-        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-        $logHelper->setLog($this->requestData, "No data found", 'getUserPurchasedItems', $this->userAgent);
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 

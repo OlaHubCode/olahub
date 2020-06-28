@@ -25,7 +25,9 @@ class CelebrationContentsController extends BaseController
 
     public function addParticipantWishText()
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Add Participant Wish Text"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationContentsModel::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -45,15 +47,17 @@ class CelebrationContentsController extends BaseController
         $participant->save();
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'WishMessageSuccussfully', 'code' => 200]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
+        $log->saveLog($userData->id, $this->requestData, ' add_Participant_Wish_Text');
         return response(['status' => true, 'msg' => 'WishMessageSuccussfully', 'code' => 200], 200);
     }
 
     public function uploadCelebrationVideo()
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Upload celebration video"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $this->requestData = isset($this->uploadVideoData) ? $this->uploadVideoData : [];
+        $log->saveLog($userData->id, $this->requestData, ' upload_Celebration_Video');
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationContentsModel::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -94,9 +98,12 @@ class CelebrationContentsController extends BaseController
 
     public function uploadMediaTopublishedCelebration()
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Upload media to published celebration"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $this->requestData = isset($this->uploadVideoData) ? $this->uploadVideoData : [];
+        $log->saveLog($userData->id, $this->requestData, ' upload_Media_Topublished_Celebration');
+
         if (isset($this->requestData) && count($this->requestData) > 0) {
 
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->where('celebration_id', $this->requestData['celebrationId'])->first();
@@ -158,7 +165,10 @@ class CelebrationContentsController extends BaseController
 
     public function removeCelebrationVideo()
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "remove media from celebration"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' remove_Celebration_Video');
+
         if (isset($this->requestData) && count($this->requestData) > 0) {
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('id', $this->requestData['celebrationUser'])
                 ->where('celebration_id', $this->requestData['celebrationId'])->first();
@@ -184,8 +194,9 @@ class CelebrationContentsController extends BaseController
 
     public function scheduleCelebration()
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Schedule celebration"]);
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' schedule_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Checking if celebration existance to schedule"]);
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId']) {
             $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $this->requestData['celebrationId'])->where('created_by', app('session')->get('tempID'))->first();
@@ -249,6 +260,9 @@ class CelebrationContentsController extends BaseController
 
     public function changeDateBeforeSchedule()
     {
+            $log = new \OlaHub\UserPortal\Helpers\Logs();
+            $userData = app('session')->get('tempData');
+            $log->saveLog($userData->id, $this->requestData, ' change_Date_Before_Schedule');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Change date before schedule"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start changing date for schedule"]);

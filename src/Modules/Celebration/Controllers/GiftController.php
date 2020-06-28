@@ -25,6 +25,9 @@ class GiftController extends BaseController
 
     public function commitCelebration()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' commit_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Commit celebration"]);
 
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId']) {
@@ -92,6 +95,9 @@ class GiftController extends BaseController
 
     private function updateCommitParticipant()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' update_Commit_Participant');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Update commit participant"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Update commit participant in celebration"]);
@@ -121,6 +127,9 @@ class GiftController extends BaseController
 
     private function updateCommitCart()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' update_Commit_Cart');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Update commit cart"]);
 
         $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('celebration_id', $this->requestData['celebrationId'])->first();
@@ -221,6 +230,9 @@ class GiftController extends BaseController
 
     public function likeCelebrationGift()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' like_Celebration_Gift');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Like celebration gift"]);
 
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0 && isset($this->requestData['celebrationGiftId']) && $this->requestData['celebrationGiftId'] > 0) {

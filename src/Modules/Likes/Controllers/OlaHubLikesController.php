@@ -45,7 +45,8 @@ class OlaHubLikesController extends BaseController
 
     public function newLikedItemsUser()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "newLikedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
@@ -60,12 +61,17 @@ class OlaHubLikesController extends BaseController
 
         $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newLikedItemsUser', 'code' => 200]]);
         $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Like_Item');
+
         return response(['status' => TRUE, 'code' => 200], 200);
     }
 
     public function removeLikedItemsUser()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+       
         $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "removeLikedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
@@ -78,6 +84,8 @@ class OlaHubLikesController extends BaseController
             ->where('user_id', app('session')->get('tempID'))->delete();
         $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'unlikeProductNow', 'code' => 200]]);
         $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Unlike_Item');
+
         return response(['status' => TRUE, 'code' => 200], 200);
     }
 
