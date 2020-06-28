@@ -1199,42 +1199,8 @@ class OlaHubGeneralController extends BaseController
                 }
             } catch (Exception $ex) {
             }
-        }
 
-        // merchants
-        $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
-        foreach ($merchants as $merchant) {
-            $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
-        }
-        // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
-        foreach ($designers as $designer) {
-            $timeline[] = $this->handlePostTimeline($designer, 'designer');
-        }
-
-        // brand items
-        $bItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
-            $q->where('quantity', '>', 0);
-        })->where(function ($query) {
-            $query->whereNull('parent_item_id');
-            $query->orWhere('parent_item_id', '0');
-        })->whereRaw($month)->inRandomOrder()->paginate(30);
-        $itemsBrands = [];
-        foreach ($bItems as $item) {
-            if (!isset($itemsBrands[$item->store_id]))
-                $itemsBrands[$item->store_id] = [];
-            array_push($itemsBrands[$item->store_id], $item);
-        }
-        foreach ($itemsBrands as $m => $im) {
-            if (count($im) == 1) {
-                if (is_object($im))
-                    $timeline[] = $this->handlePostTimeline($im, 'item');
-            } else {
-                $timeline[] = $this->handlePostTimeline($im, 'multi_item');
-            }
-        }
-        // Category items
-        $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
+            $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
             ->select('catalog_item_categories.id')
             ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
         $categoryIds = [];
@@ -1334,6 +1300,42 @@ class OlaHubGeneralController extends BaseController
             }
         }
 
+        }
+
+        // merchants
+        $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        foreach ($merchants as $merchant) {
+            $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
+        }
+        // designers
+        $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        foreach ($designers as $designer) {
+            $timeline[] = $this->handlePostTimeline($designer, 'designer');
+        }
+
+        // brand items
+        $bItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
+            $query->whereNull('parent_item_id');
+            $query->orWhere('parent_item_id', '0');
+        })->whereRaw($month)->inRandomOrder()->paginate(30);
+        $itemsBrands = [];
+        foreach ($bItems as $item) {
+            if (!isset($itemsBrands[$item->store_id]))
+                $itemsBrands[$item->store_id] = [];
+            array_push($itemsBrands[$item->store_id], $item);
+        }
+        foreach ($itemsBrands as $m => $im) {
+            if (count($im) == 1) {
+                if (is_object($im))
+                    $timeline[] = $this->handlePostTimeline($im, 'item');
+            } else {
+                $timeline[] = $this->handlePostTimeline($im, 'multi_item');
+            }
+        }
+        // Category items
+        
         // designer items
         $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
             $query->whereNull('parent_item_id');
