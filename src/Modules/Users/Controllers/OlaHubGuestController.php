@@ -119,8 +119,11 @@ class OlaHubGuestController extends BaseController
 
     function login()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
+
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
         $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
@@ -187,7 +190,7 @@ class OlaHubGuestController extends BaseController
         if (!empty($userData->invited_by) && empty($userData->invitation_accepted_date)) {
             $userData->invitation_accepted_date = date('Y-m-d');
             $userData->save();
-            $log->setLogSessionData(['user_id' => $userData->id]);
+            // $log->setLogSessionData(['user_id' => $userData->id]);
         }
 
         $userFirstLogin = false;
@@ -204,8 +207,8 @@ class OlaHubGuestController extends BaseController
         }
 
         if (!$status && empty($this->requestData["useSMS"])) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'invalidPassword', 'code' => 204]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'invalidPassword', 'code' => 204]]);
+            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'invalidPassword', 'code' => 204], 200);
         }
         $checkUserSession = $this->userHelper->checkUserSession($userData, $this->userAgent);
@@ -223,20 +226,20 @@ class OlaHubGuestController extends BaseController
 
         if (!isset($userData->is_active) || !$userData->is_active) {
             if ($userData->mobile_no && $userData->email) {
-                $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
+                // $log->saveLogSessionData();
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200], 200);
             } else if ($userData->mobile_no) {
-                $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
+                // $log->saveLogSessionData();
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200], 200);
             } else if ($userData->email) {
-                $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
+                // $log->saveLogSessionData();
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
             }
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'accountNotActive', 'code' => 500]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'accountNotActive', 'code' => 500]]);
+            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'accountNotActive', 'code' => 500], 200);
         }
 
@@ -258,15 +261,15 @@ class OlaHubGuestController extends BaseController
         if ($twostep) {
             if ($userData->email == $this->requestData["userEmail"]) {
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSessionActivation($userData, $this->userAgent, $code);
-                $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'secure', 'token' => false, 'type' => "email", 'code' => 200]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'secure', 'token' => false, 'type' => "email", 'code' => 200]]);
+                // $log->saveLogSessionData();
 
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'secure', 'token' => false, 'type' => "email", 'code' => 200], 200);
             }
             if ($userData->mobile_no == $this->requestData["userEmail"]) {
                 (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendSessionActivation($userData, $this->userAgent, $code);
-                $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'secure', 'token' => false, 'type' => "phoneNumber", 'code' => 200]]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'secure', 'token' => false, 'type' => "phoneNumber", 'code' => 200]]);
+                // $log->saveLogSessionData();
 
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'secure', 'token' => false, 'type' => "phoneNumber", 'code' => 200], 200);
             }
@@ -279,9 +282,10 @@ class OlaHubGuestController extends BaseController
         if ($userFirstLogin) {
             $return["userFirstLogin"] = "1";
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
-
+        // $log->setLogSessionData(['response' => $return]);
+        // $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'login');
+        
         return response($return, 200);
     }
 

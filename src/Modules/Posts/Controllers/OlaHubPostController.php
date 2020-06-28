@@ -268,11 +268,17 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
+        
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
+            
+            // return( str_replace('',"Z",$this->requestData[]));
+            // return($this->requestData['content']);
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
@@ -362,8 +368,10 @@ class OlaHubPostController extends BaseController
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => $return]);
+        // $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Add Post');
+
         return response($return, 200);
     }
 
@@ -430,8 +438,8 @@ class OlaHubPostController extends BaseController
 
     public function addNewComment()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewComment"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
@@ -489,8 +497,8 @@ class OlaHubPostController extends BaseController
                 }
             }
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Add Comment');
+
         return response($return, 200);
     }
 
@@ -524,9 +532,41 @@ class OlaHubPostController extends BaseController
                                 ];
                             }
                         }
+                        $canEdit=false;
+                        $canDelete=false;
+                        $canEditReply=false;
+                        $canDeleteReply=false;
+if( (app('session')->get('tempID'))==$comment->user_id){
+    $canEdit=true;
+    $canDelete=true;
+    
+}
+$post = Post::where('post_id', $this->requestData['postId'])->first();
+if ($post) {
+    if ($post->user_id == app('session')->get('tempID')) {
+        $canDelete=true;
+
+    }
+}
+if( (app('session')->get('tempID'))==$comment->user_id){
+    $canEditReply=true;
+    $canDeleteReply=true;
+    
+}
+if ($post) {
+    if ($post->user_id == app('session')->get('tempID')) {
+        $canDeleteReply=true;
+
+    }
+}
+
                         $return["data"][] = [
                             'comment_id' => $comment->id,
                             'user_id' => $comment->user_id,
+                            'canUpdate' =>$canEdit,
+                            'canDelete'=>$canDelete,
+                            'canEditReply'=>$canEditReply,
+                            'canDeleteReply'=>$canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
@@ -552,9 +592,8 @@ class OlaHubPostController extends BaseController
 
     public function addNewReply()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewReply"]);
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
             $commentId = $this->requestData['comment_id'];
@@ -611,8 +650,8 @@ class OlaHubPostController extends BaseController
                 $return['code'] = 200;
             }
         }
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Reply');
+
         return response($return, 200);
     }
 
@@ -652,7 +691,6 @@ class OlaHubPostController extends BaseController
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
     public function updatePost()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -688,5 +726,105 @@ class OlaHubPostController extends BaseController
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+
+
+
+
+    
+    public function deleteComment()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "PostComments", 'function_name' => "deleteComment"]);
+
+        if (empty($this->requestData['commentId'])) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+     
+
+        $Comment = PostComments::where('Id', $this->requestData['commentId'])->first();
+        $post = Post::where('post_id', $Comment->post_id)->first();
+        if ($Comment) {
+            if ($Comment->user_id != app('session')->get('tempID')&& $post->user_id != app('session')->get('tempID')) {
+                if (isset($Comment->group_id) && $Comment->group_id > 0) {
+                    $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($Comment->group_id);
+                    if (!$group) {
+                        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this Comment', 'code' => 400]]);
+                        $log->saveLogSessionData();
+                        return response(['status' => false, 'msg' => 'Not allow to delete this Comment', 'code' => 400], 200);
+                    }
+                } else {
+                    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to delete this Comment', 'code' => 400]]);
+                    $log->saveLogSessionData();
+                    return response(['status' => false, 'msg' => 'Not allow to delete this Comment', 'code' => 400], 200);
+                }
+            }
+            $Comment->delete = 1;
+            $Comment->save();
+            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You delete Comment successfully', 'code' => 200]]);
+            $log->saveLogSessionData();
+            return response(['status' => true, 'msg' => 'You delete Comment successfully', 'code' => 200], 200);
+        }
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+ 
+    public function updateComment()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "PostComments", 'function_name' => "updateComment"]);
+        if (empty($this->requestData['commentId'])) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+        if (isset($this->requestData['content']) && !$this->requestData['content']) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['content' => ['validation.required']]], 200);
+        }
+        $comment = PostComments::where('Id', $this->requestData['commentId'])->first();
+        if ($comment) {
+            if ($comment->user_id != app('session')->get('tempID')) {
+                $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to edit this comment', 'code' => 400]]);
+                $log->saveLogSessionData();
+                return response(['status' => false, 'msg' => 'Not allow to edit this comment', 'code' => 400], 200);
+            }
+
+            $comment->comment = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            $comment->save();
+            // $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($comment, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            $log->setLogSessionData(['response' => $return]);
+            $log->saveLogSessionData();
+            return response($return, 200);
+        }
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function hashPost(){
+
+          $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+          $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getHashPost"]);
+          $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
+          if (isset($this->requestData['postHash']) && $this->requestData['postHash']) {
+            $hashTag = substr_replace($this->requestData['postHash'], '#'.$this->requestData['postHash'], 0);
+            $post = Post::where('content', 'LIKE', '%' . $hashTag . '%')->paginate(15);
+              if ($post) {
+                  $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                  $return['status'] = TRUE;
+                  $return['code'] = 200;
+              }
+          }
+          $log->setLogSessionData(['response' => $return]);
+          $log->saveLogSessionData();
+          return response($return, 200);
     }
 }

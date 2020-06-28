@@ -64,10 +64,15 @@ class FriendsResponseHandler extends Fractal\TransformerAbstract
             if ($friend->status == 1) {
                 $this->return['friendStatus'] = 'friend';
                 $this->setFriendsOfFriend();
-            } else if ($friend->user_id == $this->data->id)
+            } else if($friend->status == 2) {
+            if ($friend->user_id == $this->data->id)
                 $this->return['friendStatus'] = 'request';
             else if ($friend->friend_id == $this->data->id)
                 $this->return['friendStatus'] = 'response';
+            } else {
+              $this->return = ['friendStatus' => 'block'];
+                // $this->return['friendStatus'] = 'block';
+            }
         }
     }
 

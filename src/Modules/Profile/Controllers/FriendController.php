@@ -156,8 +156,10 @@ class FriendController extends BaseController
 
     public function sendFriendRequest()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "sendFriendRequest"]);
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "sendFriendRequest"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         if (isset($this->requestData['profile_url'])) {
             $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['profile_url'])->first();
@@ -186,21 +188,20 @@ class FriendController extends BaseController
                     ),
                     $friend->lang
                 );
-                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'sentSuccessfully', 'code' => 200]]);
-                $log->saveLogSessionData();
+                $log->saveLog($userData->id, $this->requestData, 'Add Friend');
+
                 return response(['status' => TRUE, 'msg' => 'sentSuccessfully', 'code' => 200], 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
 
         return response(['status' => FALSE, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function cancelFriendRequest()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "cancelFriendRequest"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
 
         if (isset($this->requestData['profile_url'])) {
             $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['profile_url'])->first();
@@ -209,21 +210,20 @@ class FriendController extends BaseController
                 \OlaHub\UserPortal\Models\Friends::where('user_id', $user->id)->where('friend_id', $friend->id)->delete();
                 \OlaHub\UserPortal\Models\Notifications::where('user_id', $friend->id)->where('friend_id', $user->id)
                     ->where('type', 'user')->delete();
-                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'canceledSuccessfully', 'code' => 200]]);
-                $log->saveLogSessionData();
+                    $log->saveLog($userData->id, $this->requestData, 'Cancel Friend Request');
+
                 return response(['status' => TRUE, 'msg' => 'canceledSuccessfully', 'code' => 200], 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+       
 
         return response(['status' => FALSE, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function rejectFriendRequest()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "rejectFriendRequest"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         if (isset($this->requestData['profile_url'])) {
             $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['profile_url'])->first();
@@ -232,20 +232,22 @@ class FriendController extends BaseController
                 \OlaHub\UserPortal\Models\Friends::where('user_id', $friend->id)->where('friend_id', $user->id)->delete();
                 \OlaHub\UserPortal\Models\Notifications::where('user_id', $user->id)->where('friend_id', $friend->id)
                     ->where('type', 'user')->delete();
-                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'rejectedSuccessfully', 'code' => 200]]);
-                $log->saveLogSessionData();
+                    $log->saveLog($userData->id, $this->requestData, 'Reject Friend');
+
                 return response(['status' => TRUE, 'msg' => 'rejectedSuccessfully', 'code' => 200], 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+
         return response(['status' => FALSE, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function acceptFriendRequest()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "acceptFriendRequest"]);
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "acceptFriendRequest"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
 
         if (isset($this->requestData['profile_url'])) {
             $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['profile_url'])->first();
@@ -272,20 +274,20 @@ class FriendController extends BaseController
                     ),
                     $friend->lang
                 );
-                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'acceptedSuccessfully', 'code' => 200]]);
-                $log->saveLogSessionData();
+                $log->saveLog($userData->id, $this->requestData, 'Accept Friend');
+
                 return response(['status' => TRUE, 'msg' => 'acceptedSuccessfully', 'code' => 200], 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => FALSE, 'message' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+     
         response(['status' => FALSE, 'message' => 'NoData', 'code' => 204], 200);
     }
 
     public function removeFriend()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "acceptFriendRequest"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
 
         if (isset($this->requestData['user_id'])) {
             $friend = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['user_id'])->first();
@@ -294,14 +296,48 @@ class FriendController extends BaseController
                 \OlaHub\UserPortal\Models\Friends::whereRaw("user_id = " . app('session')->get('tempID') . " and  friend_id = " . $this->requestData['user_id'])
                     ->orWhereRaw("friend_id = " . app('session')->get('tempID') . " and  user_id = " . $this->requestData['user_id'])->delete();
 
-                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'removeFriendSuccessfully', 'code' => 200]]);
-                $log->saveLogSessionData();
+                    $log->saveLog($userData->id, $this->requestData, 'Remove Friend');
+
                 return response(['status' => TRUE, 'msg' => 'removeFriendSuccessfully', 'code' => 200], 200);
             }
         }
 
-        $log->setLogSessionData(['response' => ['status' => FALSE, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
         return response(['status' => FALSE, 'msg' => 'NoData', 'code' => 204], 200);
     }
+    public function blockUser()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "blockUser"]);
+
+        if (isset($this->requestData['user_id'])) {
+            $friend = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $this->requestData['user_id'])->first();
+            $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
+            if ($user && $friend) {
+                $relation = \OlaHub\UserPortal\Models\Friends::whereRaw("user_id = $user->id and  friend_id = $friend->id")
+                ->orWhereRaw("friend_id = $user->id and  user_id = $friend->id")->first();
+                if($relation){
+                  if($relation->status == 1 && $relation->user_id == app('session')->get('tempID')){
+                    $relation->status = 3;
+                  } else {
+                    $relation->status = 4;
+                  }
+                  $relation->save();
+                } else {
+                    $friendID = $friend->id;
+                    $requests = (new \OlaHub\UserPortal\Models\Friends);
+                    $requests->user_id = $user->id;
+                    $requests->friend_id = $friendID;
+                    $requests->status = 3;
+                    $requests->save();
+                }
+                $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'blockedSuccessfully', 'code' => 200]]);
+                $log->saveLogSessionData();
+                return response(['status' => TRUE, 'msg' => 'blockedSuccessfully', 'code' => 200], 200);
+            }
+        }
+        $log->setLogSessionData(['response' => ['status' => FALSE, 'message' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        response(['status' => FALSE, 'message' => 'NoData', 'code' => 204], 200);
+    }
+
 }

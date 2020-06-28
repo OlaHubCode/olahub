@@ -27,6 +27,9 @@ class CelebrationController extends BaseController
 
     public function createNewCelebration()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' create_New_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create new celebration"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationModel::$columnsMaping, (array) $this->requestData);
@@ -91,7 +94,9 @@ class CelebrationController extends BaseController
 
     public function createCelebrationByCalendar()
     {
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' create_Celebration_By_Calendar');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create celebration by calendar"]);
 
         if (isset($this->requestData['calendarId']) && $this->requestData['calendarId'] > 0 && isset($this->requestData['celebrationDate']) && CelebrationModel::validateDate($this->requestData) && isset($this->requestData['celebrationTitle']) && $this->requestData['celebrationTitle']) {
@@ -137,6 +142,9 @@ class CelebrationController extends BaseController
 
     public function createCelebrationByCart()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' create_Celebration_By_Cart');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create celebration by cart"]);
 
         if (isset($this->requestData['cartId']) && $this->requestData['cartId'] <= 0) {
@@ -182,6 +190,9 @@ class CelebrationController extends BaseController
 
     public function updateCelebration()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' update_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Update celebration"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start updating celebration"]);
@@ -225,7 +236,9 @@ class CelebrationController extends BaseController
 
     public function deleteCelebration()
     {
-
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' delete_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Delete celebration"]);
 
         if (CelebrationModel::validateCelebrationId($this->requestData)) {
@@ -288,6 +301,9 @@ class CelebrationController extends BaseController
 
     private function deleteCelebrationDetails($celebration)
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' delete_Celebration_Details');
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Delete celebration details"]);
 
@@ -323,6 +339,7 @@ class CelebrationController extends BaseController
 
     private function firstParticipant()
     {
+        
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "First participant"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Make celebration creator participant in this celebration"]);
@@ -337,6 +354,9 @@ class CelebrationController extends BaseController
 
     private function saveCelebrationData()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' save_Celebration_Data');
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Save celebration data"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Save celebration Data"]);
@@ -406,6 +426,9 @@ class CelebrationController extends BaseController
 
     public function getOneCelebration()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' get_One_Celebration');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get one celebration"]);
 
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
@@ -457,6 +480,9 @@ class CelebrationController extends BaseController
 
     public function getUserShippingAddress()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' get_User_Shipping_Address');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get user shipping address"]);
 
         $countryId = 0;
@@ -526,6 +552,9 @@ class CelebrationController extends BaseController
 
     public function getCreatorShippingAddress()
     {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' get_Creator_Shipping_Address');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Get creator shipping address"]);
 
         $cart = \OlaHub\UserPortal\Models\Cart::getUserCart(app('session')->get('tempID'));

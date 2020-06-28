@@ -145,7 +145,7 @@ class OlaHubLandingPageController extends BaseController
 
         $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
         $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
-        
+
         $itemModel->whereHas('quantityData', function ($q) {
             $q->where('quantity', '>', 0);
         });
@@ -174,15 +174,20 @@ class OlaHubLandingPageController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOccasionsData"]);
 
-        $occasions = \OlaHub\UserPortal\Models\Occasion::items()
+        $occasions1 = \OlaHub\UserPortal\Models\Occasion::items()
+            ->whereNotNull("order_occasion")
             ->orderBy("order_occasion", "ASC")
-            ->orderBy("name", "ASC")
             ->get();
-        if ($occasions->count() < 1) {
+        $occasions2 = \OlaHub\UserPortal\Models\Occasion::items()
+            ->whereNull("order_occasion")
+            ->inRandomOrder()
+            ->get();
+        if ($occasions1->count() < 1 && $occasions2->count() < 1) {
             throw new NotAcceptableHttpException(404);
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($occasions, '\OlaHub\UserPortal\ResponseHandlers\OccasionsHomeResponseHandler');
-        unset($occasions);
+        $occasions1 = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($occasions1, '\OlaHub\UserPortal\ResponseHandlers\OccasionsHomeResponseHandler');
+        $occasions2 = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($occasions2, '\OlaHub\UserPortal\ResponseHandlers\OccasionsHomeResponseHandler');
+        $return['data'] = array_merge($occasions1['data'], $occasions2['data']);
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
@@ -195,12 +200,22 @@ class OlaHubLandingPageController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getInterestsData"]);
 
-        $interests = \OlaHub\UserPortal\Models\Interests::has('itemsRelation')->orderBy('name', 'ASC')->get();
-        if ($interests->count() < 1) {
+        $interests1 = \OlaHub\UserPortal\Models\Interests::has('itemsRelation')
+            ->whereNotNull("order_occasion")
+            ->orderBy('order_occasion', 'ASC')
+            ->get();
+
+        $interests2 = \OlaHub\UserPortal\Models\Interests::has('itemsRelation')
+            ->whereNull("order_occasion")
+            ->inRandomOrder()
+            ->get();
+
+        if ($interests1->count() < 1 && $interests2->count() < 1) {
             throw new NotAcceptableHttpException(404);
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($interests, '\OlaHub\UserPortal\ResponseHandlers\InterestsHomeResponseHandler');
-        unset($interests);
+        $interests1 = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($interests1, '\OlaHub\UserPortal\ResponseHandlers\InterestsHomeResponseHandler');
+        $interests2 = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($interests2, '\OlaHub\UserPortal\ResponseHandlers\InterestsHomeResponseHandler');
+        $return['data'] = array_merge($interests1['data'], $interests2['data']);
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);

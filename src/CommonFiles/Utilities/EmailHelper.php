@@ -4,6 +4,13 @@ namespace OlaHub\UserPortal\Helpers;
 
 class EmailHelper extends OlaHubCommonHelper
 {
+    protected $style = [
+        'hr' => 'margin: 0;border:1px solid #eee;width:100%',
+        'img' => 'border:1px solid #f5f5f5;width:80px;height:80px;object-fit:cover;margin-right:10px',
+        'detail_h2' => 'margin:0;font-size:14px',
+        'detail_p' => 'margin:3px 0;font-size:12px',
+        'merch' => 'margin:3px 0;font-size:12px;color:#888'
+    ];
     function sendNewUser($userData, $code)
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send new user Email", "action_startData" => json_encode($userData) . $code]);
@@ -181,10 +188,56 @@ class EmailHelper extends OlaHubCommonHelper
         $customerName = $billingAddress['full_name'];
         $customerPhone = $billingAddress['phone'];
         $customerAddress = $billingAddress['country'] . ', ' . $billingAddress['city'] . ", " . $billingAddress['address'] . ", " . $billingAddress['zipcode'];
-        $orderItems = $this->handleSalesOrderItemsHtml($billDetails, $bill);
-        $replace = ['[userName]', '[customerName]', '[customerPhone]', '[customerAddress]', '[orderItems]'];
-        $with = [$userName, $customerName, $customerPhone, $customerAddress, $orderItems];
-        $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
+        $currency = $bill->billing_currency;
+        $orderDetails = $this->handleSalesOrderItemsHtml($billDetails, $currency);
+
+        $subTotal = 0;
+        foreach ($billDetails as $store) {
+            if (!$store)
+                continue;
+            $subTotal += $this->handleOrderItemsSubTotal($store['items']);
+        }
+        ############## Total ####################
+        $orderDetails .= "<table style='margin-top:20px;width:100%'>
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
+        if ($bill->promo_code_saved) {
+            $orderDetails .= "<tr><td>
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($bill->promo_code_saved, 2) . " $currency</td></tr>";
+        }
+        $orderDetails .= "<tr><td>
+        <b>Shipping</b> </td><td width='80' align='right'>" . number_format($bill->shipping_fees, 2) . " $currency</td></tr>";
+        $orderDetails .= "<tr><td>
+        <b>Total</b> </td><td width='80' align='right'>" . number_format($bill->billing_total, 2) . " $currency</td></tr>";
+        $orderDetails .= "</table>";
+
+        ############## Payments ####################
+        $payData = OlaHubCommonHelper::setPayUsed($bill);
+        $orderDetails .= "<table style='margin-top:20px;width:100%'>";
+        $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
+        if (isset($payData["orderPayVoucher"])) {
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+        }
+        if (isset($payData["orderPayByGate"])) {
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+        }
+        $orderDetails .= "</table>";
+
+        ############## Footer ####################
+        $orderDetails .= '<div style="background:#dedede;padding:10px;margin-top:20px;text-align:center;display: block;">
+                if you have any question , contact us on (<a href="mailto:info@olahub.com">info@olahub.com</a>)
+                <br />
+                thank you for your shopping
+                </div>';
+
+        $replace = ['[userName]', '[orderNumber]', '[customerName]', '[customerPhone]', '[customerAddress]', '[orderDetails]'];
+        $with = [$userName, $bill->billing_number, $customerName, $customerPhone, $customerAddress, $orderDetails];
+        if (PRODUCTION_LEVEL) {
+            $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
+        } else {
+            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+        }
+        print_r($orderDetails);
         parent::sendEmail($to, $replace, $with, $template);
     }
 
@@ -199,11 +252,27 @@ class EmailHelper extends OlaHubCommonHelper
         $customerName = $billingAddress['full_name'];
         $customerPhone = $billingAddress['phone'];
         $customerAddress = $billingAddress['country'] . ', ' . $billingAddress['city'] . ", " . $billingAddress['address'] . ", " . $billingAddress['zipcode'];
+        $currency = $bill->billing_currency;
         foreach ($billDetails as $store) {
+            $subTotal = 0;
             $merchantName = $store['storeManagerName'];
-            $orderItems = $this->handleMerchantOrderItemsHtml($store['items'], $bill);
-            $replace = ['[merchantName]', '[customerName]', '[customerPhone]', '[customerAddress]', '[orderItems]'];
-            $with = [$merchantName, $customerName, $customerPhone, $customerAddress, $orderItems];
+            $subTotal += $this->handleOrderItemsSubTotal($store['items']);
+            $orderDetails = $this->handleMerchantOrderItemsHtml($store['items'], $bill, $currency);
+
+            ############## Total ####################
+            $orderDetails .= "<table style='margin-top:20px;padding-top:10px;width:100%;border-top:1px solid #eee;'>
+                <tr><td><b>Total</b> </td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+            $orderDetails .= "</table>";
+
+            ############## Footer ####################
+            $orderDetails .= '<div style="background:#dedede;padding:10px;margin-top:20px;text-align:center;display: block;">
+                if you have any question , contact us on (<a href="mailto:info@olahub.com">info@olahub.com</a>)
+                <br />
+                thank you for your shopping
+                </div>';
+
+            $replace = ['[merchantName]', '[orderNumber]', '[customerName]', '[customerPhone]', '[customerAddress]', '[orderDetails]'];
+            $with = [$merchantName, $bill->billing_number, $customerName, $customerPhone, $customerAddress, $orderDetails];
             if (PRODUCTION_LEVEL) {
                 $to = [[$store['storeEmail'], $store['storeManagerName']]];
             } else {
@@ -213,23 +282,58 @@ class EmailHelper extends OlaHubCommonHelper
         }
     }
 
-    function sendUserNewOrderDirect($userData, $billing)
+    function sendUserNewOrderDirect($userData, $billing, $billDetails)
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user new order direct Email", "action_startData" =>  json_encode($userData) . json_encode($billing)]);
         $template = 'USR009';
         $username = "$userData->first_name $userData->last_name";
-        $payData = OlaHubCommonHelper::setPayUsed($billing);
-        $amountCollection = "<div><b>Paid by: </b>" . $payData["paidBy"] . "</div>";
-        if (isset($payData["orderPayVoucher"])) {
-            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($payData["orderPayVoucher"], 2) . " " . $billing->billing_currency . "</div>";
-            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($payData["orderVoucherAfterPay"], 2) . " " . $billing->billing_currency . "</div>";
+        $orderDate = date("l, M d, Y", strtotime($billing->billing_date));
+        $currency = $billing->billing_currency;
+        ############# Items #####################
+        $orderDetails = "<tr><td><b>Date</b> </td><td>$orderDate</td></tr>";
+        $orderDetails = "<hr style='" . $this->style['hr'] . "' />";
+        $subTotal = 0;
+        foreach ($billDetails as $store) {
+            if (!$store)
+                continue;
+            $subTotal += $this->handleOrderItemsSubTotal($store['items']);
+            $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
         }
 
-        if (isset($payData["orderPayByGate"])) {
-            $amountCollection .= "<div><b>Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . $billing->billing_currency . "</div>";
+        ############## Total ####################
+        $orderDetails .= "<table style='margin-top:20px;width:100%'>
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
+        if ($billing->promo_code_saved) {
+            $orderDetails .= "<tr><td>
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($billing->promo_code_saved, 2) . " $currency</td></tr>";
         }
-        $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
+        $orderDetails .= "<tr><td>
+        <b>Shipping</b> </td><td width='80' align='right'>" . number_format($billing->shipping_fees, 2) . " $currency</td></tr>";
+        $orderDetails .= "<tr><td>
+        <b>Total</b> </td><td width='80' align='right'>" . number_format($billing->billing_total, 2) . " $currency</td></tr>";
+        $orderDetails .= "</table>";
+
+        ############## Payments ####################
+        $payData = OlaHubCommonHelper::setPayUsed($billing);
+        $orderDetails .= "<table style='margin-top:20px;width:100%'>";
+        $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
+        if (isset($payData["orderPayVoucher"])) {
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+        }
+        if (isset($payData["orderPayByGate"])) {
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+        }
+        $orderDetails .= "</table>";
+
+        ############## Footer ####################
+        $orderDetails .= '<div style="background:#dedede;padding:10px;margin-top:20px;text-align:center;display: block;">
+                if you have any question , contact us on (<a href="mailto:info@olahub.com">info@olahub.com</a>)
+                <br />
+                thank you for your shopping
+                </div>';
+        $replace = ['[UserName]', '[orderNumber]', '[orderDetails]'];
+        $with = [$username, $billing->billing_number, $orderDetails];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -551,50 +655,54 @@ class EmailHelper extends OlaHubCommonHelper
         return $return;
     }
 
-    private function handleSalesOrderItemsHtml($stores = [], $billing = [])
+    private function handleSalesOrderItemsHtml($stores = [], $currency = "")
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Handle sales order items Html", "action_startData" => json_encode($stores) . json_encode($billing)]);
         if (isset($stores['voucher'])) {
             unset($stores['voucher']);
         }
-        $return = '<ul>';
+        $return = "<hr style='" . $this->style['hr'] . "' />";
         foreach ($stores as $store) {
-            $return .= '<li>';
-            $return .= '<h3 style="margin-bottom: 0px">From store: (' . $store['storeName'] . ' - ' . $store['storeManagerName'] . ')</h3>';
-            $return .= '<div><b>Store Phone/Email: </b>' . $store['storePhone'] . ' / ' . $store['storeEmail'] . '</div>';
-            $return .= '<div>Need below items:</div>';
-            $return .= '<ul>';
+            $return .= '<h4 style="margin: 5px 0;"><b>From store:</b> ' . $store['storeName'] . ' - ' . $store['storeManagerName'] . '</h4>';
+            if (!empty($store['storePhone']))
+                $return .= '<h4 style="margin: 5px 0;"><b>Store Phone: </b>' . $store['storePhone'] . '</h4>';
+            if (!empty($store['storeEmail']))
+                $return .= '<h4 style="margin: 5px 0;"><b>Store Email: </b>' .  $store['storeEmail'] . '</h4>';
+            $return .= '<h4 style="margin: 15px 0 5px;">Need below items:</h4>
+            <table width="100%">';
             foreach ($store['items'] as $item) {
-                $return .= '<li>';
-                $return .= '<div><b>Order Number: </b>' . $billing->billing_number . '</div>';
-                $return .= '<div><b>Item Name: </b>' . $item['itemName'] . '</div>';
-                $return .= '<div><b>Item Price: </b>' . $item['itemPrice'] . '</div>';
-                $return .= '<div><b>Item Quantity: </b>' . $item['itemQuantity'] . '</div>';
-                $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . '</div>';
-                $return .= '<div><b>Item Image Link: </b>' . $item['itemImage'] . '</div>';
+                $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+                <td>
+                <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
+                <p style="' . $this->style['merch'] . '">Branch address : ' . $item['fromPickupAddress'] . ', ' . $item['fromPickupCity'] . ', ' . $item['fromPickupRegion'] . ', ' . $item['fromPickupZipCode'] . '</p>
+                <p style="' . $this->style['detail_p'] . '">Quantity: ' . $item['itemQuantity'] . '</p>';
                 if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
-                    $return .= '<ul>';
-                    $return .= '<b>Item specs</b><ul>';
                     foreach ($item['itemAttributes'] as $attribute) {
-                        $return .= '<li><b>' . OlaHubCommonHelper::returnCurrentLangName($attribute['name']) . ': </b>' . OlaHubCommonHelper::returnCurrentLangName($attribute['value']) . '</li>';
+                        $return .= '<p style="' . $this->style['detail_p'] . '">' . OlaHubCommonHelper::returnCurrentLangName($attribute['name']) . ': ' . OlaHubCommonHelper::returnCurrentLangName($attribute['value']) . '</p>';
                     }
-                    $return .= '</ul>';
                 }
-                if (isset($item['itemCustomImage']) && $item['itemCustomImage'] != '') {
-
-                    $return .= '<div><b>Item Custome Image: </b>' . $item['itemCustomImage'] . '</div>';
+                if (isset($item['itemCustomImage']) && $item['itemCustomImage'] != "") {
+                    $return .= '<p><b>Item Custome Image: </b>
+                    <a href="' . $item['itemCustomImage'] . '">
+                    <img src="' . $item['itemCustomImage'] . '" />
+                    </a></p>';
                 }
-                if (isset($item['itemCustomText']) && $item['itemCustomText'] != '') {
-
-                    $return .= '<div><b>Item Custome Text: </b>' . $item['itemCustomText'] . '</div>';
+                if (isset($item['itemCustomText']) && $item['itemCustomText'] != "") {
+                    $return .= '<p><b>Item Custome Text: </b>' . $item['itemCustomText'] . '</p>';
                 }
-                $return .= '<div><b>From store address: </b>' . $item['fromPickupAddress'] . ', ' . $item['fromPickupCity'] . ', ' . $item['fromPickupRegion'] . ', ' . $item['fromPickupZipCode'] . '</div>';
-                $return .= '</li>';
+                if (isset($item['itemCustomImage']) && $item['itemCustomImage'] != "") {
+                    $return .= '<p><b>Item Custome Image: </b>
+                    <a href="' . $item['itemCustomImage'] . '">
+                    <img src="' . $item['itemCustomImage'] . '" />
+                    </a></p>';
+                }
+                if (isset($item['itemCustomText']) && $item['itemCustomText'] != "") {
+                    $return .= '<p><b>Item Custome Text: </b>' . $item['itemCustomText'] . '</p>';
+                }
+                $return .= '</td>
+                <td width="80" align="right"><b>' . $item['itemPrice'] . ' ' . $currency . '</b></td></tr>';
             }
-            $return .= '</ul>';
-            $return .= '</li>';
+            $return .= '</table><hr style="' . $this->style['hr'] . '" /><br />';
         }
-        $return .= '</ul><br /> <br />';
         return $return;
     }
 
@@ -640,38 +748,64 @@ class EmailHelper extends OlaHubCommonHelper
         return $return;
     }
 
-    private function handleMerchantOrderItemsHtml($items = [], $billing = [])
+    private function handleOrderItemsHtml($store = [], $currency = "")
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Handle merchant order items Html", "action_startData" => json_encode($items) . json_encode($billing)]);
-        $return = '<ul>';
+        $items = $store['items'];
+        $return = "<table width='100%'>";
         foreach ($items as $item) {
-            $return .= '<li>';
-            $return .= '<div><b>Order Number: </b>' . $billing->billing_number . '</div>';
-            $return .= '<div><b>Item Name: </b>' . $item['itemName'] . '</div>';
-            $return .= '<div><b>Item Price: </b>' . $item['itemPrice']. '</div>';
-            $return .= '<div><b>Item Quantity: </b>' . $item['itemQuantity'] . '</div>';
-            $return .= '<div><b>Total Price: </b>' . $item['itemTotal'] . '</div>';
-            $return .= '<div><b>Item Image Link: </b>' . $item['itemImage'] . '</div>';
+            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+            <td>
+            <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
+            <p style="' . $this->style['merch'] . '">From : ' . $store['storeManagerName'] . '</p>
+            <p style="' . $this->style['detail_p'] . '">Quantity: ' . $item['itemQuantity'] . '</p>';
             if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
-                $return .= '<ul>';
-                $return .= '<b>Item specs</b><ul>';
                 foreach ($item['itemAttributes'] as $attribute) {
-                    $return .= '<li><b>' . OlaHubCommonHelper::returnCurrentLangName($attribute['name']) . ': </b>' . OlaHubCommonHelper::returnCurrentLangName($attribute['value']) . '</li>';
+                    $return .= '<p style="' . $this->style['detail_p'] . '">' . OlaHubCommonHelper::returnCurrentLangName($attribute['name']) . ': ' . OlaHubCommonHelper::returnCurrentLangName($attribute['value']) . '</p>';
                 }
-                $return .= '</ul>';
+            }
+            $return .= '</td>
+            <td width="80" align="right"><b>' . $item['itemPrice'] . ' ' . $currency . '</b></td></tr>';
+        }
+        $return .= '</table>';
+        return $return;
+    }
+
+    private function handleOrderItemsSubTotal($items = [])
+    {
+        $total = 0;
+        foreach ($items as $item) {
+            $total += (float) $item['itemPrice'];
+        }
+        return number_format($total, 2);
+    }
+
+    private function handleMerchantOrderItemsHtml($items = [], $billing = [], $currency = "")
+    {
+        $return = "<table width='100%'>";
+        foreach ($items as $item) {
+            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+            <td>
+            <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
+            <p style="' . $this->style['merch'] . '">Branch address : ' . $item['fromPickupAddress'] . '</p>
+            <p style="' . $this->style['detail_p'] . '">Quantity: ' . $item['itemQuantity'] . '</p>';
+            if (isset($item['itemAttributes']) && is_array($item['itemAttributes']) && count($item['itemAttributes'])) {
+                foreach ($item['itemAttributes'] as $attribute) {
+                    $return .= '<p style="' . $this->style['detail_p'] . '">' . OlaHubCommonHelper::returnCurrentLangName($attribute['name']) . ': ' . OlaHubCommonHelper::returnCurrentLangName($attribute['value']) . '</p>';
+                }
             }
             if (isset($item['itemCustomImage']) && $item['itemCustomImage'] != "") {
-
-                $return .= '<div><b>Item Custome Image: </b>' . $item['itemCustomImage'] . '</div>';
+                $return .= '<p><b>Item Custome Image: </b>
+                <a href="' . $item['itemCustomImage'] . '">
+                <img src="' . $item['itemCustomImage'] . '" />
+                </a></p>';
             }
             if (isset($item['itemCustomText']) && $item['itemCustomText'] != "") {
-
-                $return .= '<div><b>Item Custome Text: </b>' . $item['itemCustomText'] . '</div>';
+                $return .= '<p><b>Item Custome Text: </b>' . $item['itemCustomText'] . '</p>';
             }
-            $return .= '<div><b>From your branch address: </b>' . $item['fromPickupAddress'] . ', ' . $item['fromPickupCity'] . ', ' . $item['fromPickupRegion'] . ', ' . $item['fromPickupZipCode'] . '</div>';
-            $return .= '</li><br />';
+            $return .= '</td>
+            <td width="80" align="right"><b>' . $item['itemPrice'] . ' ' . $currency . '</b></td></tr>';
         }
-        $return .= '</ul><br />';
+        $return .= '</table>';
         return $return;
     }
 
@@ -800,18 +934,18 @@ class EmailHelper extends OlaHubCommonHelper
     }
     function sendContactUsEmail($Email)
     {
-       
+
         // echo(($Email->MessageContent));
         $template = 'ADCUS007';
-        $userName="Someone";
-        if (strlen ($Email->UserName)>0){
-            $userName=$Email->UserName;
+        $userName = "Someone";
+        if (strlen($Email->UserName) > 0) {
+            $userName = $Email->UserName;
         }
-        
-        $replace = ['[desName]', '[desEmail]', '[desPhoneNum]','[Subject]','[content]'];
-        $with = [$userName, $Email->UserEmail,$Email->UserPhone,$Email->MessageTitle,$Email->MessageContent];
 
-        $to = [["info@olahub.com","olahub"]];
+        $replace = ['[desName]', '[desEmail]', '[desPhoneNum]', '[Subject]', '[content]'];
+        $with = [$userName, $Email->UserEmail, $Email->UserPhone, $Email->MessageTitle, $Email->MessageContent];
+
+        $to = [["info@olahub.com", "olahub"]];
         parent::sendEmail($to, $replace, $with, $template);
     }
 }

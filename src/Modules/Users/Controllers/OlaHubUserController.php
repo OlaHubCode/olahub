@@ -169,29 +169,22 @@ class OlaHubUserController extends BaseController
 
     public function updateUserData()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "updateUserData"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        
         if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
         }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']]]);
-            $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']]]);
-            $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-        // if (isset($this->requestData['userInterests']) && count($this->requestData['userInterests']) <= 0) {
-        //     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]]]);
-        //     $log->saveLogSessionData();
-        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userInterests' => ['validation.api.interests']]], 200);
-        // }
+       
         $userData = app('session')->get('tempData');
 
         /*** check changes ***/
@@ -276,23 +269,36 @@ class OlaHubUserController extends BaseController
                 if ($userData->is_first_login == "1") {
                     $userData->is_first_login = "0";
                     // $isFirstLogin = TRUE;
+                    $log->saveLog($userData->id, $this->requestData, 'changed_password');
                 }
+               
             }
             if (isset(UserModel::$columnsMaping[$input])) {
                 $userData->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(UserModel::$columnsMaping, $input)} = $value;
-            }
+                
+            } 
         }
+        
         $userData->save();
+    
+        
+
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
         $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
+        $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
+       
+        $log->saveLog($userData->id, $this->requestData, 'update_profile');
         $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
-        $log->setLogSessionData(['response' => $return]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => $return]);
+        // $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Upload User Data');
+
         return response($return, 200);
     }
 
     function logoutUser()
     {
+        
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "logoutUser"]);
 
@@ -312,15 +318,18 @@ class OlaHubUserController extends BaseController
 
     public function uploadUserProfilePhoto()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserProfilePhoto"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserProfilePhoto"]);
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
-            $user = app('session')->get('tempData');
-            $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($user, 'profile_picture', $this->requestData['userProfilePicture']);
-            $user->profile_picture = $imagePath;
-            $saved = $user->save();
+           // $user = app('session')->get('tempData');
+            $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($userData, 'profile_picture', $this->requestData['userProfilePicture']);
+            $userData->profile_picture = $imagePath;
+            $saved = $userData->save();
             if ($saved) {
                 //add photo as post
                 $post = new Post;
@@ -340,27 +349,30 @@ class OlaHubUserController extends BaseController
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;
-                $log->setLogSessionData(['response' => $return]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => $return]);
+                // $log->saveLogSessionData();
+                $log->saveLog($userData->id, $this->requestData, 'Upload Profile Phote');
+
                 return response($return, 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
     public function uploadUserCoverPhoto()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserCoverPhoto"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userCoverPhoto']) {
-            $user = app('session')->get('tempData');
-            $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($user, 'cover_photo', $this->requestData['userCoverPhoto']);
-            $user->cover_photo = $imagePath;
-            $saved = $user->save();
+            $userData = app('session')->get('tempData');
+            $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($userData, 'cover_photo', $this->requestData['userCoverPhoto']);
+            $userData->cover_photo = $imagePath;
+            $saved = $userData->save();
             if ($saved) {
 
                 //add photo as post
@@ -381,13 +393,16 @@ class OlaHubUserController extends BaseController
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;
-                $log->setLogSessionData(['response' => $return]);
-                $log->saveLogSessionData();
+                // $log->setLogSessionData(['response' => $return]);
+                // $log->saveLogSessionData();
+                $log->saveLog($userData->id, $this->requestData, 'Upload Cover Photo');
+
                 return response($return, 200);
             }
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
@@ -407,12 +422,12 @@ class OlaHubUserController extends BaseController
 
     public function setupTwoStep()
     {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "setupTwoStep"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
         $method = $this->requestData["method"];
         $status = $this->requestData["status"];
         $code = isset($this->requestData["userCode"]) ? $this->requestData["userCode"] : NULL;
-        $userData = app('session')->get('tempData');
         $two_step = $this->getTwoStep($method, $status, $userData->two_step);
 
         if (empty($method)) {
@@ -435,6 +450,8 @@ class OlaHubUserController extends BaseController
             }
             $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
             $userData->save();
+            $log->saveLog($userData->id, $this->requestData, 'Two Steps For Security');
+            
             if ($method == 'phone') {
                 (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                 return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);

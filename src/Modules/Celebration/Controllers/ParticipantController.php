@@ -22,8 +22,10 @@ class ParticipantController extends BaseController {
     }
 
     public function createNewParticipant() {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "createNewParticipant"]);
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
+$log->saveLog($userData->id, $this->requestData, ' create_New_Participant');
        
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationParticipantsModel::$columnsMaping, (array) $this->requestData);
@@ -75,8 +77,11 @@ class ParticipantController extends BaseController {
     }
 
     public function deleteParticipant() {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "deleteParticipant"]);
+
+ $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
+$log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
        
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationParticipantsModel::$columnsMaping, (array) $this->requestData);
@@ -244,7 +249,11 @@ class ParticipantController extends BaseController {
     }
 
     public function leaveCelebration() {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        
+ $log = new \OlaHub\UserPortal\Helpers\Logs();
+ $userData = app('session')->get('tempData');
+
+$log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "leaveCelebration"]);
        
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
