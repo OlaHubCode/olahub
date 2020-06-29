@@ -8,7 +8,7 @@
  * @version 1.0.0
  */
 $router->group([
-    'middleware' => ['checkAuth'],
+//    'middleware' => ['checkAuth'],
     'prefix' => basename(strtolower(dirname(__DIR__)))
         ], function () use($router) {
     $router->post('/', 'OlaHubPostController@getPosts');
@@ -24,6 +24,8 @@ $router->group([
     $router->post('onePost', 'OlaHubPostController@getOnePost');
     $router->delete('deletePost', 'OlaHubPostController@deletePost');
     $router->put('updatePost', 'OlaHubPostController@updatePost');
+    $router->POST('usersLike', 'OlaHubPostController@usersLike');
     $router->post('hashTag', 'OlaHubPostController@hashPost');
 
 });
+

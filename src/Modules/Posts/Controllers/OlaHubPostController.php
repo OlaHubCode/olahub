@@ -233,6 +233,39 @@ class OlaHubPostController extends BaseController
         return response($return, 200);
     }
 
+    public function usersLike()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "usersLike"]);
+
+        $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
+        if (isset($this->requestData['postId']) && $this->requestData['postId']) {
+            $post = Post::where('post_id',$this->requestData['postId'])->first();
+
+            if ($post) {
+                $likes = $post->likes;
+                $likerData = [];
+                foreach ($likes as $like) {
+                    $userData = $like->author;
+                    $name = $userData->first_name.' '.$userData->last_name ;
+
+                    $likerData[] = [
+                        'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                        'likerName' => isset($name ) ? $name : NULL,
+                        'likerid' => isset($userData->id ) ? $userData->id  : NULL
+                    ];
+                }
+                $return['data'] =$likerData;
+                $return['status'] = TRUE;
+                $return['code'] = 200;
+            }
+        }
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
+        return response($return, 200);
+    }
+
     public function addNewPost()
     {
         
