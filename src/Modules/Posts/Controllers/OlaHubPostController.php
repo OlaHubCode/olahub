@@ -306,6 +306,32 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
+            }      
+        
+            $post->post_id = uniqid(app('session')->get('tempID'));
+              if (isset($this->requestData['friend'])) {
+                $notification = new \OlaHub\UserPortal\Models\Notifications();
+                $notification->type = 'post';
+                $notification->content = "notifi_Friend_Post";
+                $notification->friend_id = $post->user_id;
+                $notification->user_id =$this->requestData['friend'];
+                $notification->post_id = $post->post_id;
+                $notification->save();
+
+                $userData = app('session')->get('tempData');
+                $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    $post->user_id,
+                    "add_post_friend",
+                    array(
+                        "type" => "add_post_friend",
+                        "postId" => $post->post_id,
+                        "subject" => $post->content,
+                        "username" => "$userData->first_name $userData->last_name",
+                    ),
+                    $owner->lang,
+                    "$userData->first_name $userData->last_name"
+                );
             }
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
