@@ -512,31 +512,31 @@ class OlaHubGeneralController extends BaseController
             $searchQuery = [];
 
             // brands
-            $searchQuery[] = "select count(id) as search from merchant_stors 
+            $searchQuery[] = "select count(id) as search from merchant_stors
             where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
 
             // designers
-            $searchQuery[] = "select count(id) as search from designers 
+            $searchQuery[] = "select count(id) as search from designers
             where LOWER(`brand_name`) like '%" . $q . "%' or LOWER(`brand_name`) sounds like '" . $q . "'";
 
             // items
-            $searchQuery[] = "select count(id) as search from catalog_items 
+            $searchQuery[] = "select count(id) as search from catalog_items
             where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
 
             // designer items
-            $searchQuery[] = "select count(id) as search from designer_items 
+            $searchQuery[] = "select count(id) as search from designer_items
             where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
 
             if (app('session')->get('tempID')) {
-                // users 
-                $searchQuery[] = "select count(id) as search from users 
-                where (LOWER(`email`) like '%" . $q . "%' or mobile_no like '%" . $q . "%' 
+                // users
+                $searchQuery[] = "select count(id) as search from users
+                where (LOWER(`email`) like '%" . $q . "%' or mobile_no like '%" . $q . "%'
                 and LOWER(`first_name`) sounds like '" . $q . "'
-                and LOWER(`last_name`) sounds like '" . $q . "')  
+                and LOWER(`last_name`) sounds like '" . $q . "')
                 and id <> " . app('session')->get('tempID') . " and is_active = 1";
 
                 // groups
-                $searchQuery[] = "select count(id) as search from groups 
+                $searchQuery[] = "select count(id) as search from groups
                 where LOWER(`name`) sounds like '" . $q . "'
                 or LOWER(`description`) sounds like '" . $q . "'";
             }
