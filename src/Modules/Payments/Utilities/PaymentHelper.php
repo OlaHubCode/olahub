@@ -351,9 +351,9 @@ class PaymentHelper extends OlaHubCommonHelper
             $return['item'] = [
                 'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                 'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
-                'itemPrice' => $item->item_price,
+                'itemPrice' => number_format($item->item_price, 2),
                 'itemQuantity' => $item->quantity,
-                'itemTotal' => $item->item_price * $item->quantity,
+                'itemTotal' => number_format($item->item_price * $item->quantity, 2),
                 'itemAttributes' => $details['attributes'],
                 'fromPickupAddress' => isset($pickup->street_address) ? $pickup->street_address : '',
                 'fromPickupCity' => isset($pickup->city) ? $pickup->city : '',

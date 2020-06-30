@@ -156,9 +156,9 @@ class OlaHubGeneralController extends BaseController
     //                     "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
     //                 ];
     //             }
-            
 
-           
+
+
     //     }
     //     if(count($friends)>0){ $return['status'] = TRUE;
     //         $return['code'] = 200;
@@ -1201,105 +1201,104 @@ class OlaHubGeneralController extends BaseController
             }
 
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
-            ->select('catalog_item_categories.id')
-            ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
-        $categoryIds = [];
-        foreach ($followedCategory as $followedCategoryID) {
-            $categoryIds[] = $followedCategoryID->id;
-        }
-
-        $cItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
-            $q->where('quantity', '>', 0);
-        })->where(function ($query) {
-            $query->whereNull('parent_item_id');
-            $query->orWhere('parent_item_id', '0');
-        })->whereRaw($month)->inRandomOrder()->whereIN('category_id', $categoryIds)->paginate(10);
-        $itemsCategory = [];
-        foreach ($cItems as $item) {
-            if (!isset($itemsCategory[$item->category_id]))
-                $itemsCategory[$item->category_id] = [];
-            array_push($itemsCategory[$item->category_id], $item);
-        }
-
-        foreach ($itemsCategory as $m => $im) {
-            if (count($im) == 1) {
-                if (is_object($im))
-                    $timeline[] = $this->handlePostTimeline($im, 'item_category');
-            } else {
-
-
-                $timeline[] = $this->handlePostTimeline($im, 'category_multi_item');
+                ->select('catalog_item_categories.id')
+                ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
+            $categoryIds = [];
+            foreach ($followedCategory as $followedCategoryID) {
+                $categoryIds[] = $followedCategoryID->id;
             }
-        }
-        // occasion items
-        $followedOccasion = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 4)->get();
-        $occasionIds = [];
-        foreach ($followedOccasion as $followedOccasionID) {
-            $occasionIds[] = $followedOccasionID->target_id;
-        }
 
-        $oItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_occasions', 'catalog_item_occasions.item_id', 'catalog_items.id')->select('catalog_item_occasions.occasion_id', 'catalog_items.*')->whereHas('quantityData', function ($q) {
+            $cItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('parent_item_id');
+                $query->orWhere('parent_item_id', '0');
+            })->whereRaw($month)->inRandomOrder()->whereIN('category_id', $categoryIds)->paginate(10);
+            $itemsCategory = [];
+            foreach ($cItems as $item) {
+                if (!isset($itemsCategory[$item->category_id]))
+                    $itemsCategory[$item->category_id] = [];
+                array_push($itemsCategory[$item->category_id], $item);
+            }
+
+            foreach ($itemsCategory as $m => $im) {
+                if (count($im) == 1) {
+                    if (is_object($im))
+                        $timeline[] = $this->handlePostTimeline($im, 'item_category');
+                } else {
+
+
+                    $timeline[] = $this->handlePostTimeline($im, 'category_multi_item');
+                }
+            }
+            // occasion items
+            $followedOccasion = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 4)->get();
+            $occasionIds = [];
+            foreach ($followedOccasion as $followedOccasionID) {
+                $occasionIds[] = $followedOccasionID->target_id;
+            }
+
+            $oItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_occasions', 'catalog_item_occasions.item_id', 'catalog_items.id')->select('catalog_item_occasions.occasion_id', 'catalog_items.*')->whereHas('quantityData', function ($q) {
                 $q->where('quantity', '>', 0);
             })->where(function ($query) {
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
             })
-            ->whereRaw($monthC)->inRandomOrder()
-            ->whereIn('occasion_id', $occasionIds)
-            ->paginate(10);
-        $itemsOccasion = [];
-        foreach ($oItems as $item) {
-            if (!isset($itemsOccasion[$item->occasion_id]))
-                $itemsOccasion[$item->occasion_id] = [];
-            array_push($itemsOccasion[$item->occasion_id], $item);
-        }
-
-        foreach ($itemsOccasion as $m => $im) {
-            if (count($im) == 1) {
-                if (is_object($im))
-                    $timeline[] = $this->handlePostTimeline($im, 'occasion_item');
-            } else {
-
-
-                $timeline[] = $this->handlePostTimeline($im, 'occasion_multi_item');
+                ->whereRaw($monthC)->inRandomOrder()
+                ->whereIn('occasion_id', $occasionIds)
+                ->paginate(10);
+            $itemsOccasion = [];
+            foreach ($oItems as $item) {
+                if (!isset($itemsOccasion[$item->occasion_id]))
+                    $itemsOccasion[$item->occasion_id] = [];
+                array_push($itemsOccasion[$item->occasion_id], $item);
             }
-        }
-        // intrest items
-        $getfollowedInterests = DB::table('users')->where("id", app('session')->get('tempID'))->select('interests')->get();
-        $followedInterests = explode(',', $getfollowedInterests[0]->interests);
 
-        foreach ($followedOccasion as $followedOccasionID) {
-            $occasionIds[] = $followedOccasionID->target_id;
-        }
+            foreach ($itemsOccasion as $m => $im) {
+                if (count($im) == 1) {
+                    if (is_object($im))
+                        $timeline[] = $this->handlePostTimeline($im, 'occasion_item');
+                } else {
 
-        $interestsItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_interests', 'catalog_item_interests.item_id', 'catalog_items.id')->select('catalog_item_interests.interest_id', 'catalog_items.*')->whereHas('quantityData', function ($q) {
+
+                    $timeline[] = $this->handlePostTimeline($im, 'occasion_multi_item');
+                }
+            }
+            // intrest items
+            $getfollowedInterests = DB::table('users')->where("id", app('session')->get('tempID'))->select('interests')->get();
+            $followedInterests = explode(',', $getfollowedInterests[0]->interests);
+
+            foreach ($followedOccasion as $followedOccasionID) {
+                $occasionIds[] = $followedOccasionID->target_id;
+            }
+
+            $interestsItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_interests', 'catalog_item_interests.item_id', 'catalog_items.id')->select('catalog_item_interests.interest_id', 'catalog_items.*')->whereHas('quantityData', function ($q) {
                 $q->where('quantity', '>', 0);
             })->where(function ($query) {
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
             })->whereRaw($monthC)->inRandomOrder()
-            ->whereIn('interest_id', $followedInterests)
+                ->whereIn('interest_id', $followedInterests)
 
-            ->paginate(10);
-        // $timeline[] = $this->handlePostTimeline($interestsItems, 'intrests_multi_item');
-        $itemsInterests = [];
-        foreach ($interestsItems as $item) {
-            if (!isset($itemsInterests[$item->interest_id]))
-                $itemsInterests[$item->interest_id] = [];
-            array_push($itemsInterests[$item->interest_id], $item);
-        }
-
-        foreach ($itemsInterests as $m => $im) {
-            if (count($im) == 1) {
-                if (is_object($im))
-                    $timeline[] = $this->handlePostTimeline($im, 'intrests_item');
-            } else {
-
-
-                $timeline[] = $this->handlePostTimeline($im, 'intrests_multi_item');
+                ->paginate(10);
+            // $timeline[] = $this->handlePostTimeline($interestsItems, 'intrests_multi_item');
+            $itemsInterests = [];
+            foreach ($interestsItems as $item) {
+                if (!isset($itemsInterests[$item->interest_id]))
+                    $itemsInterests[$item->interest_id] = [];
+                array_push($itemsInterests[$item->interest_id], $item);
             }
-        }
 
+            foreach ($itemsInterests as $m => $im) {
+                if (count($im) == 1) {
+                    if (is_object($im))
+                        $timeline[] = $this->handlePostTimeline($im, 'intrests_item');
+                } else {
+
+
+                    $timeline[] = $this->handlePostTimeline($im, 'intrests_multi_item');
+                }
+            }
         }
 
         // merchants
@@ -1335,7 +1334,7 @@ class OlaHubGeneralController extends BaseController
             }
         }
         // Category items
-        
+
         // designer items
         $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
             $query->whereNull('parent_item_id');
