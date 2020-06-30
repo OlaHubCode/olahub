@@ -89,7 +89,9 @@ class Notifications extends Model
             "accept_member" => $word . " accepted your request to join community " . $word2,
             "invite_group" => $word . " invited you to join community " . $word2,
             "ask_group" => $word . " asked to join your community",
-            "add_post" => $word . " added new post in your community"
+            "add_post" => $word . " added new post in your community",
+            "add_post_friend" => $word . " added a new post in your timeline"
+
         ];
         $langs->ar = [
             "chat_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
@@ -118,7 +120,8 @@ class Notifications extends Model
             "accept_member" => "وافق " . $word . " على طلب الإنضمام إلى مجتمع " . $word2,
             "invite_group" => "قام " . $word . " بدعوتك بالإنضمام إلى مجتمع " . $word2,
             "ask_group" => "قام " . $word . " بطلب دعوة بالإنضمام إلى مجتمعك",
-            "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع"
+            "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
+            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك"
         ];
         return $langs->$lang[$key];
     }
