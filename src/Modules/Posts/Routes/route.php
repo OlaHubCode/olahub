@@ -24,4 +24,5 @@ $router->group([
     $router->post('onePost', 'OlaHubPostController@getOnePost');
     $router->delete('deletePost', 'OlaHubPostController@deletePost');
     $router->put('updatePost', 'OlaHubPostController@updatePost');
+    $router->post('ReportPost', 'OlaHubPostController@ReportPost');
 });
