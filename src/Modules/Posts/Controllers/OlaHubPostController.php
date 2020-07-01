@@ -8,6 +8,7 @@ use OlaHub\UserPortal\Models\groups;
 use OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\PostComments;
 use OlaHub\UserPortal\Models\PostReplies;
+use OlaHub\UserPortal\Models\PostShares;
 
 class OlaHubPostController extends BaseController
 {
@@ -460,6 +461,36 @@ class OlaHubPostController extends BaseController
         $return['status'] = TRUE;
         $return['code'] = 200;
         return response($return, 200);
+    }
+
+    public function newSharePost(){
+
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->setLogSessionData(['module_name' => "PostShares", 'function_name' => "sharePost"]);
+
+        if (isset($this->requestData['postId']) && !$this->requestData['postId']) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+        $groupId = isset($this->requestData['groupId']) ? $this->requestData['groupId'] : NULL;
+        $shared = PostShares::where('post_id', $this->requestData['postId'])
+            ->where('group_id', $groupId)
+            ->where('user_id', app('session')->get('tempID'))->first();
+        if (!$shared) {
+            $share = new PostShares;
+            $share->post_id = $this->requestData['postId'];
+            $share->group_id = $groupId;
+            $share->user_id = app('session')->get('tempID');
+            $share->save();
+        }
+
+        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200]]);
+        $log->saveLogSessionData();
+        $log->saveLog($userData->id, $this->requestData, 'Share_Post');
+
+        return response(['status' => TRUE, 'code' => 200], 200);
     }
 
     public function addNewComment()

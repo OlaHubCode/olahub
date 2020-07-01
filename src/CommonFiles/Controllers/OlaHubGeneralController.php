@@ -1200,6 +1200,45 @@ class OlaHubGeneralController extends BaseController
             } catch (Exception $ex) {
             }
 
+            // shared posts
+            try {
+                if (!$friends)
+                    $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
+                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($friends, $myGroups) {
+                        $q->where(function ($query) use ($friends) {
+                            $query->whereIn('user_id', $friends);
+                        });
+                        $q->orWhere(function ($query) use ($myGroups) {
+                            $query->whereIn('group_id', $myGroups);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedPosts->count()) {
+                    $filteredStoreItems = [];
+                    $filteredPosts = [];
+                    foreach ($sharedPosts as $postOne) {
+                        if (!isset($filteredPosts[$postOne->item_id]))
+                            $filteredPosts[$postOne->item_id] = [];
+                        array_push($filteredPosts[$postOne->item_id], $postOne->user_id);
+                    }
+                    if (count($filteredPosts)) {
+                        foreach ($filteredPosts as $item_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->first();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                            ];
+                            if ($uInfo)
+                            $fInfo['username'] = $uInfo->first_name;
+
+                            $item = \OlaHub\UserPortal\Models\Post::where('id', $item_id)->first();
+                            $timeline[] = $this->handlePostTimeline($item, 'post_shared', $fInfo);
+                        }
+                    }
+                }
+            } catch (Exception $ex) {
+            }
+
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
             ->select('catalog_item_categories.id')
             ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
@@ -1490,6 +1529,12 @@ class OlaHubGeneralController extends BaseController
                     'merchant_slug' => isset($designer->designer_slug) ? $designer->designer_slug : NULL,
                     'merchant_title' => isset($designer->brand_name) ? $designer->brand_name : NULL,
                 ];
+                break;
+            case 'post_shared':
+                $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($data, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                $return = $d['data'];
+                $return['type'] = 'post_shared';
+
                 break;
             case 'item':
                 $brand = $data->brand;
