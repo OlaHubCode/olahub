@@ -134,8 +134,8 @@ class OlaHubWishListsController extends BaseController
     }
 
     public function getWishlistOccasions() {
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $log->setLogSessionData(['module_name' => "WishLists", 'function_name' => "getWishlistOccasions"]);
+        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        // $log->setLogSessionData(['module_name' => "WishLists", 'function_name' => "getWishlistOccasions"]);
         
         $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->where('is_published',1)->get();
         if ($occassionsCountry->count() < 1) {
@@ -160,7 +160,7 @@ class OlaHubWishListsController extends BaseController
         $return['wishlistType'] = $wishlistType;
         $return['status'] = true;
         $return['code'] = 200;
-        $log->saveLog($userData->id, $this->requestData, 'Get Wishlist Occasions');
+        // $log->saveLog($userData->id, $this->requestData, 'Get Wishlist Occasions');
 
         return response($return, 200);
     }

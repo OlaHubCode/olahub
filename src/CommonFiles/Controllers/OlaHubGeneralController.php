@@ -857,8 +857,8 @@ class OlaHubGeneralController extends BaseController
     {
         $page = (int) $request->input('page') || 1;
         $now = date('Y-m-d');
-        $month = 'created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
-        $monthC = 'catalog_items.created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
+        $month = 'created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -300 DAY) AND CURRENT_DATE()';
+        $monthC = 'catalog_items.created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -300 DAY) AND CURRENT_DATE()';
         $timeline = [];
         $friends = NULL;
         $all = [];

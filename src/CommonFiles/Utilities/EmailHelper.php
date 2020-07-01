@@ -476,7 +476,7 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############# Items #####################
         $orderDetails .= '<table width="100%"><tr>
-            <td width="85"><img style="' . $this->style['img'] . '" src="' .
+            <td width="85"><img style="' . $this->style['img'] . '" width="80" src="' .
             \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->item_image) . '" /></td>
             <td>
             <h2 style="' . $this->style['detail_h2'] . '">' . $item->item_name . '</h2>
@@ -516,7 +516,7 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############# Items #####################
         $orderDetails .= '<table width="100%"><tr>
-            <td width="85"><img style="' . $this->style['img'] . '" src="' .
+            <td width="85"><img style="' . $this->style['img'] . '" width="80" src="' .
             \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->item_image) . '" /></td>
             <td>
             <h2 style="' . $this->style['detail_h2'] . '">' . $item->item_name . '</h2>
@@ -1004,7 +1004,7 @@ class EmailHelper extends OlaHubCommonHelper
             $return .= '<h4 style="margin: 15px 0 5px;">Need below items:</h4>
             <table width="100%">';
             foreach ($store['items'] as $item) {
-                $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+                $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" width="80" src="' . $item['itemImage'] . '" /></td>
                 <td>
                 <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
                 <p style="' . $this->style['merch'] . '">Branch address : ' . $item['fromPickupAddress'] . ', ' . $item['fromPickupCity'] . ', ' . $item['fromPickupRegion'] . ', ' . $item['fromPickupZipCode'] . '</p>
@@ -1046,7 +1046,7 @@ class EmailHelper extends OlaHubCommonHelper
         $item = $store['item'];
 
         $return = '<table width="100%"><tr>
-            <td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+            <td width="85"><img style="' . $this->style['img'] . '" width="80" src="' . $item['itemImage'] . '" /></td>
             <td>
             <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
             <p style="' . $this->style['detail_p'] . '">Quantity: ' . $item['itemQuantity'] . '</p>';
@@ -1072,7 +1072,7 @@ class EmailHelper extends OlaHubCommonHelper
         $items = $store['items'];
         $return = "<table width='100%'>";
         foreach ($items as $item) {
-            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" width="80" src="' . $item['itemImage'] . '" /></td>
             <td>
             <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
             <p style="' . $this->style['merch'] . '">From : ' . $store['storeManagerName'] . '</p>
@@ -1102,7 +1102,7 @@ class EmailHelper extends OlaHubCommonHelper
     {
         $return = "<table width='100%'>";
         foreach ($items as $item) {
-            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" src="' . $item['itemImage'] . '" /></td>
+            $return .= '<tr><td width="85"><img style="' . $this->style['img'] . '" width="80" src="' . $item['itemImage'] . '" /></td>
             <td>
             <h2 style="' . $this->style['detail_h2'] . '">' . $item['itemName'] . '</h2>
             <p style="' . $this->style['merch'] . '">Branch address : ' . $item['fromPickupAddress'] . '</p>
