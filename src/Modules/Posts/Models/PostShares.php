@@ -26,7 +26,16 @@ class PostShares extends Model
 
     public function post()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\Post', 'post_id', 'id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\Post', 'post_id', 'post_id');
+    }
+
+    public function getUserNameAttribute(){
+            if($this->author){
+                $author = $this->author;
+                $authorName = "$author->first_name $author->last_name";
+                return $authorName;
+
+        }
     }
 
 }

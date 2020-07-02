@@ -31,7 +31,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'comments_count' => isset($this->data->comments) ? count($this->data->comments) : 0,
             'comments' => [],
             'total_share_count' => 0,
-            'shares_count' => 0,
+            'shares_count' =>  isset($this->data->shares) ? count($this->data->shares) : 0,
             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($this->data->created_at),
             'post' => isset($this->data->post_id) ? $this->data->post_id : 0,
             'color' => isset($this->data->color) ? json_decode($this->data->color) : NULL,

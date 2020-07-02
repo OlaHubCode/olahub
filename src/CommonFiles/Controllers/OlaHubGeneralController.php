@@ -1214,25 +1214,45 @@ class OlaHubGeneralController extends BaseController
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedPosts->count()) {
-                    $filteredStoreItems = [];
                     $filteredPosts = [];
                     foreach ($sharedPosts as $postOne) {
-                        if (!isset($filteredPosts[$postOne->item_id]))
-                            $filteredPosts[$postOne->item_id] = [];
-                        array_push($filteredPosts[$postOne->item_id], $postOne->user_id);
+                        if (!isset($filteredPosts[$postOne->post_id]))
+                            $filteredPosts[$postOne->post_id] = [];
+                        array_push($filteredPosts[$postOne->post_id], $postOne->user_id);
                     }
+
                     if (count($filteredPosts)) {
-                        foreach ($filteredPosts as $item_id => $users) {
-                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $users)->first();
+                        foreach ($filteredPosts as $post_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', array_values($users))->get();
                             $uNames = [];
                             $fInfo = [
                                 'username' => "",
+                                'other' => 0
                             ];
-                            if ($uInfo)
-                            $fInfo['username'] = $uInfo->first_name;
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
 
-                            $item = \OlaHub\UserPortal\Models\Post::where('id', $item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'post_shared', $fInfo);
+                            $item = \OlaHub\UserPortal\Models\Post::where('post_id', $post_id)->first();
+                            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                            $item = $item['data'];
+                            $item['type'] = 'post_shared';
+                            $item['sharedUser_info'] = $fInfo;
+                            $item['shared_time'] = NULL;
+                            $timeline[] = $item;
                         }
                     }
                 }
@@ -1529,12 +1549,6 @@ class OlaHubGeneralController extends BaseController
                     'merchant_slug' => isset($designer->designer_slug) ? $designer->designer_slug : NULL,
                     'merchant_title' => isset($designer->brand_name) ? $designer->brand_name : NULL,
                 ];
-                break;
-            case 'post_shared':
-                $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($data, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                $return = $d['data'];
-                $return['type'] = 'post_shared';
-
                 break;
             case 'item':
                 $brand = $data->brand;

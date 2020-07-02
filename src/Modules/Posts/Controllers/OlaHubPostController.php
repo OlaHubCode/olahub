@@ -118,6 +118,31 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
+                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($group) {
+                        $q->where(function ($query) use ($group) {
+                            $query->where('group_id', $group->id);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedPosts->count()) {
+                    foreach ($sharedPosts as $litem) {
+
+                        $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
+                        $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                        $item = $item['data'];
+                        $item['type'] = 'post_shared';
+                        $item['sharedUser_info'] = [
+                            'user_id' => $litem->author->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                            'username' => $litem->user_name,
+                        ];
+                        $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                        $return['data'][] = $item;
+
+                    }
+                }
+
                 shuffle($all);
                 $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             }
@@ -163,7 +188,36 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
+
+                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($userID) {
+                        $q->where(function ($query) use ($userID) {
+                            $query->where('user_id', $userID);
+                            $query->where('group_id', NULL);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedPosts->count()) {
+                    foreach ($sharedPosts as $litem) {
+
+                        $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
+                        $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                        $item = $item['data'];
+                        $item['type'] = 'post_shared';
+                        $item['sharedUser_info'] = [
+                            'user_id' => $litem->author->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                            'username' => $litem->user_name,
+                        ];
+
+                        $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                        $return['data'][] = $item;
+                    }
+                }
+
             }
+
+
             shuffle($return['data']);
             // $return['data'] = $posts;
             $return['status'] = TRUE;
@@ -465,7 +519,7 @@ class OlaHubPostController extends BaseController
 
     public function newSharePost(){
 
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $userData = app('session')->get('tempData');
         $log->setLogSessionData(['module_name' => "PostShares", 'function_name' => "sharePost"]);
 
@@ -474,23 +528,24 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
-        $groupId = isset($this->requestData['groupId']) ? $this->requestData['groupId'] : NULL;
+        $groupId = isset($this->requestData['groupId']) && $this->requestData['groupId'] != 0  ? $this->requestData['groupId'] : NULL;
         $shared = PostShares::where('post_id', $this->requestData['postId'])
             ->where('group_id', $groupId)
             ->where('user_id', app('session')->get('tempID'))->first();
+        $update = false;
         if (!$shared) {
             $share = new PostShares;
             $share->post_id = $this->requestData['postId'];
             $share->group_id = $groupId;
             $share->user_id = app('session')->get('tempID');
             $share->save();
+            $update = true;
         }
 
-        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200]]);
+        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200,'update'=> $update]]);
         $log->saveLogSessionData();
-        $log->saveLog($userData->id, $this->requestData, 'Share_Post');
 
-        return response(['status' => TRUE, 'code' => 200], 200);
+        return response(['status' => TRUE, 'code' => 200,'update'=> $update], 200);
     }
 
     public function addNewComment()

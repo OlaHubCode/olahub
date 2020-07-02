@@ -32,6 +32,10 @@ class Post extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\PostComments', 'post_id', 'post_id');
     }
+    public function shares()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\PostShares', 'post_id', 'post_id');
+    }
 
     public function likes()
     {
