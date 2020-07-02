@@ -4,23 +4,35 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Notifications extends Model
+class UserNotificationNewItems extends Model
 {
 
-    protected $table = 'users_notifications';
+    protected $table = 'user_notification_new_items';
     
 
     public function userData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'friend_id');
     }
+    public function brandData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\Brand','store_slug','followed_slug');
+    }
+    public function interestData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\Interests','interest_slug','followed_slug');
+    }
+ 
 
     public function groupData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
     }
 
- 
+    public function celebrationData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CelebrationModel', 'id', 'celebration_id');
+    }
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
@@ -35,7 +47,7 @@ class Notifications extends Model
                 'sound' => "default",
                 'click_action' => "FCM_PLUGIN_ACTIVITY",
                 "title" => $title ? $title : $username,
-                "body" => Notifications::translate($key, $lang, $word, $word2),
+                "body" => UserNotificationNewItems::translate($key, $lang, $word, $word2),
             ),
             'data' => $data,
         );
@@ -86,7 +98,8 @@ class Notifications extends Model
             "accept_member" => $word . " accepted your request to join community " . $word2,
             "invite_group" => $word . " invited you to join community " . $word2,
             "ask_group" => $word . " asked to join your community",
-            "add_post" => $word . " added new post in your community"
+            "add_post" => $word . " added new post in your community",
+            
         ];
         $langs->ar = [
             "chat_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
