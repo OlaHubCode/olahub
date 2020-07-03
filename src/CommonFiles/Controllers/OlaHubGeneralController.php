@@ -275,6 +275,8 @@ class OlaHubGeneralController extends BaseController
     public function getUserNotification()
     {
         $week = 'updated_at	BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -7 DAY) AND CURRENT_DATE()';
+        $sessionUserId=(int) app('session')->get('tempID');
+       
 
         $sessionUserId=(int) app('session')->get('tempID');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
@@ -283,7 +285,7 @@ class OlaHubGeneralController extends BaseController
         $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
 
-        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)
+        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)->whereRaw("FIND_IN_SET($sessionUserId,user_id)")
         ->inRandomOrder()->take(2)->get();
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
 
@@ -449,7 +451,7 @@ class OlaHubGeneralController extends BaseController
     public function readNotification()
     {
         $sessionUserId=(int) app('session')->get('tempID');
-
+    
 
         
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Read notification"]);
@@ -458,7 +460,7 @@ class OlaHubGeneralController extends BaseController
             if ($this->requestData->notificationId == 'all') {
                 \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->update(['read' => 1]);
            
-                // \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw("FIND_IN_SET($sessionUserId,user_id)")->whereRaw("!FIND_IN_SET($sessionUserId,read_items)")->update(['read_items' => 0]);
+                // \OlaHub\UserPortal\Models\UserNotificationNewItems::->whereRaw("!FIND_IN_SET($sessionUserId,read_items)")->update(['read_items' => 0]);
                 return ['status' => true, 'msg' => 'Notifications has been read', 'code' => 200];
             } 
             // else if($this->requestData->type=="newItems"){
