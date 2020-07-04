@@ -199,6 +199,7 @@ class OlaHubUserController extends BaseController
         if ((!empty($this->requestData['userPhoneNumber']) && $userData->mobile_no != $this->requestData['userPhoneNumber']) ||
             (!empty($this->requestData['userCountry']) && $userData->country_id != $this->requestData['userCountry'])
         ) {
+            // dd("----");
             $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
             $country_id = $this->requestData["userCountry"];
             $u = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $country_id) {

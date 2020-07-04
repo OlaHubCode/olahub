@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use \OlaHub\UserPortal\Models\Post;
 use Illuminate\Support\Facades\DB;
+use OlaHub\UserPortal\Models\Occasion;
 
 class OlaHubGeneralController extends BaseController
 {
@@ -79,7 +80,7 @@ class OlaHubGeneralController extends BaseController
         $actionData = ["action_name" => "Get All countries"];
         $countries = \OlaHub\UserPortal\Models\Country::get();
         if ($countries->count() < 1) {
-            throw new NotAcceptableHttpException(404);
+            throw new NotAcceptableHttpException(405);
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
         $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as flag, LOWER(code) as code")
@@ -275,14 +276,91 @@ class OlaHubGeneralController extends BaseController
 
     public function getUserNotification()
     {
+        $week = 'updated_at	BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -7 DAY) AND CURRENT_DATE()';
+        $sessionUserId=(int) app('session')->get('tempID');
+       
+
+        $sessionUserId=(int) app('session')->get('tempID');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
         $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
+
+        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)->whereRaw("FIND_IN_SET($sessionUserId,user_id)")
+        ->inRandomOrder()->take(2)->get();
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
+
+        $allNotifications = [];
+        $newItemsNotifications = [];
+
+        
+        if ($newItemscnotification->count() > 0) {
+            foreach ($newItemscnotification as $one) {
+                switch ($one->type){
+                    case "new_multi_brand_items":     
+                $brandData = @$one["brandData"][0];
+                $newItemsNotifications[] = [
+                    "followed_slug"=>$one->followed_slug,
+                    "id" => $one->id,
+                    "type" => $one->type,
+                    "content" => $one->content,
+                    "user_name" => isset($brandData) ? $brandData["name"] : "NULL",
+                    "avatar_url" => isset($brandData["image_ref"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brandData["image_ref"]) : NULL,
+                    "for_user" => $one->user_id,
+                ];
+            break;
+                case "new_multi_category_items":
+             $category = DB::table('catalog_item_categories')->where('category_slug', $one->followed_slug)->first();
+             $newItemsNotifications[] = [
+                "followed_slug"=>$one->followed_slug,
+
+                "id" => $one->id,
+                "type" => $one->type,
+                "content" => $one->content,
+                "user_name" => isset($category) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name"): "NULL",
+                "avatar_url" => isset($category) ? ($category->category_slug) :var_dump($one->followed_slug),
+                "for_user" => $one->user_id,
+            ];
+        break;
+                case "new_multi_interest_items":
+                    $interestData=@$one["interestData"][0];
+             $newItemsNotifications[] = [
+                "followed_slug"=>$one->followed_slug,
+
+                "id" => $one->id,
+                "type" => $one->type,
+                "content" => $one->content,
+                "user_name" => isset($interestData) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interestData, "name"): "NULL",
+                "avatar_url" => isset($interestData["image_ref"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interestData["image_ref"]) : NULL,
+                "for_user" => $one->user_id,
+            ];
+        break;
+            
+            case "new_multi_occasion_items":
+              
+             $occasionS = DB::table('occasion_types')->where('occasion_slug', $one->followed_slug)->first();
+             $newItemsNotifications[] = [
+                "followed_slug"=>$one->followed_slug,
+                "id" => $one->id,
+                "type" => $one->type,
+                "content" => $one->content,
+                
+                "user_name" => isset($occasionS) ?  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasionS, "name"): "NULL",
+                "avatar_url" => isset($occasionS->logo_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasionS->logo_ref) : NULL,
+                "for_user" => $one->user_id,
+            ];
+        break;
+
+            }
+            }
+
+
+        }
+
         if ($notification->count() > 0) {
-            $allNotifications = [];
+            // dd($newItemscnotification);
+            // return($newItemscnotification);
             foreach ($notification as $one) {
                 $userData = @$one["userData"][0];
                 $groupData = @$one["groupData"][0];
@@ -294,7 +372,7 @@ class OlaHubGeneralController extends BaseController
                     "celebration_id" => $one->celebration_id,
                     "post_id" => $one->post_id,
                     "group_id" => $one->group_id,
-                    "user_name" => isset($userData) ? $userData["first_name"] . " " . $userData["last_name"] : NULL,
+                    "user_name" => isset($userData) ? $userData["first_name"] . " " . $userData["last_name"] : "NULL",
                     "community_title" => @$groupData["name"],
                     "celebration_title" => @$celebrationData["title"],
                     "profile_url" => $userData["profile_url"],
@@ -303,11 +381,18 @@ class OlaHubGeneralController extends BaseController
                     "for_user" => $one->user_id,
                 ];
             }
+       
+
+
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $notification]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End check notification existance"]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End fetch user notification"]);
-            return $allNotifications;
+            $data=[
+            'newItemsNotifications'=>$newItemsNotifications,
+            'allNotifications'=>$allNotifications,
+            ];
+            return $data    ;
         } else {
             $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
@@ -367,13 +452,33 @@ class OlaHubGeneralController extends BaseController
 
     public function readNotification()
     {
+        $sessionUserId=(int) app('session')->get('tempID');
+    
+
+        
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Read notification"]);
 
         if (isset($this->requestData->notificationId) && $this->requestData->notificationId) {
             if ($this->requestData->notificationId == 'all') {
                 \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->update(['read' => 1]);
+           
+                // \OlaHub\UserPortal\Models\UserNotificationNewItems::->whereRaw("!FIND_IN_SET($sessionUserId,read_items)")->update(['read_items' => 0]);
                 return ['status' => true, 'msg' => 'Notifications has been read', 'code' => 200];
-            } else {
+            } 
+            // else if($this->requestData->type=="newItems"){
+            //     $notification = \OlaHub\UserPortal\Models\UserNotificationNewItems::where('user_id', app('session')->get('tempID'))->find($this->requestData->notificationId);
+            //     if ($notification) {
+            //         $notification->save();
+            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Notification has been read', 'code' => 200]]);
+            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+            //         return ['status' => true, 'msg' => 'Notification has been read', 'code' => 200];
+            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End making notification read"]);
+            //     }
+            // }
+            
+            else {
+
                 $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->find($this->requestData->notificationId);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start making notification read"]);
                 if ($notification) {
