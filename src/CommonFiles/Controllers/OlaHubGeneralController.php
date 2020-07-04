@@ -1200,6 +1200,65 @@ class OlaHubGeneralController extends BaseController
             } catch (Exception $ex) {
             }
 
+            // shared posts
+            try {
+                if (!$friends)
+                    $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
+                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                    ->where(function ($q) use ($friends, $myGroups) {
+                        $q->where(function ($query) use ($friends) {
+                            $query->whereIn('user_id', $friends);
+                        });
+                        $q->orWhere(function ($query) use ($myGroups) {
+                            $query->whereIn('group_id', $myGroups);
+                        });
+                    })->orderBy('created_at', 'desc')->paginate(20);
+                if ($sharedPosts->count()) {
+                    $filteredPosts = [];
+                    foreach ($sharedPosts as $postOne) {
+                        if (!isset($filteredPosts[$postOne->post_id]))
+                            $filteredPosts[$postOne->post_id] = [];
+                        array_push($filteredPosts[$postOne->post_id], $postOne->user_id);
+                    }
+
+                    if (count($filteredPosts)) {
+                        foreach ($filteredPosts as $post_id => $users) {
+                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', array_values($users))->get();
+                            $uNames = [];
+                            $fInfo = [
+                                'username' => "",
+                                'other' => 0
+                            ];
+                            $uCount = $uInfo->count();
+                            if ($uCount > 3) {
+                                $x = 0;
+                                while ($x < 3) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                                $fInfo['other'] = $uCount - 3;
+                            } else {
+                                $x = 0;
+                                while ($x < $uCount) {
+                                    $uNames[] = $uInfo[$x]->first_name;
+                                    $x++;
+                                }
+                            }
+                            $fInfo['username'] = $uNames;
+
+                            $item = \OlaHub\UserPortal\Models\Post::where('post_id', $post_id)->first();
+                            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                            $item = $item['data'];
+                            $item['type'] = 'post_shared';
+                            $item['sharedUser_info'] = $fInfo;
+                            $item['shared_time'] = NULL;
+                            $timeline[] = $item;
+                        }
+                    }
+                }
+            } catch (Exception $ex) {
+            }
+
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
                 ->select('catalog_item_categories.id')
                 ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
