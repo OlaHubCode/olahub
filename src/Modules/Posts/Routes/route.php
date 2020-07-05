@@ -17,6 +17,7 @@ $router->group([
     $router->post('likePost', 'OlaHubPostController@likePost');
 //    $router->post('sharePost', 'OlaHubPostController@sharePost');
     $router->post('sharePost', 'OlaHubPostController@newSharePost');
+    $router->post('removeSharePost', 'OlaHubPostController@removeSharePost');
     $router->post('addComment', 'OlaHubPostController@addNewComment');
     $router->post('getComments', 'OlaHubPostController@getPostComments');
     $router->post('addReply', 'OlaHubPostController@addNewReply');

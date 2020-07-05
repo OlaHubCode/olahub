@@ -124,10 +124,12 @@ class OlaHubPostController extends BaseController
                             $query->where('group_id', $group->id);
                         });
                     })->orderBy('created_at', 'desc')->paginate(20);
+
+
                 if ($sharedPosts->count()) {
                     foreach ($sharedPosts as $litem) {
-
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
+                     
                         $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                         $item = $item['data'];
                         $item['type'] = 'post_shared';
@@ -141,6 +143,7 @@ class OlaHubPostController extends BaseController
                         $return['data'][] = $item;
 
                     }
+
                 }
 
                 shuffle($all);
@@ -840,11 +843,6 @@ if ($post) {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-
-
-
-
-    
     public function deleteComment()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -939,4 +937,27 @@ if ($post) {
           $log->saveLogSessionData();
           return response($return, 200);
     }
+
+    public function removeSharePost(){
+
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $userData = app('session')->get('tempData');
+        $log->setLogSessionData(['module_name' => "PostShares", 'function_name' => "removeSharePost"]);
+
+        if (isset($this->requestData['postId']) && !$this->requestData['postId']) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+        $groupId = isset($this->requestData['groupId']) && $this->requestData['groupId'] != 0  ? $this->requestData['groupId'] : NULL;
+        $shared = PostShares::where('post_id', $this->requestData['postId'])
+            ->where('group_id', $groupId)
+            ->where('user_id', app('session')->get('tempID'))->delete();
+
+        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'RemoveSharedPost', 'code' => 200]]);
+        $log->saveLogSessionData();
+
+        return response(['status' => TRUE, 'code' => 200], 200);
+    }
+
 }
