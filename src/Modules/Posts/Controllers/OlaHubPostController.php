@@ -129,7 +129,6 @@ class OlaHubPostController extends BaseController
                 if ($sharedPosts->count()) {
                     foreach ($sharedPosts as $litem) {
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                     
                         $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                         $item = $item['data'];
                         $item['type'] = 'post_shared';
@@ -140,7 +139,7 @@ class OlaHubPostController extends BaseController
                             'username' => $litem->user_name,
                         ];
                         $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
-                        $return['data'][] = $item;
+                        $all[] = $item;
 
                     }
 
