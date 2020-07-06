@@ -9,6 +9,7 @@ use OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\PostComments;
 use OlaHub\UserPortal\Models\PostReplies;
 use OlaHub\UserPortal\Models\PostShares;
+use OlaHub\UserPortal\Models\PostReport;
 
 class OlaHubPostController extends BaseController
 {
@@ -937,6 +938,7 @@ if ($post) {
           return response($return, 200);
     }
 
+
     public function removeSharePost(){
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -958,5 +960,36 @@ if ($post) {
 
         return response(['status' => TRUE, 'code' => 200], 200);
     }
+
+
+    
+public function ReportPost()
+{
+    $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+    $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "ReportPost"]);
+
+    if (empty($this->requestData['postId'])) {
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    $post = Post::where('post_id', $this->requestData['postId'])->first();
+    $user = app('session')->get('tempID');
+    $postId = $this->requestData['postId'];
+     if ($post) {
+        $report = new PostReport();
+        $report->post_id = $postId;
+        $report->user_id = app('session')->get('tempID');
+        $report->save();
+    
+        $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You report post successfully', 'code' => 200]]);
+        $log->saveLogSessionData();
+        return response(['status' => true, 'msg' => 'You report post successfully', 'code' => 200], 200);
+    }
+    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+    $log->saveLogSessionData();
+    return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+ 
+}
 
 }

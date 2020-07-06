@@ -248,7 +248,7 @@ class SmsHelper extends OlaHubCommonHelper
         parent::sendSms($to, $replace, $with, $template);
     }
 
-    function sendUserNewOrderGift($userData, $billing, $targetData)
+    function sendUserNewOrderGift($userData, $billing)
     {
         //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user new order gift SMS", "action_startData" => json_encode($userData). json_encode($billing)]);
         $this->getCountryCode($userData->country_id);

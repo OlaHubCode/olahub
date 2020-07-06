@@ -644,10 +644,10 @@ class OlaHubPaymentsMainController extends BaseController
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (!empty(app('session')->get('tempData')->email)) {
-            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing, $target);
+            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing, $this->grouppedMers);
         }
         if (!empty(app('session')->get('tempData')->mobile_no)) {
-            (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing, $target);
+            (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendUserNewOrderGift(app('session')->get('tempData'), $this->billing);
         }
     }
 

@@ -14,7 +14,6 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
 
     public function createUserBilling($type = "default")
     {
-
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(\OlaHub\UserPortal\Models\UserBill::$columnsMaping, $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
@@ -160,7 +159,7 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
         $this->finalizeSuccessPayment(false, 1, 0);
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesCODRequest($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         if (app('session')->get('tempData')->email) {
-            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserCODRequest($this->billing, app('session')->get('tempData'));
+            (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendUserCODRequest($this->billing, app('session')->get('tempData'), $this->grouppedMers);
         }
 
         if (app('session')->get('tempData')->mobile_no) {

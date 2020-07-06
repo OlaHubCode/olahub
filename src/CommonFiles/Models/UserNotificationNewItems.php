@@ -4,23 +4,35 @@ namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Notifications extends Model
+class UserNotificationNewItems extends Model
 {
 
-    protected $table = 'users_notifications';
+    protected $table = 'user_notification_new_items';
     
 
     public function userData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'friend_id');
     }
+    public function brandData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\Brand','store_slug','followed_slug');
+    }
+    public function interestData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\Interests','interest_slug','followed_slug');
+    }
+ 
 
     public function groupData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
     }
 
- 
+    public function celebrationData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CelebrationModel', 'id', 'celebration_id');
+    }
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
@@ -35,7 +47,7 @@ class Notifications extends Model
                 'sound' => "default",
                 'click_action' => "FCM_PLUGIN_ACTIVITY",
                 "title" => $title ? $title : $username,
-                "body" => Notifications::translate($key, $lang, $word, $word2),
+                "body" => UserNotificationNewItems::translate($key, $lang, $word, $word2),
             ),
             'data' => $data,
         );
@@ -87,8 +99,7 @@ class Notifications extends Model
             "invite_group" => $word . " invited you to join community " . $word2,
             "ask_group" => $word . " asked to join your community",
             "add_post" => $word . " added new post in your community",
-            "add_post_friend" => $word . " added a new post in your timeline"
-
+            
         ];
         $langs->ar = [
             "chat_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
@@ -117,8 +128,7 @@ class Notifications extends Model
             "accept_member" => "وافق " . $word . " على طلب الإنضمام إلى مجتمع " . $word2,
             "invite_group" => "قام " . $word . " بدعوتك بالإنضمام إلى مجتمع " . $word2,
             "ask_group" => "قام " . $word . " بطلب دعوة بالإنضمام إلى مجتمعك",
-            "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
-            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك"
+            "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع"
         ];
         return $langs->$lang[$key];
     }
