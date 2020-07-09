@@ -20,8 +20,7 @@ class OlaHubGeneralController extends BaseController
     public function __construct(Request $request)
     {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
-        // $this->requestData = (object) $return['requestData'];
-        $this->requestData = $return['requestData'];
+        $this->requestData = (object) $return['requestData'];
         $this->requestFilter = (object) $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
         $this->requestShareData = $return['requestData'];
@@ -55,6 +54,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response(["status" => true], 200);
     }
+
     public function getCities($regionId)
     {
         $cities = \OlaHub\UserPortal\Models\ShippingCities::where('region_id', $regionId)->get();
@@ -142,30 +142,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response($return, 200);
     }
-    // public function getFriendsToMention($FriendNameToFind)
-    // {
-    //     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
-    //     if (count($friends) > 0) {
-    //             $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->Where('first_name', 'LIKE',"%$FriendNameToFind%")->take(5)->get();
-    //             foreach ($friends as $friend) {
-    //                 $return['data'][] = [
-    //                     "profile" => $friend->id,
-    //                     "username" =>ucwords($friend->first_name)  . ' ' . ucwords( $friend->last_name),
-    //                     "profile_url" => $friend->profile_url,
-    //                     "user_gender" => isset($friend->user_gender) ? $friend->user_gender : NULL,
-    //                     "avatar_url" => isset($friend->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
-    //                     "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
-    //                 ];
-    //             }
 
-
-
-    //     }
-    //     if(count($friends)>0){ $return['status'] = TRUE;
-    //         $return['code'] = 200;
-    //         return response($return, 200);}
-    //     return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-    // }
     public function getSocialAccounts()
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get social accounts"]);
@@ -255,6 +232,7 @@ class OlaHubGeneralController extends BaseController
 
     public function getStaticPage($type)
     {
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get static page"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch static pages", "action_startData" => $type]);
@@ -1304,73 +1282,48 @@ class OlaHubGeneralController extends BaseController
                 }
             } catch (Exception $ex) {
             }
+        }
 
-            // shared posts
-            try {
-                if (!$friends)
-                    $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
-                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($friends, $myGroups) {
-                        $q->where(function ($query) use ($friends) {
-                            $query->whereIn('user_id', $friends);
-                        });
-                        $q->orWhere(function ($query) use ($myGroups) {
-                            $query->whereIn('group_id', $myGroups);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
-                if ($sharedPosts->count()) {
-                    $filteredPosts = [];
-                    foreach ($sharedPosts as $postOne) {
-                        if (!isset($filteredPosts[$postOne->post_id]))
-                            $filteredPosts[$postOne->post_id] = [];
-                        array_push($filteredPosts[$postOne->post_id], $postOne->user_id);
-                    }
+        // merchants
+        $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        foreach ($merchants as $merchant) {
+            $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
+        }
+        // designers
+        $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        foreach ($designers as $designer) {
+            $timeline[] = $this->handlePostTimeline($designer, 'designer');
+        }
 
-                    if (count($filteredPosts)) {
-                        foreach ($filteredPosts as $post_id => $users) {
-                            $uInfo = \OlaHub\UserPortal\Models\UserModel::whereIn('id', array_values($users))->get();
-                            $uNames = [];
-                            $fInfo = [
-                                'username' => "",
-                                'other' => 0
-                            ];
-                            $uCount = $uInfo->count();
-                            if ($uCount > 3) {
-                                $x = 0;
-                                while ($x < 3) {
-                                    $uNames[] = $uInfo[$x]->first_name;
-                                    $x++;
-                                }
-                                $fInfo['other'] = $uCount - 3;
-                            } else {
-                                $x = 0;
-                                while ($x < $uCount) {
-                                    $uNames[] = $uInfo[$x]->first_name;
-                                    $x++;
-                                }
-                            }
-                            $fInfo['username'] = $uNames;
-
-                            $item = \OlaHub\UserPortal\Models\Post::where('post_id', $post_id)->first();
-                            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                            $item = $item['data'];
-                            $item['type'] = 'post_shared';
-                            $item['sharedUser_info'] = $fInfo;
-                            $item['shared_time'] = NULL;
-                            $timeline[] = $item;
-                        }
-                    }
-                }
-            } catch (Exception $ex) {
+        // brand items
+        $bItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+            $q->where('quantity', '>', 0);
+        })->where(function ($query) {
+            $query->whereNull('parent_item_id');
+            $query->orWhere('parent_item_id', '0');
+        })->whereRaw($month)->inRandomOrder()->paginate(30);
+        $itemsBrands = [];
+        foreach ($bItems as $item) {
+            if (!isset($itemsBrands[$item->store_id]))
+                $itemsBrands[$item->store_id] = [];
+            array_push($itemsBrands[$item->store_id], $item);
+        }
+        foreach ($itemsBrands as $m => $im) {
+            if (count($im) == 1) {
+                if (is_object($im))
+                    $timeline[] = $this->handlePostTimeline($im, 'item');
+            } else {
+                $timeline[] = $this->handlePostTimeline($im, 'multi_item');
             }
-
-            $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
-                ->select('catalog_item_categories.id')
-                ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
-            $categoryIds = [];
-            foreach ($followedCategory as $followedCategoryID) {
-                $categoryIds[] = $followedCategoryID->id;
-            }
+        }
+        // Category items
+        $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
+            ->select('catalog_item_categories.id')
+            ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
+        $categoryIds = [];
+        foreach ($followedCategory as $followedCategoryID) {
+            $categoryIds[] = $followedCategoryID->id;
+        }
 
             $cItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
                 $q->where('quantity', '>', 0);
@@ -1463,41 +1416,7 @@ class OlaHubGeneralController extends BaseController
                     $timeline[] = $this->handlePostTimeline($im, 'intrests_multi_item');
                 }
             }
-        }
-
-        // merchants
-        $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
-        foreach ($merchants as $merchant) {
-            $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
-        }
-        // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
-        foreach ($designers as $designer) {
-            $timeline[] = $this->handlePostTimeline($designer, 'designer');
-        }
-
-        // brand items
-        $bItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
-            $q->where('quantity', '>', 0);
-        })->where(function ($query) {
-            $query->whereNull('parent_item_id');
-            $query->orWhere('parent_item_id', '0');
-        })->whereRaw($month)->inRandomOrder()->paginate(30);
-        $itemsBrands = [];
-        foreach ($bItems as $item) {
-            if (!isset($itemsBrands[$item->store_id]))
-                $itemsBrands[$item->store_id] = [];
-            array_push($itemsBrands[$item->store_id], $item);
-        }
-        foreach ($itemsBrands as $m => $im) {
-            if (count($im) == 1) {
-                if (is_object($im))
-                    $timeline[] = $this->handlePostTimeline($im, 'item');
-            } else {
-                $timeline[] = $this->handlePostTimeline($im, 'multi_item');
-            }
-        }
-        // Category items
+        
 
         // designer items
         $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
@@ -1917,9 +1836,6 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
-        $userData = app('session')->get('tempData');
-
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
@@ -1931,7 +1847,6 @@ class OlaHubGeneralController extends BaseController
             $following->type = 4;
         } else  $following->type = 2;
         $following->save();
-        $log->saveLog($userData->id, $this->requestData, 'follow_brand');
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
 
@@ -2002,5 +1917,28 @@ class OlaHubGeneralController extends BaseController
             }
         }
         return response(['status' => true, 'data' => $return, 'code' => 200], 200);
+    }
+
+
+    public function getFriendsToMention($friendNameToFind)
+    {
+          $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+          if (count($friends) > 0) {
+                  $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->Where('first_name', 'like', '%' . $friendNameToFind. '%')->take(5)->get();
+                  foreach ($friends as $friend) {
+                      $return['data'][] = [
+                          "profile" => $friend->id,
+                          "name" =>ucwords($friend->first_name)  . ' ' . ucwords( $friend->last_name),
+                          "profile_url" => $friend->profile_url,
+                          "user_gender" => isset($friend->user_gender) ? $friend->user_gender : NULL,
+                          "avatar" => isset($friend->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
+                          "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
+                      ];
+                  }
+          }
+          if(count($friends)>0){ $return['status'] = TRUE;
+              $return['code'] = 200;
+              return response($return, 200);}
+          return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 }
