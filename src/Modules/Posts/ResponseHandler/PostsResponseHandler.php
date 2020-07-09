@@ -39,7 +39,11 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'friendId' => isset($this->data->friend_id) ? $this->data->friend_id : NULL,
             'content' => isset($this->data->content) ? $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
-        ];
+            'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
+
+
+      ];
+
     }
 
     private function setPostImg()

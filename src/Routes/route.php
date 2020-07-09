@@ -3,7 +3,7 @@
 /**
  * MerBankInfos routes
  * Handling URL requests with method type to send to Controller
- * 
+ *
  * @copyright (c) 2018, OlaHub LLC
  * @version 1.0.0
  */
@@ -50,6 +50,6 @@ $router->group([], function () use ($router) {
         $router->post('follow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userFollow');
         $router->post('unfollow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userUnFollow');
         $router->post('listFollowing', 'OlaHubGeneralController@listUserFollowing');
-        // $router->post('getFriendsToMention/{FriendNameToFind}', 'OlaHubGeneralController@getFriendsToMention');
+        $router->get('getFriendsToMention/{FriendNameToFind}', 'OlaHubGeneralController@getFriendsToMention');
     });
 });

@@ -26,6 +26,7 @@ class OlaHubPostController extends BaseController
 
     public function getPosts($type = false)
     {
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getPosts"]);
 
@@ -235,24 +236,27 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
-        
-        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        // $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "addNewPost"]);
+      if(isset($this->requestData['mentions'])){
+
+        $allMentions=serialize ($this->requestData['mentions']);
+
+      }
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
-            
-            // return( str_replace('',"Z",$this->requestData[]));
-            // return($this->requestData['content']);
+
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
+            $post->mentions= isset( $allMentions)?$allMentions:NULL;
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
             $groupData = NULL;
+
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
                 $post->group_id = $this->requestData['group'];
@@ -330,6 +334,7 @@ class OlaHubPostController extends BaseController
                     }
                 }
             }
+
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
@@ -506,7 +511,7 @@ class OlaHubPostController extends BaseController
 if( (app('session')->get('tempID'))==$comment->user_id){
     $canEdit=true;
     $canDelete=true;
-    
+
 }
 $post = Post::where('post_id', $this->requestData['postId'])->first();
 if ($post) {
@@ -518,7 +523,7 @@ if ($post) {
 if( (app('session')->get('tempID'))==$comment->user_id){
     $canEditReply=true;
     $canDeleteReply=true;
-    
+
 }
 if ($post) {
     if ($post->user_id == app('session')->get('tempID')) {
@@ -699,7 +704,7 @@ if ($post) {
 
 
 
-    
+
     public function deleteComment()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -710,7 +715,7 @@ if ($post) {
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
-     
+
 
         $Comment = PostComments::where('Id', $this->requestData['commentId'])->first();
         $post = Post::where('post_id', $Comment->post_id)->first();
@@ -740,7 +745,7 @@ if ($post) {
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
- 
+
     public function updateComment()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
