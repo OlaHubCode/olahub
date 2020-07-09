@@ -86,8 +86,8 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationParticipantsModel::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
+            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
         $this->celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->where('created_by', app('session')->get('tempID'))->first();
@@ -123,16 +123,16 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
                 $this->celebration->participant_count = $this->celebration->participant_count - 1;
                 $this->celebration->save();
                 (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
-               $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
-               $log->saveLogSessionData();
+            //    $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
+            //    $log->saveLogSessionData();
                 return response(['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200], 200);
             }
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowDeleteParticipant', 'code' => 400]]);
-            $log->saveLogSessionData();
+            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowDeleteParticipant', 'code' => 400]]);
+            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NotAllowDeleteParticipant', 'code' => 400], 200);
         }
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        // $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
