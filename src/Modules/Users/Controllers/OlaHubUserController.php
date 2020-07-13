@@ -117,8 +117,12 @@ class OlaHubUserController extends BaseController
 
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
         $celebrationId = null;
+        $registryId = null;
         if (isset($this->requestFilter['celebration'])) {
             $celebrationId = $this->requestFilter['celebration'];
+        };
+        if (isset($this->requestFilter['registry'])) {
+            $registryId = $this->requestFilter['registry'];
         };
         if (count($friends) > 0) {
             if ($celebrationId != null) {
@@ -127,6 +131,26 @@ class OlaHubUserController extends BaseController
                 foreach ($friends as $friend) {
                     if ($celebration->user_id != $friend->id) {
                         $part = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', $friend->id)->where('celebration_id', $celebrationId)->first();
+                        if ($part) {
+                            continue;
+                        } else {
+                            $return['data'][] = [
+                                "profile" => $friend->id,
+                                "username" => $friend->first_name . ' ' .  $friend->last_name,
+                                "profile_url" => $friend->profile_url,
+                                "user_gender" => isset($friend->user_gender) ? $friend->user_gender : NULL,
+                                "avatar_url" => isset($friend->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->profile_picture),
+                                "cover_photo" => isset($friend->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($friend->cover_photo),
+                            ];
+                        }
+                    }
+                }
+            }elseif ($registryId != null) {
+                $registry = \OlaHub\UserPortal\Models\RegistryModel::where('id', $registryId)->first();
+                $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->get();
+                foreach ($friends as $friend) {
+                    if ($registry->user_id != $friend->id) {
+                        $part = \OlaHub\UserPortal\Models\RegistryUsersModel::where('user_id', $friend->id)->where('registry_id', $registryId)->first();
                         if ($part) {
                             continue;
                         } else {

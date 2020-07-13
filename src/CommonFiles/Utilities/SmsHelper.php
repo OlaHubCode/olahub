@@ -396,4 +396,35 @@ class SmsHelper extends OlaHubCommonHelper
         $to = $this->countryCode . (int) $userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }
+    function sendDeletedRegistry($userData, $registryName, $registryOwner)
+    {
+        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send deleted celebration SMS", "action_startData" => json_encode($userData). $celebrationCreator. $celebrationName. $celebrationOwner]);
+        $this->getCountryCode($userData->country_id);
+        $template = 'USR033';
+        $username = "$userData->first_name $userData->last_name";
+        $replace = ['[UserName]', '[RegistryEvent]', '[RegistryOwnerName]'];
+        $with = [$username, $registryName, $registryOwner];
+        $to = $this->countryCode . (int) $userData->mobile_no;
+        parent::sendSms($to, $replace, $with, $template);
+    }
+
+    function sendNotRegisterUserRegistryInvition($userData, $registryOwner, $registryID, $password)
+    {
+        $this->getCountryCode($userData->country_id);
+        $template = 'USR035';
+        $username = "$userData->first_name $userData->last_name";
+        $replace = ['[UserName]', '[RegistryURL]', '[UserEmail]', '[UserPassword]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $this->countryCode . (int) $userData->mobile_no, $password];
+        $to = $this->countryCode . (int) $userData->mobile_no;
+        parent::sendSms($to, $replace, $with, $template);
+    }
+    function sendRegisterUserRegistryInvition($userData, $registryOwner, $registryID, $registryName)
+    {
+        $this->getCountryCode($userData->country_id);
+        $template = 'USR034';
+        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
+        $to = $this->countryCode . (int) $userData->mobile_no;
+        parent::sendSms($to, $replace, $with, $template);
+    }
 }

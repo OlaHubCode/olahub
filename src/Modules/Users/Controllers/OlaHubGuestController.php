@@ -33,6 +33,7 @@ class OlaHubGuestController extends BaseController
         } else {
             $this->userAgent = $request->header('user-agent');
         }
+
     }
 
     /*
@@ -119,12 +120,22 @@ class OlaHubGuestController extends BaseController
 
     function login()
     {
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
 
         // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);
-        $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
+
+//        $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
+
+//        if (env('REQUEST_TYPE') != 'postMan') {
+
+            $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
+
+//        }
+//        var_dump($this->requestData["userEmail"]);
+
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
