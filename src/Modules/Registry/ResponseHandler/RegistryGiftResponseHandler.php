@@ -4,6 +4,7 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\CartItems;
 use League\Fractal;
+use OlaHub\UserPortal\Models\RegistryGiftModel;
 
 class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
 {
@@ -12,12 +13,12 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
     private $data;
     private $item;
 
-    public function transform(CartItems $data)
+    public function transform(RegistryGiftModel $data)
     {
         $this->data = $data;
         $this->setDefaultData();
         $this->setGiftOwnerImageData();
-        $this->setLikersData();
+
         return $this->return;
     }
 
@@ -101,27 +102,4 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
         $this->return['registryItemHasDiscount'] = $return['productHasDiscount'];
     }
 
-//    private function setLikersData()
-//    {
-//        $participantLikers = unserialize($this->data->paricipant_likers);
-//        $this->return['currentLike'] = FALSE;
-//        $this->return['totalLikers'] = 0;
-//        $likers = [];
-//        if ($participantLikers && count($participantLikers) > 0) {
-//            $usersData = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $participantLikers['user_id'])->get();
-//            $this->return['totalLikers'] = count($usersData);
-//            $likers = [];
-//            foreach ($usersData as $userData) {
-//                if ($userData->id != app('session')->get('tempID')) {
-//                    $likers[] = [
-//                        "userId" => $userData->id,
-//                        "userName" => isset($userData->first_name) ? $userData->first_name . ' ' . $userData->last_name : NULL
-//                    ];
-//                } else {
-//                    $this->return['currentLike'] = TRUE;
-//                }
-//            }
-//        }
-//        $this->return['Likers'] = $likers;
-//    }
 }

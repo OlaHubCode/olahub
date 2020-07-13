@@ -198,6 +198,8 @@ class RegistryController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Delete registry details"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete registry details", "action_startData" => $registry]);
+        $items = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)->where('created_by',app('session')->get('tempID'))->delete();
+
 //        $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('registry_id', $registry->id)->first();
 //
 //        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete gift items related to celebration"]);
@@ -245,7 +247,6 @@ class RegistryController extends BaseController
         }
 
         $saved = $this->registry->save();
-
         if ($saved) {
             if(isset($this->requestData['registryImage'])){
                 $image = (new \OlaHub\UserPortal\Helpers\RegistryHelper)->uploadImage($this->registry, 'image', $this->requestData['registryImage']);
@@ -253,7 +254,6 @@ class RegistryController extends BaseController
                 $saved = $this->registry->save();
             }
             if (isset($this->requestData['registryVideo'])){
-
                 $video = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData['registryVideo'], DEFAULT_IMAGES_PATH . "registries/" . $this->registry->id, "registries/" . $this->registry->id, false);
                 if (array_key_exists('path', $video)) {
 
@@ -283,6 +283,7 @@ class RegistryController extends BaseController
                 ->orwhere('user_id', app('session')->get('tempID'))
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
+
 
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($registries, '\OlaHub\UserPortal\ResponseHandlers\RegistryResponseHandler');
             $return['status'] = true;
@@ -332,10 +333,52 @@ class RegistryController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response($return, 200);
             }
+
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function publishRegistry(){
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' publishRegistry');
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "publish Registry"]);
+
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start publish Registry"]);
+
+        if (RegistryModel::validateRegistryId($this->requestData) ) {
+            $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
+
+            if ($this->registry->user_id != app('session')->get('tempID')) {
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400]]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+                return response(['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400], 200);
+            }elseif($this->registry->status != 1){
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400]]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+                return response(['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400], 200);
+            }
+            $this->registry->publish = 1;
+            $saved = $this->registry->save();
+
+            if ($saved) {
+
+                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->registry, '\OlaHub\UserPortal\ResponseHandlers\RegistryResponseHandler');
+                $return['status'] = TRUE;
+                $return['code'] = 200;
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End updating registry"]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+                return response($return, 200);
+            }
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();

@@ -25,13 +25,13 @@ class RegistryGiftModel extends Model {
             'column' => 'quantity',
             'type' => 'number',
             'relation' => false,
-            'validation' => 'numeric'
+            'validation' => 'numeric|required|min:1'
         ],
         'registryItemType' => [
             'column' => 'item_type',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'string'
+            'validation' => 'string|required'
         ],
         
         

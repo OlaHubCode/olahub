@@ -12,7 +12,7 @@ $router->group([
         ], function () use($router) {
 
     $router->group([
-//        'middleware' => ['checkAuth']
+        'middleware' => ['checkAuth']
             ], function () use($router) {
         
         $router->post('newRegistry', 'RegistryController@createNewRegistry');
@@ -20,23 +20,16 @@ $router->group([
         $router->post('deleteRegistry', 'RegistryController@deleteRegistry');
         $router->get('list', 'RegistryController@ListRegistry');
         $router->post('one', 'RegistryController@getOneRegistry');
+        $router->post('publish' , 'RegistryController@publishRegistry');
 
 
         $router->post('newParticipants', 'RegistryParticipantController@createParticipants');
         $router->post('deleteParticipant', 'RegistryParticipantController@deleteParticipant');
         $router->post('listParticipants', 'RegistryParticipantController@ListRegistryParticipants');
 
-//        $router->post('add/{itemType:\bstore|designer\b}/{type:\bdefault|event|celebration\b}', 'OlaHubCartController@newCartItem');
-
-//        $router->post('newGift', 'GiftController@addGiftToCelebration');
-//        //$router->post('deleteGift', 'GiftController@deleteGiftFromCelebration');
-//        $router->post('listGifts', 'GiftController@listCelebrationGifts');
-//        $router->post('likeGift', 'GiftController@likeCelebrationGift');
-//        $router->delete('deleteGift', 'GiftController@deleteCelebrationGift');
-//
-//        $router->post('commitCelebration', 'GiftController@commitCelebration');
-//        $router->post('unCommitCelebration', 'GiftController@unCommitCelebration');
-//
+        $router->post('newGift', 'RegistryGiftController@newGift');
+        $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');
+        $router->post('deleteGift', 'RegistryGiftController@removeRegistryItem');
 
         
     });
