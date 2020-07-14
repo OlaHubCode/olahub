@@ -343,46 +343,5 @@ class RegistryController extends BaseController
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-    public function publishRegistry(){
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
-        $userData = app('session')->get('tempData');
-        $log->saveLog($userData->id, $this->requestData, ' publishRegistry');
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "publish Registry"]);
-
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start publish Registry"]);
-
-        if (RegistryModel::validateRegistryId($this->requestData) ) {
-            $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
-
-            if ($this->registry->user_id != app('session')->get('tempID')) {
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-                return response(['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400], 200);
-            }elseif($this->registry->status != 1){
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400]]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-                return response(['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400], 200);
-            }
-            $this->registry->publish = 1;
-            $saved = $this->registry->save();
-
-            if ($saved) {
-
-                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->registry, '\OlaHub\UserPortal\ResponseHandlers\RegistryResponseHandler');
-                $return['status'] = TRUE;
-                $return['code'] = 200;
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End updating registry"]);
-                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-                return response($return, 200);
-            }
-        }
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-    }
 
 }
