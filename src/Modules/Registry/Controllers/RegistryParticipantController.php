@@ -37,6 +37,7 @@ class RegistryParticipantController extends BaseController {
 
 
         $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
+
 //        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
         $existParticipants = RegistryUsersModel::whereIn('user_id', $this->requestData['usersId'])->where('registry_id', $this->requestData['registryId'])->pluck('user_id')->toArray();
         $usersId = $this->requestData['usersId'];
@@ -49,8 +50,9 @@ class RegistryParticipantController extends BaseController {
         if ($usersId) {
             $log = new \OlaHub\UserPortal\Helpers\LogHelper();
             foreach ($usersId as $userId) {
-
-                if ($this->registry && $userId != $this->registry->user_id) {
+                if ($this->registry && (app('session')->get('tempID') == $userId ||
+                        app('session')->get('tempID') == $this->registry->user_id)) {
+                    if ($this->registry && $userId != $this->registry->user_id) {
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'registry';
                     $notification->content = "notifi_addParticipantRegistry";
@@ -59,24 +61,25 @@ class RegistryParticipantController extends BaseController {
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->save();
 
-                   $userData = app('session')->get('tempData');
+                    $userData = app('session')->get('tempData');
 
                     $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
-                   \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                       $targe->id,
-                       "registry_part_add",
-                       array(
-                           "type" => "registry_part_add",
-                           "registryId" => $this->registry->id,
-                           "registryTitle" => $this->registry->title,
-                           "username" => "$userData->first_name $userData->last_name",
-                       ),
-                       $targe->lang,
-                       "$userData->first_name $userData->last_name",
-                       $this->registry->title
-                   );
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $targe->id,
+                        "registry_part_add",
+                        array(
+                            "type" => "registry_part_add",
+                            "registryId" => $this->registry->id,
+                            "registryTitle" => $this->registry->title,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $targe->lang,
+                        "$userData->first_name $userData->last_name",
+                        $this->registry->title
+                    );
 
                     $participant = $this->participant($userId);
+                }
                 }
             }
             $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->get();
@@ -113,8 +116,9 @@ class RegistryParticipantController extends BaseController {
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
-        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
-        if ($this->registry) {
+        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
+        if ($this->registry && (app('session')->get('tempID') == $this->requestData['userId'] ||
+                app('session')->get('tempID') == $this->registry->user_id)) {
             $participant = RegistryUsersModel::where('user_id', $this->requestData['userId'])->where('registry_id', $this->requestData['registryId'])->first();
             if ($participant && $this->registry->user_id != $this->requestData['userId'] ) {
                 $participant->delete();
