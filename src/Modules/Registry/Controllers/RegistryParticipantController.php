@@ -44,7 +44,7 @@ class RegistryParticipantController extends BaseController {
         if ($existParticipants) {
             $usersId = array_diff($numArray, $existParticipants);
         }
-
+//var_dump($usersId);
         if ($usersId) {
             $log = new \OlaHub\UserPortal\Helpers\LogHelper();
             foreach ($usersId as $userId) {
@@ -80,8 +80,8 @@ class RegistryParticipantController extends BaseController {
                 }
                 }
             }
-            $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->get();
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($participants, '\OlaHub\UserPortal\ResponseHandlers\RegistryParticipantResponseHandler');
+            $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->paginate(30);
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($participants, '\OlaHub\UserPortal\ResponseHandlers\RegistryParticipantResponseHandler');
 
             $return['status'] = TRUE;
             $return['code'] = 200;
