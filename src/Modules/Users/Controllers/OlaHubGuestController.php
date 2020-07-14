@@ -129,12 +129,9 @@ class OlaHubGuestController extends BaseController
 
 //        $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
 
-//        if (env('REQUEST_TYPE') != 'postMan') {
-
+        if (env('REQUEST_TYPE') != 'postMan') {
             $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
-
-//        }
-//        var_dump($this->requestData["userEmail"]);
+        }
 
         if (!isset($this->requestData["userEmail"])) {
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);

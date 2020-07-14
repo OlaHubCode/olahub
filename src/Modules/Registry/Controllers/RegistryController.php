@@ -105,7 +105,6 @@ class RegistryController extends BaseController
                 }
                 $this->registry->video = $video['path'];
 
-
             }
         }
 
@@ -272,18 +271,18 @@ class RegistryController extends BaseController
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "ListRegistry"]);
         $participants = RegistryUsersModel::where('user_id', app('session')->get('tempID'))->get();
-
+        $registriesId = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "List user registries"]);
         if (count($participants) > 0) {
             foreach ($participants as $participant) {
                 $registriesId[] = $participant->registry_id;
             }
-
+        }
             $registries = RegistryModel::whereIn('id', $registriesId)
                 ->orwhere('user_id', app('session')->get('tempID'))
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
-
+        if ($registries){
 
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($registries, '\OlaHub\UserPortal\ResponseHandlers\RegistryResponseHandler');
             $return['status'] = true;
