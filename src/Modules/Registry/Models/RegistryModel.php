@@ -26,12 +26,12 @@ class RegistryModel extends Model {
             'relation' => false,
             'validation' => 'mimes:mp4,mov,ogg,qt | max:20000'
         ],
-        'registryOwner' => [
-            'column' => 'user_id',
-            'type' => 'number',
-            'relation' => false,
-            'validation' => 'required|numeric|exists:users,id'
-        ],
+//        'registryOwner' => [
+//            'column' => 'user_id',
+//            'type' => 'number',
+//            'relation' => false,
+//            'validation' => 'required|numeric|exists:users,id'
+//        ],
         'registryDate' => [
             'column' => 'registry_date',
             'type' => 'string',

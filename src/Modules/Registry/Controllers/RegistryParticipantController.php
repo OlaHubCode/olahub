@@ -36,7 +36,8 @@ class RegistryParticipantController extends BaseController {
         }
 
 
-        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
+        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
+//        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
         $existParticipants = RegistryUsersModel::whereIn('user_id', $this->requestData['usersId'])->where('registry_id', $this->requestData['registryId'])->pluck('user_id')->toArray();
         $usersId = $this->requestData['usersId'];
         $numArray = array_map('intval', $usersId);
@@ -89,8 +90,8 @@ class RegistryParticipantController extends BaseController {
 
         }
 
-        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        $log->saveLogSessionData();
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
