@@ -17,7 +17,6 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
     {
         $this->data = $data;
         $this->setDefaultData();
-        $this->setGiftOwnerImageData();
 
         return $this->return;
     }
@@ -31,7 +30,6 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
                     "registryGiftId" => isset($this->data->id) ? $this->data->id : 0,
                     "registryGiftStatus" => isset($this->data->status) ? $this->data->status : 1,
                     "registryGiftType" => "store",
-                    "registryGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
                     "registryItem" => isset($this->item->id) ? $this->item->id : 0,
                     "registryItemName" => isset($this->item) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->item, 'name') : NULL,
                     "registryItemSlug" => isset($this->item->item_slug) ? $this->item->item_slug : NULL,
@@ -47,7 +45,6 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
                         "registryGiftId" => isset($this->data->id) ? $this->data->id : 0,
                         "registryGiftStatus" => isset($this->data->status) ? $this->data->status : 1,
                         "registryGiftType" => "designer",
-                        "registryGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
                         "registryItem" => isset($this->item->id) ? $this->item->id : 0,
                         "registryItemName" => $this->item->name,
                         "registryItemSlug" => isset($this->item->item_slug) ? $this->item->item_slug : NULL,
@@ -71,16 +68,6 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
         }
     }
 
-    private function setGiftOwnerImageData()
-    {
-        $giftOwner = \OlaHub\UserPortal\Models\UserModel::where('id', $this->data->created_by)->first();
-        $this->return["registryGiftOwnerName"] = isset($giftOwner) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($giftOwner, 'name') : NULL;
-        if (isset($giftOwner->profile_picture)) {
-            $this->return['registryGiftOwnerPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($giftOwner->profile_picture);
-        } else {
-            $this->return['registryGiftOwnerPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
-        }
-    }
 
     private function setPriceData()
     {
