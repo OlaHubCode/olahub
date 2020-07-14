@@ -195,7 +195,7 @@ class RegistryParticipantController extends BaseController {
        
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
             $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->paginate(30);
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($participants, '\OlaHub\UserPortal\ResponseHandlers\RegistryParticipantResponseHandler');
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($participants, '\OlaHub\UserPortal\ResponseHandlers\RegistryParticipantResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
