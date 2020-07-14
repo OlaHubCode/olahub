@@ -117,7 +117,7 @@ class RegistryGiftController extends BaseController
         $this->gift = RegistryGiftModel::where('id', $this->requestData['registryGiftId'])->where('created_by', app('session')->get('tempID'))->first();
         if ($this->gift) {
             $registry = RegistryModel::where('user_id', $this->gift->created_by)->where('id', $this->gift->registry_id)->first();
-            if ($registry && $registry->status == 1 && $this->gift->status == 1) {
+            if ($registry && $this->gift->status == 1) {
                 $this->gift->delete();
 
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'RegistryGiftDeleted', 'code' => 200]]);

@@ -1289,15 +1289,17 @@ class EmailHelper extends OlaHubCommonHelper
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
-
-    function sendNotRegisterUserRegistryInvition($userData, $registryOwner, $registryID, $password)
+    function sendNotRegisterUserRegistryInvition($email, $registryOwner, $registryID, $registryName)
     {
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user registry invition Email", "action_startData" => json_encode($userData) . $registryOwner . $registryID . "*******"]);
-        $template = 'USR035';
-        $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[RegistryURL]', '[UserEmail]', '[UserPassword]'];
-        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $userData->email, $password];
-        $to = [[$userData->email, $username]];
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user registry invition Email", "action_startData" => json_encode($email) . $registryOwner . $registryID . $registryName]);
+        $template = 'USR034';
+//        $username = "$userData->first_name $userData->last_name";
+        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
+        $to = [[$email]];
+//        $to = [[$email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
+
+
 }

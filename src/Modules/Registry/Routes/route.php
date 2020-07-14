@@ -25,6 +25,7 @@ $router->group([
         $router->post('newParticipants', 'RegistryParticipantController@createParticipants');
         $router->post('deleteParticipant', 'RegistryParticipantController@deleteParticipant');
         $router->post('listParticipants', 'RegistryParticipantController@ListRegistryParticipants');
+        $router->post('inviteNotRegisterUsers', 'RegistryParticipantController@inviteNotRegisterUsers');
 
         $router->post('newGift', 'RegistryGiftController@newGift');
         $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');

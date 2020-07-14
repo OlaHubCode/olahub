@@ -44,5 +44,19 @@ class RegistryUsersModel extends Model {
         }
         return ['status' => $status, 'data' => $data];
     }
+    static function validateNotRegisterUserData($requestData) {
+        $data = [];
+        $status = TRUE;
+
+        $validator = \Validator::make($requestData, [
+            'registryId' => 'required|exists:registries,id',
+            'users'    => 'required|array',
+        ]);
+        if ($validator->fails()) {
+            $status = FALSE;
+            $data = $validator->errors()->toArray();
+        }
+        return ['status' => $status, 'data' => $data];
+    }
     
 }

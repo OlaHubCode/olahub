@@ -37,8 +37,6 @@ class RegistryParticipantController extends BaseController {
 
 
         $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
-
-//        $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
         $existParticipants = RegistryUsersModel::whereIn('user_id', $this->requestData['usersId'])->where('registry_id', $this->requestData['registryId'])->pluck('user_id')->toArray();
         $usersId = $this->requestData['usersId'];
         $numArray = array_map('intval', $usersId);
@@ -172,28 +170,16 @@ class RegistryParticipantController extends BaseController {
             $participant->user_id = $user_id;
             $participant->save();
             $registryOwner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->registry->user_id)->first();
-            if (!$user->invited_by) {
-                if ($user->mobile_no && $user->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
-                } else if ($user->mobile_no) {
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
-                } else if ($user->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
-                }
-            } else {
-                $password = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6);
-                $user->password = $password;
-                $user->save();
-                if ($user->mobile_no && $user->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $password);
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $password);
-                } else if ($user->mobile_no) {
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $password);
-                } else if ($user->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $password);
-                }
+
+            if ($user->mobile_no && $user->email) {
+                (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
+                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
+            } else if ($user->mobile_no) {
+                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
+            } else if ($user->email) {
+                (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
             }
+
             return true;
         }
 
@@ -208,7 +194,7 @@ class RegistryParticipantController extends BaseController {
         $log->setLogSessionData(['module_name' => "Registry", 'function_name' => "ListRegistryParticipants"]);
        
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
-            $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->get();
+            $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->paginate(30);
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($participants, '\OlaHub\UserPortal\ResponseHandlers\RegistryParticipantResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
@@ -219,6 +205,35 @@ class RegistryParticipantController extends BaseController {
        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+    public function inviteNotRegisterUsers() {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Registry", 'function_name' => "participant"]);
+
+        $validator = RegistryUsersModel::validateNotRegisterUserData($this->requestData);
+
+        if (isset($validator['status']) && !$validator['status']) {
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
+        }
+
+        foreach ($this->requestData['users'] as $user) {
+            $is_phone = is_numeric($user);
+            $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
+            $registryOwner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->registry->user_id)->first();
+            if ($is_phone) {
+                $send = (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
+            } else {
+                $send = (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNotRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
+            }
+
+        }
+        $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'UsersInvitedSuccessfully', 'code' => 200]]);
+        $log->saveLogSessionData();
+        return response(['status' => true, 'msg' => 'UsersInvitedSuccessfully', 'code' => 200], 200);
+
     }
 
 }

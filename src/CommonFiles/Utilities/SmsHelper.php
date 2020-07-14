@@ -408,16 +408,6 @@ class SmsHelper extends OlaHubCommonHelper
         parent::sendSms($to, $replace, $with, $template);
     }
 
-    function sendNotRegisterUserRegistryInvition($userData, $registryOwner, $registryID, $password)
-    {
-        $this->getCountryCode($userData->country_id);
-        $template = 'USR035';
-        $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[RegistryURL]', '[UserEmail]', '[UserPassword]'];
-        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $this->countryCode . (int) $userData->mobile_no, $password];
-        $to = $this->countryCode . (int) $userData->mobile_no;
-        parent::sendSms($to, $replace, $with, $template);
-    }
     function sendRegisterUserRegistryInvition($userData, $registryOwner, $registryID, $registryName)
     {
         $this->getCountryCode($userData->country_id);
@@ -425,6 +415,15 @@ class SmsHelper extends OlaHubCommonHelper
         $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
         $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
         $to = $this->countryCode . (int) $userData->mobile_no;
+        parent::sendSms($to, $replace, $with, $template);
+    }
+
+    function sendNotRegisterUserRegistryInvition($mobile, $registryOwner, $registryID, $registryName)
+    {
+        $template = 'USR034';
+        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
+        $to = (int) $mobile;
         parent::sendSms($to, $replace, $with, $template);
     }
 }

@@ -29,6 +29,7 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
                 $this->item = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $this->data->item_id)->first();
                 $this->return = [
                     "registryGiftId" => isset($this->data->id) ? $this->data->id : 0,
+                    "registryGiftStatus" => isset($this->data->status) ? $this->data->status : 1,
                     "registryGiftType" => "store",
                     "registryGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
                     "registryItem" => isset($this->item->id) ? $this->item->id : 0,
@@ -44,6 +45,7 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
                 if ($this->item) {
                     $this->return = [
                         "registryGiftId" => isset($this->data->id) ? $this->data->id : 0,
+                        "registryGiftStatus" => isset($this->data->status) ? $this->data->status : 1,
                         "registryGiftType" => "designer",
                         "registryGiftOwner" => $this->data->created_by == app('session')->get('tempID') ? TRUE : FALSE,
                         "registryItem" => isset($this->item->id) ? $this->item->id : 0,

@@ -29,6 +29,7 @@ class RegistryResponseHandler extends Fractal\TransformerAbstract {
         $this->return = [
             "registry" => isset($this->data->id) ? $this->data->id : 0,
             "registryTitle" =>  isset($this->data->title) ? $this->data->title : NULL,
+            "registryStatus" =>  isset($this->data->status) ? $this->data->status : 1,
             "registryWish" =>  isset($this->data->wish) ? $this->data->wish : NULL,
             'registryImage' => isset($this->data->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->image) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
             'registryVideo' => isset($this->data->video) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->video) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
