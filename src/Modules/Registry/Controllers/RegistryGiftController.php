@@ -114,6 +114,7 @@ class RegistryGiftController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "removeRegistryItem"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete registry item"]);
 
+
         $this->gift = RegistryGiftModel::where('id', $this->requestData['registryGiftId'])->where('created_by', app('session')->get('tempID'))->first();
         if ($this->gift) {
             $registry = RegistryModel::where('user_id', $this->gift->created_by)->where('id', $this->gift->registry_id)->first();
@@ -124,6 +125,47 @@ class RegistryGiftController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
                 return response(['status' => true, 'msg' => 'RegistryGiftDeleted', 'code' => 200], 200);
+            }
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowDeleteGift', 'code' => 400]]);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NotAllowDeleteGift', 'code' => 400], 200);
+        }
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+    public function updateRegistryItemQuantity() {
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+
+        $userData = app('session')->get('tempData');
+        $log->saveLog($userData->id, $this->requestData, ' updateRegistryItem');
+
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "updateRegistryItem"]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "update registry item"]);
+
+        $validator = RegistryGiftModel::validateRegistryItemQuantity($this->requestData) ;
+
+        if (isset($validator['status']) && !$validator['status']) {
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']]]);
+            (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
+        }
+
+
+        $this->gift = RegistryGiftModel::where('id', $this->requestData['registryGiftId'])->where('created_by', app('session')->get('tempID'))->first();
+        if ($this->gift) {
+            $registry = RegistryModel::where('user_id', $this->gift->created_by)->where('id', $this->gift->registry_id)->first();
+            if ($registry && $this->gift->status == 1) {
+
+                $this->gift->quantity = $this->requestData['registryItemQuantity'];
+                $this->gift->total_price = (float) $this->gift->unit_price * $this->gift->quantity;
+                $this->gift->save();
+
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'RegistryGiftUpdated', 'code' => 200]]);
+                (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+
+                return response(['status' => true, 'msg' => 'RegistryGiftUpdated', 'code' => 200], 200);
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowDeleteGift', 'code' => 400]]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();

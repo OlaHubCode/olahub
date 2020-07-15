@@ -84,7 +84,7 @@ class OlaHubCartController extends BaseController
         $checkPermission = $this->checkActionPermission($type);
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
-        }
+        }quantity
         // $countryData = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($country);
         // if (!$countryData) {
         //     throw new NotAcceptableHttpException(404);
