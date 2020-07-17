@@ -121,7 +121,7 @@ class EmailHelper extends OlaHubCommonHelper
 
         $subTotal = 0;
         foreach ($billingDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
         }
@@ -241,7 +241,7 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails = $this->style['fhr'];
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
             $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
@@ -308,7 +308,7 @@ class EmailHelper extends OlaHubCommonHelper
 
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
         }
@@ -368,6 +368,8 @@ class EmailHelper extends OlaHubCommonHelper
         $customerAddress = $billingAddress['country'] . ', ' . $billingAddress['city'] . ", " . $billingAddress['address'] . ", " . $billingAddress['zipcode'];
         $currency = $bill->billing_currency;
         foreach ($billDetails as $store) {
+            if (!$store || !isset($store['items']))
+                continue;
             $subTotal = 0;
             $merchantName = $store['storeManagerName'];
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
@@ -408,7 +410,7 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails = $this->style['fhr'];
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
             $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
@@ -579,7 +581,7 @@ class EmailHelper extends OlaHubCommonHelper
 
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
         }
@@ -642,6 +644,8 @@ class EmailHelper extends OlaHubCommonHelper
         $giftDate = OlaHubCommonHelper::convertStringToDate($bill->gift_date);
 
         foreach ($billDetails as $store) {
+            if (!$store || !isset($store['items']))
+                continue;
             $subTotal = 0;
             $merchantName = $store['storeManagerName'];
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
@@ -694,7 +698,7 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails = $this->style['fhr'];
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
             $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
@@ -753,7 +757,7 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails = $this->style['fhr'];
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
             $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
@@ -788,7 +792,7 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails = $this->style['fhr'];
         $subTotal = 0;
         foreach ($billDetails as $store) {
-            if (!$store)
+            if (!$store || !isset($store['items']))
                 continue;
             $subTotal += $this->handleOrderItemsSubTotal($store['items']);
             $orderDetails .= $this->handleOrderItemsHtml($store, $currency);
@@ -1093,7 +1097,7 @@ class EmailHelper extends OlaHubCommonHelper
     {
         $total = 0;
         foreach ($items as $item) {
-            $total += (float) $item['itemPrice'];
+            $total += (float) $item['itemPrice'] * $item['itemQuantity'];
         }
         return number_format($total, 2);
     }
