@@ -639,7 +639,7 @@ class OlaHubPaymentsMainController extends BaseController
         $targetID = isset($shipping['for_user']) ? $shipping['for_user'] : NULL;
         $target = UserModel::withOutGlobalScope('notTemp')->find($targetID);
         if (isset($this->grouppedMers['voucher']) && $this->grouppedMers['voucher'] > 0) {
-            \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance($targetID, $this->grouppedMers['voucher'], $this->cart->country_id);
+            \OlaHub\UserPortal\Models\UserVouchers::updateVoucherBalance($targetID, $this->grouppedMers['voucher'], $this->billing->country_id);
         }
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSalesNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendMerchantNewOrderGift($this->grouppedMers, $this->billing, app('session')->get('tempData'));
