@@ -8,7 +8,7 @@ class Notifications extends Model
 {
 
     protected $table = 'users_notifications';
-    
+
 
     public function userData()
     {
@@ -20,7 +20,7 @@ class Notifications extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
     }
 
- 
+
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {

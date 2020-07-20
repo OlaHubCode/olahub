@@ -154,6 +154,8 @@ class ComposerStaticInitbba53004a0b53843540453fe6dd181df
         'OlaHub\\UserPortal\\Models\\PostReplies' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/PostReplies.php',
         'OlaHub\\UserPortal\\Models\\PostReport' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/PostReport.php',
         'OlaHub\\UserPortal\\Models\\PostShares' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/PostShares.php',
+        'OlaHub\\UserPortal\\Models\\PostVote' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/PostVote.php',
+        'OlaHub\\UserPortal\\Models\\PostVoteUser' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/VotePostUser.php',
         'OlaHub\\UserPortal\\Models\\SellWithUsUnsupport' => __DIR__ . '/../..' . '/src/CommonFiles/Models/SellWithUsUnsupport.php',
         'OlaHub\\UserPortal\\Models\\SharedItems' => __DIR__ . '/../..' . '/src/Modules/shares/Models/SharedItems.php',
         'OlaHub\\UserPortal\\Models\\ShippingCities' => __DIR__ . '/../..' . '/src/CommonFiles/Models/ShippingCities.php',
