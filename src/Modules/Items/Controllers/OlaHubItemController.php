@@ -505,6 +505,7 @@ class OlaHubItemController extends BaseController
 
     public function getOneItemRelatedItems($slug)
     {
+        
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItemRelatedItems"]);
 

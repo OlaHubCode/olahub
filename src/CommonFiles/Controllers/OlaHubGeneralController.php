@@ -591,6 +591,8 @@ class OlaHubGeneralController extends BaseController
         $q = 'a';
         $searchData = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search all"]);
+        $ditems = [];
+
         if (isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) {
             $q = mb_strtolower($this->requestFilter->word);
             $searchQuery = [];

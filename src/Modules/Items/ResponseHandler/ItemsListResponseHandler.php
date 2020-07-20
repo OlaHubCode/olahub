@@ -16,8 +16,9 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         $this->data = $data;
         $this->setDefaultData();
         $this->setPriceData();
+        $this->setWishlistData();
         // $this->setMerchantData();
-        // $this->setAddData();
+//         $this->setAddData();
         // $this->setDefImageData();
         return $this->return;
     }
@@ -98,5 +99,17 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         } else {
             $this->return['productImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
+    }
+    private function setWishlistData()
+    {
+        $this->return['productWishlist'] = false;
+
+        //wishlist
+        $wishlist = \OlaHub\UserPortal\Models\WishList::where('item_id', $this->data->id)
+            ->where('user_id', app('session')->get('tempID'))->first();
+        if ($wishlist) {
+            $this->return['productWishlist'] = true;
+        }
+        
     }
 }
