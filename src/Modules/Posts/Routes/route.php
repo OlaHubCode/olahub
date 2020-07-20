@@ -29,8 +29,5 @@ $router->group([
     $router->POST('usersLike', 'OlaHubPostController@usersLike');
     $router->post('hashTag', 'OlaHubPostController@hashPost');
     $router->post('ReportPost', 'OlaHubPostController@ReportPost');
-
-
+    $router->post('votersOnPost','OlaHubPostController@votersOnPost');
 });
-
-

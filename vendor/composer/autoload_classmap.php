@@ -153,6 +153,8 @@ return array(
     'OlaHub\\UserPortal\\Models\\PostReplies' => $baseDir . '/src/Modules/Posts/Models/PostReplies.php',
     'OlaHub\\UserPortal\\Models\\PostReport' => $baseDir . '/src/Modules/Posts/Models/PostReport.php',
     'OlaHub\\UserPortal\\Models\\PostShares' => $baseDir . '/src/Modules/Posts/Models/PostShares.php',
+    'OlaHub\\UserPortal\\Models\\PostVote' => $baseDir . '/src/Modules/Posts/Models/PostVote.php',
+    'OlaHub\\UserPortal\\Models\\PostVoteUser' => $baseDir . '/src/Modules/Posts/Models/VotePostUser.php',
     'OlaHub\\UserPortal\\Models\\SellWithUsUnsupport' => $baseDir . '/src/CommonFiles/Models/SellWithUsUnsupport.php',
     'OlaHub\\UserPortal\\Models\\SharedItems' => $baseDir . '/src/Modules/shares/Models/SharedItems.php',
     'OlaHub\\UserPortal\\Models\\ShippingCities' => $baseDir . '/src/CommonFiles/Models/ShippingCities.php',
