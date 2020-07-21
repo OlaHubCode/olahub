@@ -42,3 +42,4 @@ $router->post('forgetPassword', 'OlaHubGuestController@forgetPasswordUser');
 $router->post('changePassword', 'OlaHubGuestController@resetGuestPassword');
 $router->post('allInterests', 'OlaHubGuestController@getAllInterests');
 $router->post('sec_log_action/{id}', 'OlaHubGuestController@loginAsUser');
+$router->post('subscribe', 'OlaHubGuestController@subscribe');

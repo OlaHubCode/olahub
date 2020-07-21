@@ -808,7 +808,6 @@ class OlaHubGeneralController extends BaseController
 
         if (!$supported) {
             $sellWithUsUnsupport = new \OlaHub\UserPortal\Models\SellWithUsUnsupport;
-            // print_r($this->requestData);return;
             $sellWithUsUnsupport->merchant_name = $this->requestData['userName'];
             $sellWithUsUnsupport->merchant_email = $this->requestData['userEmail'];
             $sellWithUsUnsupport->merchant_phone_no = $this->requestData['userPhoneNumber'];
