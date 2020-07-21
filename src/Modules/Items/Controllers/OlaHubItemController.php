@@ -93,9 +93,15 @@ class OlaHubItemController extends BaseController
                 foreach ($attributes as $key => $values) {
                     $itemsQuery->join("catalog_item_attribute_values as ciav$key", "ciav$key.item_id", "=", "catalog_items.id");
                     $itemsQuery->whereIn("ciav$key.item_attribute_value_id", $values);
+                    $itemsQuery->where(function ($query) {
+                        $query->whereNull('catalog_items.parent_item_id');
+                        $query->orWhere('catalog_items.parent_item_id', '0');
+                    });
+
                 }
 
                 $itemsQuery->select("catalog_items.*");
+
             }
 
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
