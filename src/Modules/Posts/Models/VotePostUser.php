@@ -19,3 +19,5 @@ class VotePostUser extends Model
         return $this->belongsTo('OlaHub\UserPortal\Models\PostVote','id');
     }
 }
+
+
