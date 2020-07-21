@@ -3,7 +3,6 @@
 namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\Post;
-use OlaHub\UserPortal\Models\VotePostUser;
 use League\Fractal;
 
 class PostsResponseHandler extends Fractal\TransformerAbstract
@@ -51,22 +50,34 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
       $dataVotes = [];
       if($votes){
         foreach($votes as $vote){
-          $dataVotes[] = array(
-            'content' => $vote->option,
-            'type' => $vote->type,
-            'content' => $vote->option,
-            'total' => $vote->usersVote()->count()
+          $newRow = array(
+            'id'            => $vote->id,
+            'type'          => $vote->type,
+            'content'       => $vote->option,
+            'total'         => count($vote->usersVote),
+            'isUserVoted'   => isset($vote->usersVote[0]->user_id) ? true : false,
+            'endDate'       =>\Carbon\Carbon::now()->diffInDays($vote->end_date)
           );
+          $item = false;
+          if($vote->type == 'store'){
+            $item = (new \OlaHub\UserPortal\Models\CatalogItem)->where('item_slug', $vote->option)->first();
+          } else if($vote->type == 'designer'){
+            $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
+          }
+          if($item){
+            $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+            $newRow['item_title'] = $item->name;
+          }
+          $dataVotes[] = $newRow;
         }
       }
+      $x = 0;
+      foreach($dataVotes as $total){
+            $x += $total['total'];
+      }
+      $this->return['totalCountVote']=$x;
       $this->return['votes'] = $dataVotes;
     }
-
-    // private function isUserVoted(){
-    //     $userId = app('session')->get('tempID');
-        
-    //     $voters = VotePostUser::
-    // }
 
     private function setPostImg()
     {

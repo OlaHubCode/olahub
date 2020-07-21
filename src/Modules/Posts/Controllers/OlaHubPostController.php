@@ -459,8 +459,6 @@ class OlaHubPostController extends BaseController
 
               if(isset($this->requestData['isVote']) && $this->requestData['isVote'] == true ){
                 $postVote = new PostVote;
-                // $postId = $post->post_id;
-                //$voteEndDate = date("Y-m-d h:i:s");
                 $dataRows = [];
                 if(!empty($this->requestData['optionsTextData'])){
                   foreach ($this->requestData['optionsTextData'] as $value) {
@@ -1039,40 +1037,41 @@ public function ReportPost()
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
 
-              $user_vote = new PostVoteUser();
+              $user_vote = new VotePostUser();
               $user_vote->user_id = app('session')->get('tempID') ;
               $user_vote->vote_id = $this->requestData['optionId'];
               $user_vote->save();
 
-              $postV = $user_vote->post_vote->post_id;
-              $post = Post::where('post_id',$postV)->first();
+            //   $postV = $user_vote->post_vote->post_id;
+            //   $post = Post::where('post_id',$postV)->first();
 
-               if ($post->user_id != app('session')->get('tempID')){
-                  $notification = new \OlaHub\UserPortal\Models\Notifications();
-                  $notification->type = 'post_voting';
-                  $notification->content = "notifi_voting";
-                  $notification->user_id = $post->user_id;
-                  $notification->friend_id = app('session')->get('tempID');
-                  $notification->post_id = $post->post_id;
-                  $notification->save();
+            //    if ($post->user_id != app('session')->get('tempID')){
+            //       $notification = new \OlaHub\UserPortal\Models\Notifications();
+            //       $notification->type = 'post_voting';
+            //       $notification->content = "notifi_voting";
+            //       $notification->user_id = $post->user_id;
+            //       $notification->friend_id = app('session')->get('tempID');
+            //       $notification->post_id = $post->post_id;
+            //       $notification->save();
 
-                   $userData = app('session')->get('tempData');
-                   $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+            //        $userData = app('session')->get('tempData');
+            //        $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
 
-                  \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                      $post->user_id,
-                      "post_voting",
-                      array(
-                          "type" => "post_voting",
-                          "post_id" => $post->post_id,
-                          "username" => "$userData->first_name $userData->last_name",
-                      ),
-                      $owner->lang,
-                      "$userData->first_name $userData->last_name"
-                  );
-              $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You voteing post successfully', 'code' => 200]]);
-              $log->saveLogSessionData();
-              return response(['status' => true, 'msg' => 'You report post successfully', 'code' => 200], 200);
-            }
+            //       \OlaHub\UserPortal\Models\Notifications::sendFCM(
+            //           $post->user_id,
+            //           "post_voting",
+            //           array(
+            //               "type" => "post_voting",
+            //               "post_id" => $post->post_id,
+            //               "username" => "$userData->first_name $userData->last_name",
+            //           ),
+            //           $owner->lang,
+            //           "$userData->first_name $userData->last_name"
+            //       );
+             
+            // }
+            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You voteing post successfully', 'code' => 200]]);
+            $log->saveLogSessionData();
+            return response(['status' => true, 'msg' => 'You vote post successfully', 'code' => 200], 200);
         }
 }

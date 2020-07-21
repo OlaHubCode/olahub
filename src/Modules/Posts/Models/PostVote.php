@@ -21,8 +21,9 @@ class PostVote extends Model
 
     public function usersVote()
     {
-        return $this->hasMany('OlaHub\UserPortal\Models\VotePostUser', 'vote_id','vote_id');
+        return $this->hasMany('OlaHub\UserPortal\Models\VotePostUser', 'vote_id');
     }
 
-
+    
+ 
 }
