@@ -15,7 +15,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     {
         $this->data = $data;
         $this->setDefaultData();
-        $this->setVoteData();
         $this->setPostImg();
         $this->setPostVideo();
         $this->userData();
@@ -41,31 +40,10 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content' => isset($this->data->content) ? $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
+
+
       ];
 
-    }
-
-    private function setVoteData(){
-
-        // $post = Post::with('options')->where('post_id','22695f159123d246c')->first();
-       
-        // foreach($post->options as $tezy){
-        //     echo $tezy->option."<br />";
-        // }
-
-     $votes = $this->data->options;
-      $dataVotes = [];
-      if($votes){
-        foreach($votes as $vote){
-          $dataVotes[] = array(
-            'content' => $vote->option,
-            'type' => $vote->type,
-            'content' => $vote->option,
-            'total' => $vote->usersVote()->count()
-          );
-        }
-      }
-      $this->return['votes'] = $dataVotes;
     }
 
     private function setPostImg()
@@ -142,14 +120,12 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                 $liked = true;
             $userData = $like->author;
             $likerData[] = [
-            'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
-            'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
+                'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL
             ];
         }
         $this->return['likers_count'] = isset($likes) ? count($likes) : 0;
         $this->return['liked'] = $liked;
         $this->return['likersData'] = $likerData;
     }
-
-
 }
