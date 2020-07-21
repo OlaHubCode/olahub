@@ -3,6 +3,7 @@
 namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\VotePostUser;
 use League\Fractal;
 
 class PostsResponseHandler extends Fractal\TransformerAbstract
@@ -46,14 +47,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     }
 
     private function setVoteData(){
-
-        // $post = Post::with('options')->where('post_id','22695f159123d246c')->first();
-       
-        // foreach($post->options as $tezy){
-        //     echo $tezy->option."<br />";
-        // }
-
-     $votes = $this->data->options;
+      $votes = $this->data->choices;
       $dataVotes = [];
       if($votes){
         foreach($votes as $vote){
@@ -67,6 +61,12 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
       }
       $this->return['votes'] = $dataVotes;
     }
+
+    // private function isUserVoted(){
+    //     $userId = app('session')->get('tempID');
+        
+    //     $voters = VotePostUser::
+    // }
 
     private function setPostImg()
     {

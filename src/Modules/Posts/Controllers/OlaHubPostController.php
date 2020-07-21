@@ -330,9 +330,7 @@ class OlaHubPostController extends BaseController
     public function addNewPost()
     {
 
-
-
-      if(isset($this->requestData['mentions']) && count($this->requestData['mentions'])>0){
+        if(isset($this->requestData['mentions']) && count($this->requestData['mentions'])>0){
 
         $allMentions=serialize ($this->requestData['mentions']);
 
