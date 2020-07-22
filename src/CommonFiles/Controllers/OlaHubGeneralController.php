@@ -924,10 +924,10 @@ class OlaHubGeneralController extends BaseController
 
         if (!$supported) {
             $sellWithUsUnsupport = new \OlaHub\UserPortal\Models\SellWithUsUnsupport;
-            $sellWithUsUnsupport->merchant_name = $this->requestData->userName;
-            $sellWithUsUnsupport->merchant_email = $this->requestData->userEmail;
-            $sellWithUsUnsupport->merchant_phone_no = $this->requestData->userPhoneNumber;
-            $sellWithUsUnsupport->country_id = $this->requestData->country;
+            $sellWithUsUnsupport->merchant_name = $this->requestData['userName'];
+            $sellWithUsUnsupport->merchant_email = $this->requestData['userEmail'];
+            $sellWithUsUnsupport->merchant_phone_no = $this->requestData['userPhoneNumber'];
+            $sellWithUsUnsupport->country_id = $this->requestData['country'];
             $sellWithUsUnsupport->save();
             $return = ['status' => true, 'msg' => 'sentOurManagers', 'code' => 200];
         }
