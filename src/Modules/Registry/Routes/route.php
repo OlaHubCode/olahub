@@ -29,6 +29,7 @@ $router->group([
         $router->post('inviteNotRegisterUsers', 'RegistryParticipantController@inviteNotRegisterUsers');
 
         $router->post('newGift', 'RegistryGiftController@newGift');
+        $router->post('updateGiftQuantity', 'RegistryGiftController@updateRegistryItemQuantity');
         $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');
         $router->post('deleteGift', 'RegistryGiftController@removeRegistryItem');
     });

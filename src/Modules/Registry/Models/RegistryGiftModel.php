@@ -44,5 +44,20 @@ class RegistryGiftModel extends Model {
     public function creatorUser() {
         return $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'created_by');
     }
+
+    static function validateRegistryItemQuantity($requestData) {
+        $data = [];
+        $status = TRUE;
+
+        $validator = \Validator::make($requestData, [
+            'registryItemQuantity' => 'required|numeric|min:1',
+            'registryGiftId' => 'required'
+        ]);
+        if ($validator->fails()) {
+            $status = FALSE;
+            $data = $validator->errors()->toArray();
+        }
+        return ['status' => $status, 'data' => $data];
+    }
     
 }

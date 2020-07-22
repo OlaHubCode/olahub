@@ -114,6 +114,7 @@ class RegistryGiftController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "removeRegistryItem"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete registry item"]);
 
+
         $this->gift = RegistryGiftModel::where('id', $this->requestData['registryGiftId'])->where('created_by', app('session')->get('tempID'))->first();
         if ($this->gift) {
             $registry = RegistryModel::where('user_id', $this->gift->created_by)->where('id', $this->gift->registry_id)->first();
