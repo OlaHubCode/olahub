@@ -466,7 +466,8 @@ class OlaHubPostController extends BaseController
                       'post_id' => $post->post_id,
                       'end_date' => $this->requestData['voteEndDate'],
                       'option' => $value,
-                      'type' => 'text'
+                      'type' => 'text',
+                      'start_date' => \Carbon\Carbon::now()
                     );
                   }
                 }
@@ -475,8 +476,8 @@ class OlaHubPostController extends BaseController
                     $dataRows[] = array(
                       'post_id' => $post->post_id,
                       'end_date' => $this->requestData['voteEndDate'],
-                      'option' => $value->value,
-                      'type' => $value->type
+                      'option' => $value['value'],
+                      'type' => $value['type']
                     );
                   }
                 }
@@ -1074,4 +1075,40 @@ public function ReportPost()
             $log->saveLogSessionData();
             return response(['status' => true, 'msg' => 'You vote post successfully', 'code' => 200], 200);
         }
+
+
+        public function notifyVotedUsers (){
+            // $item->usersVote[0]->user_id
+            $items = (new \OlaHub\UserPortal\Models\PostVote)->where(\Carbon\Carbon::now())->get();
+
+            if(!empty($items)){
+
+
+                foreach($items as $item){
+
+                    
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
+                    $notification->type = 'post_voting_end_date';
+                    $notification->content = "notifi_all_users";
+                    $notification->user_id = $item->usersVote[0]->user_id;
+                    $notification->save();
+
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $item->usersVote[0]->user_id,
+                        
+                        "post_voting_end_date",
+                        array(
+                            "type" => "post_voting",
+                            "post_id" => $post->post_id,
+                            "username" => "$userData->first_name $userData->last_name",
+                            ),
+
+                        $owner->lang,
+                        "$userData->first_name $userData->last_name"
+                  );
+             
+                 }
+                }
+            
+            }
 }
