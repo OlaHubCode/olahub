@@ -18,6 +18,11 @@ class VotePostUser extends Model
     {
         return $this->belongsTo('OlaHub\UserPortal\Models\PostVote','id');
     }
+
+    public function voter()
+    {
+        return $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'user_id', 'id');
+    }
 }
 
 
