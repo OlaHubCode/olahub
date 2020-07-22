@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Helpers\UserHelper;
 use Illuminate\Support\Facades\Crypt;
+use OlaHub\UserPortal\Models\UserSubscribe;
+
 
 class OlaHubGuestController extends BaseController
 {
@@ -855,7 +857,22 @@ class OlaHubGuestController extends BaseController
             return ['status' => false, 'msg' => 'PasswordNotCorrect', 'code' => 204];
         }
     }
+   public function subscribe()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
+        if (!empty($this->requestData['email'])) {
 
+        $subscribe = new UserSubscribe();
+        $subscribe->email = $this->requestData['email'];
+        $subscribe->save();
+        return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
+
+        }else{
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+
+        }
+    }
     function checkActiveCode()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();

@@ -631,6 +631,8 @@ class OlaHubCartController extends BaseController
     private function handleAddItemToCelebration($totalPrice)
     {
         if ($this->celebration && $totalPrice >= 0) {
+            print_r($this->celebration);return;
+
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)->get();
             $price = $totalPrice / $participants->count();
             $this->celebration->participant_count = $participants->count();
