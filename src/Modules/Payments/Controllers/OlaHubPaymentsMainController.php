@@ -171,7 +171,7 @@ class OlaHubPaymentsMainController extends BaseController
         $promoID = $this->cart ? $this->cart->promo_code_id : $this->billing->promo_code_id;
         if ($promoID) {
             $coupon = \OlaHub\UserPortal\Models\Coupon::find($promoID);
-            
+
             if ($coupon) {
                 $checkValid = (new \OlaHub\UserPortal\Helpers\CouponsHelper)->checkCouponValid($coupon);
                 if ($checkValid == "valid") {
@@ -188,9 +188,9 @@ class OlaHubPaymentsMainController extends BaseController
     {
         $this->cartTotal = (float) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
         $this->checkPromoCode($this->cartTotal);
-        if($this->promoCodeName == 'June2020'){
-            $this->shippingFees =0;    
-        }else{
+        if ($this->promoCodeName == 'June2020') {
+            $this->shippingFees = 0;
+        } else {
             $this->shippingFees = $this->cart->shipment_fees;
             if ($withExtra) {
                 if ($this->paymentMethodCountryData) {
@@ -201,13 +201,13 @@ class OlaHubPaymentsMainController extends BaseController
 
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
         if ($this->celebration) {
-            if($this->promoCodeName== 'June2020'){
-                $this->shippingFees=0;
-            }else{
+            if ($this->promoCodeName == 'June2020') {
+                $this->shippingFees = 0;
+            } else {
                 $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration);
                 $this->shippingFees = $shippingFees['total'];
             }
-            
+
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
             // $this->cartTotal = $participant->amount_to_pay - $this->shippingFees;
@@ -673,6 +673,20 @@ class OlaHubPaymentsMainController extends BaseController
         if ($participantPaids == $participantsCount) {
             $this->celebrationDetails->celebration_status = 3;
             $this->celebrationDetails->save();
+            if ($this->celebrationDetails->registry_id) {
+                foreach ($this->billingDetails as $item) {
+                    \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $this->celebrationDetails->registry_id)
+                        ->where('item_id', $item->item_id)->where('item_type', $item->item_type)->update(['status' => 3]);
+                }
+                $allItems = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $this->celebrationDetails->registry_id)->get();
+                $boughtItem = true;
+                foreach ($allItems as $item) {
+                    if ($item->status != 3)
+                        $boughtItem = false;
+                }
+                if ($boughtItem)
+                    \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->celebrationDetails->registry_id)->update(['status' => 3]);
+            }
         }
         $userData = app('session')->get('tempData');
         foreach ($participants as $participant) {

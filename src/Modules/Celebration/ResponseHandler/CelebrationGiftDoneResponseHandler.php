@@ -30,7 +30,7 @@ class CelebrationGiftDoneResponseHandler extends Fractal\TransformerAbstract
                     "celebrationItem" => isset($this->item->id) ? $this->item->id : 0,
                     "celebrationItemName" => isset($this->item) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->item, 'name') : NULL,
                     "celebrationItemSlug" => isset($this->item->item_slug) ? $this->item->item_slug : NULL,
-                    'celebrationItemPrice' => number_format($this->data->country_paid, 2),
+                    // 'celebrationItemPrice' => number_format($this->data->country_paid, 2),
                     'celebrationItemQuantity' => number_format($this->data->quantity, 2),
                     'celebrationItemTotalPrice' =>  number_format($this->data->user_paid, 2),
                     'celebrationItemDiscountedPrice' => number_format($this->data->item_price, 2),
@@ -46,7 +46,7 @@ class CelebrationGiftDoneResponseHandler extends Fractal\TransformerAbstract
                         "celebrationItem" => isset($this->item->id) ? $this->item->id : 0,
                         "celebrationItemName" => $this->item->name,
                         "celebrationItemSlug" => isset($this->item->item_slug) ? $this->item->item_slug : NULL,
-                        'celebrationItemPrice' => number_format($this->data->country_paid, 2),
+                        // 'celebrationItemPrice' => number_format($this->data->country_paid, 2),
                         'celebrationItemQuantity' => number_format($this->data->quantity, 2),
                         'celebrationItemTotalPrice' =>  number_format($this->data->user_paid, 2),
                         'celebrationItemDiscountedPrice' => number_format($this->data->item_price, 2),
@@ -55,6 +55,7 @@ class CelebrationGiftDoneResponseHandler extends Fractal\TransformerAbstract
                 }
                 break;
         }
+        $this->return['celebrationItemPrice'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->data->country_paid);
         $this->setDefImageData();
     }
 

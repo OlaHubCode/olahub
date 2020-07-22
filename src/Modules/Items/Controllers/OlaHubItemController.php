@@ -463,6 +463,28 @@ class OlaHubItemController extends BaseController
             $return['data']["existInCelebration"] = $existInCelebration;
             $return['data']["acceptParticipant"] = $acceptParticipant;
         }
+        if (isset($this->requestFilter['registryId']) && $this->requestFilter['registryId']) {
+            $existInRegistry = FALSE;
+            $existRegistry = TRUE;
+            $acceptParticipant = FALSE;
+            $registry = \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->requestFilter['registryId'])->first();
+            if ($registry) {
+                $registryItem = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)
+                    ->where('item_type', 'store')
+                    ->where('item_id', $item->id)->first();
+                if ($registryItem) {
+                    $existInRegistry = TRUE;
+                }
+            } else {
+                $existRegistry = FALSE;
+            }
+            if ($registry->user_id == app('session')->get('tempID')) {
+                $acceptParticipant = TRUE;
+            }
+            $return['data']["existRegistry"] = $existRegistry;
+            $return['data']["existInRegistry"] = $existInRegistry;
+            $return['data']["acceptParticipant"] = $acceptParticipant;
+        }
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);

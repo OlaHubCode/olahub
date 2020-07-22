@@ -7,26 +7,29 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\CelebrationModel;
 use OlaHub\UserPortal\Models\CelebrationParticipantsModel;
 
-class ParticipantController extends BaseController {
+class ParticipantController extends BaseController
+{
 
     protected $requestData;
     protected $requestFilter;
     private $celebration;
     protected $userAgent;
 
-    public function __construct(Request $request) {
+    public function __construct(Request $request)
+    {
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
 
-    public function createNewParticipant() {
+    public function createNewParticipant()
+    {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
 
-$log->saveLog($userData->id, $this->requestData, ' create_New_Participant');
-       
+        $log->saveLog($userData->id, $this->requestData, ' create_New_Participant');
+
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationParticipantsModel::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -51,7 +54,7 @@ $log->saveLog($userData->id, $this->requestData, ' create_New_Participant');
             $notification->user_id = $this->requestData['userId'];
             $notification->friend_id = app('session')->get('tempID');
             $notification->save();
-            
+
             $userData = app('session')->get('tempData');
             $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
             \OlaHub\UserPortal\Models\Notifications::sendFCM(
@@ -76,13 +79,14 @@ $log->saveLog($userData->id, $this->requestData, ' create_New_Participant');
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function deleteParticipant() {
+    public function deleteParticipant()
+    {
 
- $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
 
-$log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
-       
+        $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
+
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationParticipantsModel::$columnsMaping, (array) $this->requestData);
         if (isset($validator['status']) && !$validator['status']) {
@@ -123,8 +127,8 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
                 $this->celebration->participant_count = $this->celebration->participant_count - 1;
                 $this->celebration->save();
                 (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
-            //    $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
-            //    $log->saveLogSessionData();
+                //    $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
+                //    $log->saveLogSessionData();
                 return response(['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200], 200);
             }
             // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowDeleteParticipant', 'code' => 400]]);
@@ -136,16 +140,17 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function approveParticipantRequest() {
+    public function approveParticipantRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "approveParticipantRequest"]);
-       
+
 
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
             $participant = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])
-                    ->where('user_id', app('session')->get('tempID'))
-                    ->where('is_approved', 0)
-                    ->first();
+                ->where('user_id', app('session')->get('tempID'))
+                ->where('is_approved', 0)
+                ->first();
             if ($participant) {
                 $participant->is_approved = 1;
                 $participant->save();
@@ -199,17 +204,18 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function rejectParticipantRequest() {
+    public function rejectParticipantRequest()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "rejectParticipantRequest"]);
-       
+
 
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
             $participant = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])
-                    ->where('user_id', app('session')->get('tempID'))
-                    ->where('is_approved', 0)
-                    ->where('is_creator', '!=', 1)
-                    ->first();
+                ->where('user_id', app('session')->get('tempID'))
+                ->where('is_approved', 0)
+                ->where('is_creator', '!=', 1)
+                ->first();
             if ($participant) {
                 $participant->delete();
                 $this->celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->first();
@@ -243,25 +249,26 @@ $log->saveLog($userData->id, $this->requestData, ' deleteParticipant');
                 return response(['status' => true, 'msg' => 'RejectCelebration', 'code' => 200], 200);
             }
         }
-        $log->setLogSessionData(['response' =>['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function leaveCelebration() {
-        
- $log = new \OlaHub\UserPortal\Helpers\Logs();
- $userData = app('session')->get('tempData');
+    public function leaveCelebration()
+    {
 
-$log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
+        $log = new \OlaHub\UserPortal\Helpers\Logs();
+        $userData = app('session')->get('tempData');
+
+        $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "leaveCelebration"]);
-       
+
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
             $participant = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])
-                    ->where('user_id', app('session')->get('tempID'))
-                    ->where('is_approved', 1)
-                    ->where('is_creator', '!=', 1)
-                    ->first();
+                ->where('user_id', app('session')->get('tempID'))
+                ->where('is_approved', 1)
+                ->where('is_creator', '!=', 1)
+                ->first();
             if ($participant) {
                 $participant->delete();
                 $this->celebration = CelebrationModel::where('id', $this->requestData['celebrationId'])->first();
@@ -276,7 +283,7 @@ $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
                 $notification->user_id = $this->celebration->created_by;
                 $notification->friend_id = app('session')->get('tempID');
                 $notification->save();
-                
+
                 $userData = app('session')->get('tempData');
                 $creatorUser = $this->celebration->creatorUser;
                 \OlaHub\UserPortal\Models\Notifications::sendFCM(
@@ -294,7 +301,7 @@ $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
                 );
 
                 (new \OlaHub\UserPortal\Helpers\CelebrationHelper)->saveCelebrationCart($this->celebration);
-                $log->setLogSessionData(['response' =>['status' => true, 'msg' => 'You Leave Celebration', 'code' => 200]]);
+                $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You Leave Celebration', 'code' => 200]]);
                 $log->saveLogSessionData();
                 return response(['status' => true, 'msg' => 'LeaveCelebration', 'code' => 200], 200);
             }
@@ -304,10 +311,11 @@ $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    private function participant() {
+    private function participant()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "participant"]);
-       
+
         $user = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->requestData['userId'])->first();
         if ($user) {
             $participant = new CelebrationParticipantsModel;
@@ -352,14 +360,15 @@ $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
 
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
-        
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function ListCelebrationParticipants() {
+    public function ListCelebrationParticipants()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Celebration", 'function_name' => "ListCelebrationParticipants"]);
-       
+
         if (isset($this->requestData['celebrationId']) && $this->requestData['celebrationId'] > 0) {
             $participants = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])->where('user_id', '!=', app('session')->get('tempID'))->get();
             $loginedParticipant = CelebrationParticipantsModel::where('celebration_id', $this->requestData['celebrationId'])->where('user_id', app('session')->get('tempID'))->first();
@@ -372,9 +381,8 @@ $log->saveLog($userData->id, $this->requestData, ' leave_Celebration');
             $log->saveLogSessionData();
             return response($return, 200);
         }
-       $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-       $log->saveLogSessionData();
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
 }

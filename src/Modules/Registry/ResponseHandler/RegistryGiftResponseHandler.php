@@ -90,5 +90,4 @@ class RegistryGiftResponseHandler extends Fractal\TransformerAbstract
         $this->return['registryItemDiscountedPrice'] = $return['productDiscountedPrice'];
         $this->return['registryItemHasDiscount'] = $return['productHasDiscount'];
     }
-
 }

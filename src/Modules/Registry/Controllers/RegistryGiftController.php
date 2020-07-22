@@ -22,7 +22,8 @@ class RegistryGiftController extends BaseController
         $this->requestFilter = $return['requestFilter'];
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
-    public function newGift(){
+    public function newGift()
+    {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
         $log->saveLog($userData->id, $this->requestData, 'newGift');
@@ -38,7 +39,7 @@ class RegistryGiftController extends BaseController
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start add item"]);
 
-        if (RegistryModel::validateRegistryId($this->requestData) ) {
+        if (RegistryModel::validateRegistryId($this->requestData)) {
             $registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
 
             if ($registry->user_id != app('session')->get('tempID')) {
@@ -53,7 +54,7 @@ class RegistryGiftController extends BaseController
                 return response(['status' => false, 'msg' => 'NotAllowedToAddGift', 'code' => 400], 200);
             }
             $itemType = $this->requestData['registryItemType'];
-            $country = $registry->country_id ;
+            $country = $registry->country_id;
             $this->gift = new RegistryGiftModel;
             foreach ($this->requestData as $input => $value) {
                 if (isset(RegistryGiftModel::$columnsMaping[$input])) {
@@ -96,16 +97,15 @@ class RegistryGiftController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response($return, 200);
             }
-
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-
     }
 
-    public function removeRegistryItem() {
+    public function removeRegistryItem()
+    {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
 
         $userData = app('session')->get('tempData');
@@ -134,12 +134,21 @@ class RegistryGiftController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
-    public function ListRegistryGifts() {
+    public function ListRegistryGifts()
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Registry", 'function_name' => "ListRegistryGifts"]);
 
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
             $items = RegistryGiftModel::where('registry_id', $this->requestData['registryId'])->get();
+            foreach ($items as $key => $item) {
+                $nitem = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $item->item_id)->first();
+                $qty = $nitem->quantityData()->first();
+                if (!$qty->quantity && $item->status < 3) {
+                    $item->delete();
+                    unset($items[$key]);
+                }
+            }
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\RegistryGiftResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
@@ -151,6 +160,4 @@ class RegistryGiftController extends BaseController
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-
-
 }
