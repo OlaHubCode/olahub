@@ -21,6 +21,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->friendData();
         $this->groupData();
         $this->likersData();
+        $this->setVoteData();
+        
         return $this->return;
     }
 
@@ -44,6 +46,45 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
 
       ];
 
+    }
+
+    private function setVoteData(){
+      $votes = $this->data->choices;
+      $dataVotes = [];
+      $isUserVoted = false;
+      if($votes){
+        foreach($votes as $vote){
+            if(!$isUserVoted){
+                $isUserVoted = (isset($vote->usersVote[0]->user_id) ) ? true : false;
+                  }
+          $newRow = array(
+            'id'            => $vote->id,
+            'type'          => $vote->type,
+            'content'       => $vote->option,
+            'total'         => count($vote->usersVote),
+            'isUserVoted'   => isset($vote->usersVote[0]->user_id) ? true : false,
+            'endDate'       =>$vote->end_date >\Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date) : 0
+          );
+          $item = false;
+          if($vote->type == 'store'){
+            $item = (new \OlaHub\UserPortal\Models\CatalogItem)->where('item_slug', $vote->option)->first();
+          } else if($vote->type == 'designer'){
+            $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
+          }
+          if($item){
+            $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+            $newRow['item_title'] = $item->name;
+          }
+          $dataVotes[] = $newRow;
+        }
+      }
+      $x = 0;
+      foreach($dataVotes as $total){
+            $x += $total['total'];
+      }
+      $this->return['isUserVoted']=$isUserVoted;
+      $this->return['totalCountVote']=$x;
+      $this->return['votes'] = $dataVotes;
     }
 
     private function setPostImg()

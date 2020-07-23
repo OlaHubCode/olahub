@@ -1258,18 +1258,18 @@ class EmailHelper extends OlaHubCommonHelper
     function sendContactUsEmail($Email)
     {
 
-        // echo(($Email->MessageContent));
         $template = 'ADCUS007';
         $userName = "Someone";
-        if (strlen($Email->UserName) > 0) {
-            $userName = $Email->UserName;
+        if (strlen($Email['UserName']) > 0) {
+            $userName = $Email['UserName'];
         }
 
         $replace = ['[desName]', '[desEmail]', '[desPhoneNum]', '[Subject]', '[content]'];
-        $with = [$userName, $Email->UserEmail, $Email->UserPhone, $Email->MessageTitle, $Email->MessageContent];
+        $with = [$userName, $Email['UserEmail'], $Email['UserPhone'], $Email['MessageTitle'], $Email['MessageContent']];
 
         $to = [["info@olahub.com", "olahub"]];
         parent::sendEmail($to, $replace, $with, $template);
+        
     }
 
 
