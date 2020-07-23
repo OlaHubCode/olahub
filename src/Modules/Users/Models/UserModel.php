@@ -252,4 +252,9 @@ class UserModel extends Model
         }
         return $return;
     }
+
+    public function catalogItemViews()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CatalogItemViews', 'user_id');
+    }
 }
