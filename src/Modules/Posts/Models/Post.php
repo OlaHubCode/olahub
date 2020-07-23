@@ -41,4 +41,9 @@ class Post extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\PostLikes', 'post_id', 'post_id');
     }
+
+    public function choices()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\PostVote', 'post_id', 'post_id');
+    }
 }
