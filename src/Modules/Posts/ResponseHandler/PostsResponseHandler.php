@@ -60,7 +60,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content'       => $vote->option,
             'total'         => count($vote->usersVote),
             'isUserVoted'   => isset($vote->usersVote[0]->user_id) ? true : false,
-            'endDate'       =>$vote->end_date < \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffIn($vote->end_date) : 0
+            'endDate'       =>$vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date) : 0
           );
           $item = false;
           if($vote->type == 'store'){
@@ -69,7 +69,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
           }
           if($item){
-            $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+            $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]['content_ref']) : NULL;
             $newRow['item_title'] = $item->name;
           }
           $dataVotes[] = $newRow;

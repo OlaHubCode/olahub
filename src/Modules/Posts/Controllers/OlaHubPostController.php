@@ -1101,14 +1101,14 @@ public function ReportPost()
                             "type" => "post_voting",
                             // "post_id" => $post->post_id,
                             // "username" => "$userData->first_name $userData->last_name",
-                            ),
+                            )
 
                         // $owner->lang,
                         // "$userData->first_name $userData->last_name"
-                  );
+                        );
              
                  }
                 }
             
             }
-}
+        }
