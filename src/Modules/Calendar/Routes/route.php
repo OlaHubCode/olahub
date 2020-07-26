@@ -23,6 +23,7 @@ $router->group([
     $router->post('/updateCalendar/{id}', 'CalendarController@updateUserCalendar');
     $router->post('/one', 'CalendarController@getOneCalendar');
     $router->get('/PrerequestOccassion', 'CalendarController@getAllOccassionByCountry');
+    $router->get('/PrerequestOccassion/{target}', 'CalendarController@getAllOccassionByCountry');
     
     });
     
