@@ -4,6 +4,7 @@ namespace OlaHub\UserPortal\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
+use OlaHub\UserPortal\Models\DesignerItems;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use OlaHub\UserPortal\Models\CatalogItem;
 
@@ -115,53 +116,222 @@ class OlaHubLandingPageController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getTrendingData"]);
+        $data = [];
 
-        $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
-        $itemModel->whereHas('quantityData', function ($q) {
-            $q->where('quantity', '>', 0);
-        })->where(function ($query) {
-            $query->whereNull('parent_item_id');
-            $query->orWhere('parent_item_id', '0');
-        });
-        $itemModel->orderBy('total_views', 'DESC');
-        $itemModel->orderBy('name', 'ASC');
-        $itemModel->take(15);
-        $items = $itemModel->get();
-        if ($items->count() < 1) {
-            throw new NotAcceptableHttpException(404);
+        if(app('session')->get('tempID')) {
+            $monthC = 'catalog_items.created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -30 DAY) AND CURRENT_DATE()';
+
+            // Category items Start
+            $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
+                ->select('catalog_item_categories.id')
+                ->join('catalog_item_categories', 'catalog_item_categories.parent_id', 'following.target_id')->get();
+            $categoryIds = [];
+            foreach ($followedCategory as $followedCategoryID) {
+                $categoryIds[] = $followedCategoryID->id;
+            }
+            $cItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('parent_item_id');
+                $query->orWhere('parent_item_id', '0');
+            })->whereIN('category_id', $categoryIds)
+                ->paginate(10);
+
+            $itemsIDS = [];
+            foreach ($cItems as $item) {
+                $data[] = $item;
+            }
+            // Category items end
+
+            // occasion items start
+            $followedOccasion = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 4)->get();
+            $occasionIds = [];
+            foreach ($followedOccasion as $followedOccasionID) {
+                $occasionIds[] = $followedOccasionID->target_id;
+            }
+
+            $oItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_occasions', 'catalog_item_occasions.item_id', 'catalog_items.id')
+                ->select('catalog_item_occasions.occasion_id', 'catalog_items.*')
+                ->whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('catalog_items.parent_item_id');
+                $query->orWhere('catalog_items.parent_item_id', '0');
+            })->whereIn('occasion_id', $occasionIds)
+                ->paginate(10);
+            foreach ($oItems as $item) {
+                $data[] = $item;
+            }
+            // occasion items end
+
+            // brand items start
+            $followedBrands = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 1)->get();
+            $brandIds = [];
+            foreach ($followedBrands as $followedBrandsID) {
+                $brandIds[] = $followedBrandsID->target_id;
+            }
+
+            $oItems = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+                    $q->where('quantity', '>', 0);
+                })->where(function ($query) {
+                    $query->whereNull('catalog_items.parent_item_id');
+                    $query->orWhere('catalog_items.parent_item_id', '0');
+                })->whereIn('brand_id', $brandIds)
+                ->paginate(10);
+            foreach ($oItems as $item) {
+                $data[] = $item;
+            }
+            // brand items end
+            $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($data, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+
+            // designer items start
+            $followedDesigner = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 2)->get();
+            $designerIds = [];
+            foreach ($followedDesigner as $followedDesignerID) {
+                $designerIds[] = $followedDesignerID->target_id;
+            }
+
+            $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
+                $query->whereNull('parent_item_id');
+                $query->orWhere('parent_item_id', '0');
+            })->where('item_stock', '>', 0)
+                ->inRandomOrder()
+                ->whereIn('designer_id', $designerIds)
+                ->paginate(10);
+
+            foreach ($dItems as $item2) {
+                $dataNew = $this->handleDesignerItem($item2);
+                array_push($data['data'], $dataNew);
+
+            }
+
+            // designer items end
+            shuffle($data['data']);
+
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
-        $return['status'] = true;
-        $return['code'] = 200;
-        $log->setLogSessionData(['response' => $return]);
+        if(app('session')->get('tempID') == NUll || count($data['data']) < 1){
+
+            $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+            $itemModel->whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('parent_item_id');
+                $query->orWhere('parent_item_id', '0');
+            });
+            $itemModel->orderBy('total_views', 'DESC');
+            $itemModel->orderBy('name', 'ASC');
+            $itemModel->take(6);
+            $items = $itemModel->get();
+
+            if ($items->count() < 1) {
+
+                throw new NotAcceptableHttpException(404);
+            }
+            $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+
+        }
+
+        $data['status'] = true;
+        $data['code'] = 200;
+        $log->setLogSessionData(['response' => $data]);
         $log->saveLogSessionData();
-        return response($return, 200);
+        return response($data, 200);
+    }
+    private function handleDesignerItem($data)
+    {
+        $return = [
+            "type"=>"designer",
+            "productID" => isset($data->id) ? $data->id : 0,
+            "productSlug" => isset($data->item_slug) ? $data->item_slug : null,
+            "productName" => isset($data->name) ? $data->name : null,
+            "productDescription" => isset($data->description) ? $data->description : null,
+            "productInStock" => isset($data->item_stock) ? $data->item_stock : 0,
+            "productPrice" => isset($data->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($data->price, true) : 0,
+            "productOwner" => isset($data->designer_id) ? $data->designer_id : 0,
+            "productOwnerName" => isset($data->designer) ? $data->designer->brand_name : 0,
+            "productOwnerSlug" => isset($data->designer) ? $data->designer->designer_slug : 0,
+            "productSlug" =>\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($data, 'item_slug', $data->name),
+            "productShowLabel" => true,
+        ];
+        $itemPrice = DesignerItems::checkPrice($data);
+        $return['productPrice'] = $itemPrice['productPrice'];
+        $return['productDiscountedPrice'] = $itemPrice['productDiscountedPrice'];
+        $return['productHasDiscount'] = $itemPrice['productHasDiscount'];
+
+        $images = $data->images;
+        if ($images->count() > 0) {
+            $return['productImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref);
+        } else {
+            $return['productImage'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
+        }
+
+
+        return $return;
     }
 
     public function getMostOfferData()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getMostOfferData"]);
+        $items = [];
+        if(app('session')->get('tempID')) {
+            // intrest items
+            $getfollowedInterests =  \OlaHub\UserPortal\Models\UserModel::where("id", app('session')->get('tempID'))->select('interests')->get();
+            $followedInterests = explode(',', $getfollowedInterests[0]->interests);
 
-        $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
-        $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
+            $interestsItems = \OlaHub\UserPortal\Models\CatalogItem::join('catalog_item_interests', 'catalog_item_interests.item_id', 'catalog_items.id')
+                ->select('catalog_item_interests.interest_id', 'catalog_items.*')
+                ->whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('catalog_items.parent_item_id');
+                $query->orWhere('catalog_items.parent_item_id', '0');
+            })->whereIn('interest_id', $followedInterests)
+                ->take(6)
+                ->get();
+            foreach ($interestsItems as $item){
+                $items[]=$item;
+            }
+            if( count($interestsItems) < 6 ){
+                $itemModel = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+                })->where(function ($query) {
+                    $query->whereNull('catalog_items.parent_item_id');
+                    $query->orWhere('catalog_items.parent_item_id', '0');
+                })->Where('admin_recommended','=',0)->orderByRaw("RAND()")->take(6)->get();
+                if ($itemModel->count() < 1) {
+                    throw new NotAcceptableHttpException(404);
+                }
+                foreach ($itemModel as $item){
+                    $items[]=$item;
+                }
 
-        $itemModel->whereHas('quantityData', function ($q) {
-            $q->where('quantity', '>', 0);
-        });
-        $itemModel->where(function ($query) {
-            $query->whereNotNull('discounted_price_start_date');
-            $query->whereNotNull('discounted_price_end_date');
-            $query->where('discounted_price_start_date', '<=', date('Y-m-d') . " 00:00:01");
-            $query->where('discounted_price_end_date', '>=', date('Y-m-d') . " 23:59:59");
-        });
-        $itemModel->orderByRaw("RAND()");
-        $itemModel->take(15);
-        $items = $itemModel->get();
-        if ($items->count() < 1) {
-            throw new NotAcceptableHttpException(404);
+            }
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+        if(app('session')->get('tempID') == NUll ) {
+            $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+            $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
+
+            $itemModel->whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            });
+            $itemModel->where(function ($query) {
+                $query->whereNotNull('discounted_price_start_date');
+                $query->whereNotNull('discounted_price_end_date');
+                $query->where('discounted_price_start_date', '<=', date('Y-m-d') . " 00:00:01");
+                $query->where('discounted_price_end_date', '>=', date('Y-m-d') . " 23:59:59");
+            });
+            $itemModel->orderByRaw("RAND()");
+            $itemModel->take(6);
+            $items = $itemModel->get();
+            if ($items->count() < 1) {
+                throw new NotAcceptableHttpException(404);
+            }
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+        }
+
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);

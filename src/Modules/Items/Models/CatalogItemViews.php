@@ -16,12 +16,19 @@ class CatalogItemViews extends Model {
         $request = \Illuminate\Http\Request::capture();
         $userIP = $request->ip();
         $userBrowser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getUserBrowserAndOS($request->userAgent());
-        $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->first();
+        if(app('session')->get('tempID')){
+            $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->where('user_id', app('session')->get('tempID'))->first();
+        }else{
+            $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->first();
+        }
         if(!$oldView){
             $oldView = new CatalogItemViews;
             $oldView->item_id = $item->id;
             $oldView->browser_name = $userBrowser;
             $oldView->user_ip = $userIP;
+            if(app('session')->get('tempID')){
+                $oldView->user_id = app('session')->get('tempID');
+            }
             $oldView->save();
             $item->total_views++;
             $item->save();
