@@ -77,7 +77,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                     $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
                 }
                 if ($item) {
-                    $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+                    $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]['content_ref']) : NULL;
                     $newRow['item_title'] = $item->name;
                 }
                 $dataVotes[] = $newRow;
