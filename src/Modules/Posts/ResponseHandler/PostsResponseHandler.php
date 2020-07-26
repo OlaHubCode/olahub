@@ -51,11 +51,14 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function setVoteData(){
       $votes = $this->data->choices;
       $dataVotes = [];
+      $userData = app('session')->get('tempData');
+
+
       $isUserVoted = false;
       if($votes){
         foreach($votes as $vote){
             if(!$isUserVoted){
-                $isUserVoted = (isset($vote->usersVote[0]->user_id) ) ? true : false;
+                $isUserVoted = ((isset($vote->usersVote[0]->user_id))&& $vote->usersVote[0]->user_id == $userData->user_id)  ? true : false;
                   }
           $newRow = array(
             'id'            => $vote->id,
