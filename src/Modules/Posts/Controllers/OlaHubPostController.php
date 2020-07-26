@@ -541,6 +541,7 @@ class OlaHubPostController extends BaseController
             ->where('group_id', $groupId)
             ->where('user_id', app('session')->get('tempID'))->first();
         $update = false;
+        $item = [];
         if (!$shared) {
             $share = new PostShares;
             $share->post_id = $this->requestData['postId'];
@@ -548,12 +549,28 @@ class OlaHubPostController extends BaseController
             $share->user_id = app('session')->get('tempID');
             $share->save();
             $update = true;
+
+            $litem = PostShares::where('id', $share->id)->first();
+
+            $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
+            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+            $item = $item['data'];
+            $item['type'] = 'post_shared';
+            $item['sharedUser_info'] = [
+                'user_id' => $litem->author->id,
+                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                'username' => $litem->user_name,
+            ];
+
+            $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+            $return['data'][] = $item;
         }
 
-        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200,'update'=> $update]]);
+        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200,'update'=> $update,'data'=>$item]]);
         $log->saveLogSessionData();
 
-        return response(['status' => TRUE, 'code' => 200,'update'=> $update], 200);
+        return response(['status' => TRUE, 'code' => 200,'update'=> $update ,'data'=>$item], 200);
     }
 
     public function addNewComment()
