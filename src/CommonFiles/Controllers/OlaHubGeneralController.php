@@ -252,17 +252,19 @@ class OlaHubGeneralController extends BaseController
 
     public function getUserNotification()
     {
-        $week = 'updated_at	BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -7 DAY) AND CURRENT_DATE()';
-        $sessionUserId = (int) app('session')->get('tempID');
-
+        $week = 'updated_at	BETWEEN DATE_ADD(now(), INTERVAL -300 DAY) AND now()';
         $sessionUserId = (int) app('session')->get('tempID');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
         $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
-        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)->whereRaw("FIND_IN_SET($sessionUserId,user_id)")->groupBy('followed_slug')
-            ->inRandomOrder()->take(2)->get();
+
+        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw($week)
+            ->whereRaw("FIND_IN_SET($sessionUserId,user_id)")
+            ->inRandomOrder()
+            ->groupBy('followed_slug')
+            ->get();
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         //return($newItemscnotification);
         $allNotifications = [];
@@ -272,7 +274,7 @@ class OlaHubGeneralController extends BaseController
             foreach ($newItemscnotification as $one) {
                 switch ($one->type) {
                     case "new_multi_brand_items":
-                        $brandData = @$one["brandData"][0];
+                        $brandData = @$one->brandData->first();
                         $newItemsNotifications[] = [
                             "followed_slug" => $one->followed_slug,
                             "id" => $one->id,
@@ -287,7 +289,6 @@ class OlaHubGeneralController extends BaseController
                         $category = DB::table('catalog_item_categories')->where('category_slug', $one->followed_slug)->first();
                         $newItemsNotifications[] = [
                             "followed_slug" => $one->followed_slug,
-
                             "id" => $one->id,
                             "type" => $one->type,
                             "content" => $one->content,
@@ -297,10 +298,9 @@ class OlaHubGeneralController extends BaseController
                         ];
                         break;
                     case "new_multi_interest_items":
-                        $interestData = @$one["interestData"][0];
+                        $interestData = @$one->interestData->first();
                         $newItemsNotifications[] = [
                             "followed_slug" => $one->followed_slug,
-
                             "id" => $one->id,
                             "type" => $one->type,
                             "content" => $one->content,
@@ -311,16 +311,14 @@ class OlaHubGeneralController extends BaseController
                         break;
 
                     case "new_multi_occasion_items":
-
                         $occasionS = DB::table('occasion_types')->where('occasion_slug', $one->followed_slug)->first();
                         $newItemsNotifications[] = [
                             "followed_slug" => $one->followed_slug,
                             "id" => $one->id,
                             "type" => $one->type,
                             "content" => $one->content,
-
-                            "user_name" => isset($occasionS) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasionS, "name") : "NULL",
-                            "avatar_url" => isset($occasionS->logo_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasionS->logo_ref) : null,
+                            "user_name" => isset($occasionS) ?  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasionS, "name") : "NULL",
+                            "avatar_url" => isset($occasionS->logo_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasionS->logo_ref) : NULL,
                             "for_user" => $one->user_id,
                         ];
                         break;
@@ -337,6 +335,7 @@ class OlaHubGeneralController extends BaseController
                 $userData = @$one["userData"][0];
                 $groupData = @$one["groupData"][0];
                 $celebrationData = @$one["celebrationData"][0];
+                $registryData = @$one["registryData"][0];
                 $allNotifications[] = [
                     "id" => $one->id,
                     "type" => $one->type,
@@ -344,16 +343,17 @@ class OlaHubGeneralController extends BaseController
                     "celebration_id" => $one->celebration_id,
                     "post_id" => $one->post_id,
                     "group_id" => $one->group_id,
+                    "registry_id" => $one->registry_id,
                     "user_name" => isset($userData) ? $userData["first_name"] . " " . $userData["last_name"] : "NULL",
                     "community_title" => @$groupData["name"],
                     "celebration_title" => @$celebrationData["title"],
+                    "registry_title" => @$registryData["title"],
                     "profile_url" => $userData["profile_url"],
                     "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : null,
                     "read" => $one->read,
                     "for_user" => $one->user_id,
                 ];
             }
-
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $notification]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End check notification existance"]);
@@ -1867,10 +1867,7 @@ class OlaHubGeneralController extends BaseController
             $following->type = 3;
         } else if ($type == 'occasion') {
             $following->type = 4;
-        } else {
-            $following->type = 2;
-        }
-
+        } else  $following->type = 2;
         $following->save();
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
@@ -1883,9 +1880,7 @@ class OlaHubGeneralController extends BaseController
             $typeNum = 3;
         } else if ($type == 'occasion') {
             $typeNum = 4;
-        } else {
-            $typeNum = 2;
-        }
+        } else $typeNum = 2;
 
         \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $id)
             ->where('type', $typeNum)->delete();

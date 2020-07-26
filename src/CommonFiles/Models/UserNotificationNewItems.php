@@ -22,17 +22,6 @@ class UserNotificationNewItems extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\Interests','interest_slug','followed_slug');
     }
- 
-
-    public function groupData()
-    {
-        return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
-    }
-
-    public function celebrationData()
-    {
-        return $this->hasMany('OlaHub\UserPortal\Models\CelebrationModel', 'id', 'celebration_id');
-    }
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
