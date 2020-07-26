@@ -6,12 +6,12 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\groups;
 use OlaHub\UserPortal\Models\Post;
-use OlaHub\UserPortal\Models\PostVote;
-use OlaHub\UserPortal\Models\VotePostUser;
 use OlaHub\UserPortal\Models\PostComments;
 use OlaHub\UserPortal\Models\PostReplies;
 use OlaHub\UserPortal\Models\PostShares;
 use OlaHub\UserPortal\Models\PostReport;
+use OlaHub\UserPortal\Models\VotePostUser;
+use OlaHub\UserPortal\Models\PostVote;
 
 class OlaHubPostController extends BaseController
 {
@@ -329,8 +329,7 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
-
-        if(isset($this->requestData['mentions']) && count($this->requestData['mentions'])>0){
+      if(isset($this->requestData['mentions'])){
 
         $allMentions=serialize ($this->requestData['mentions']);
 
@@ -338,18 +337,19 @@ class OlaHubPostController extends BaseController
 
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
+        
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-      if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
+        if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
+
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
             $post->mentions= isset( $allMentions)?$allMentions:NULL;
-            $post->content = isset($this->requestData['content'])?$this->requestData['content'] /*$this->requestData['content']*/ : NULL;
+            $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
             $groupData = NULL;
-
 
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
@@ -427,8 +427,8 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
-            }
-
+            }      
+        
             $post->post_id = uniqid(app('session')->get('tempID'));
               if (isset($this->requestData['friend'])) {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
@@ -1014,12 +1014,12 @@ if ($post) {
     }
 
 
-
+    
 public function ReportPost()
 {
     $log = new \OlaHub\UserPortal\Helpers\LogHelper();
     $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "ReportPost"]);
-
+    
     if (empty($this->requestData['postId'])) {
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
@@ -1028,12 +1028,12 @@ public function ReportPost()
     $post = Post::where('post_id', $this->requestData['postId'])->first();
     $user = app('session')->get('tempID');
     $postId = $this->requestData['postId'];
-     if ($post) {
+    if ($post) {
         $report = new PostReport();
         $report->post_id = $postId;
         $report->user_id = app('session')->get('tempID');
         $report->save();
-
+        
         $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You report post successfully', 'code' => 200]]);
         $log->saveLogSessionData();
         return response(['status' => true, 'msg' => 'You report post successfully', 'code' => 200], 200);
@@ -1041,19 +1041,19 @@ public function ReportPost()
     $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
     $log->saveLogSessionData();
     return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-
+    
 }
-      public function VotersOnPost (){
+public function votersOnPost(){
 
-        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        $userData = app('session')->get('tempData');
-        $log->setLogSessionData(['module_name' => "VotePostUser", 'function_name' => "VotersOnPost"]);
+$log = new \OlaHub\UserPortal\Helpers\LogHelper();
+$userData = app('session')->get('tempData');
+$log->setLogSessionData(['module_name' => "VotePostUser", 'function_name' => "VotersOnPost"]);
 
-        if (empty($this->requestData['optionId'])) {
-            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-            $log->saveLogSessionData();
-            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-        }
+if (empty($this->requestData['optionId'])) {
+    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+    $log->saveLogSessionData();
+    return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+}
 
               $user_vote = new VotePostUser();
               $user_vote->user_id = app('session')->get('tempID') ;
