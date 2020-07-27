@@ -78,6 +78,7 @@ $router->group([
     $router->post('/', 'OlaHubItemController@getOneItem');
     $router->post('/attribute', 'OlaHubItemController@getOneItemAttrsData');
     $router->post('related', 'OlaHubItemController@getOneItemRelatedItems');
+    $router->post('mostViewed', 'OlaHubItemController@getOneItemMostViewedItems');
     $router->post('reviews', 'OlaHubItemReviewsController@getReviews');
 
     

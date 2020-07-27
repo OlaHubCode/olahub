@@ -21,6 +21,11 @@ class CatalogItemViews extends Model {
         }else{
             $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->first();
         }
+        if($oldView){
+            $date = date('Y-m-d H:i:s');
+            $oldView->updated_at = $date;
+            $oldView->save();
+        }
         if(!$oldView){
             $oldView = new CatalogItemViews;
             $oldView->item_id = $item->id;
