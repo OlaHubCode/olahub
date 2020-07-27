@@ -134,7 +134,8 @@ class OlaHubLandingPageController extends BaseController
             })->where(function ($query) {
                 $query->whereNull('parent_item_id');
                 $query->orWhere('parent_item_id', '0');
-            })->whereIN('category_id', $categoryIds)
+            }) ->Where('is_published', '=',1)
+                ->whereIN('category_id', $categoryIds)
                 ->paginate(10);
 
             $itemsIDS = [];
@@ -157,7 +158,8 @@ class OlaHubLandingPageController extends BaseController
             })->where(function ($query) {
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
-            })->whereIn('occasion_id', $occasionIds)
+            })->Where('catalog_items.is_published', '=',1)
+                ->whereIn('occasion_id', $occasionIds)
                 ->paginate(10);
             foreach ($oItems as $item) {
                 $data[] = $item;
@@ -176,7 +178,8 @@ class OlaHubLandingPageController extends BaseController
                 })->where(function ($query) {
                     $query->whereNull('catalog_items.parent_item_id');
                     $query->orWhere('catalog_items.parent_item_id', '0');
-                })->whereIn('brand_id', $brandIds)
+                })->Where('is_published', '=',1)
+                ->whereIn('brand_id', $brandIds)
                 ->paginate(10);
             foreach ($oItems as $item) {
                 $data[] = $item;
@@ -194,7 +197,8 @@ class OlaHubLandingPageController extends BaseController
             $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
                 $query->whereNull('parent_item_id');
                 $query->orWhere('parent_item_id', '0');
-            })->where('item_stock', '>', 0)
+            }) ->Where('is_published', '=',1)
+                ->where('item_stock', '>', 0)
                 ->inRandomOrder()
                 ->whereIn('designer_id', $designerIds)
                 ->paginate(10);
@@ -218,6 +222,7 @@ class OlaHubLandingPageController extends BaseController
                 $query->whereNull('parent_item_id');
                 $query->orWhere('parent_item_id', '0');
             });
+            $itemModel->Where('is_published', '=',1);
             $itemModel->orderBy('total_views', 'DESC');
             $itemModel->orderBy('name', 'ASC');
             $itemModel->take(6);
@@ -286,19 +291,22 @@ class OlaHubLandingPageController extends BaseController
             })->where(function ($query) {
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
-            })->whereIn('interest_id', $followedInterests)
-                ->take(6)
+            })
+                ->Where('catalog_items.is_published', '=',1)
+                ->whereIn('interest_id', $followedInterests)
+                ->limit(6)
                 ->get();
             foreach ($interestsItems as $item){
                 $items[]=$item;
             }
             if( count($interestsItems) < 6 ){
                 $itemModel = \OlaHub\UserPortal\Models\CatalogItem::whereHas('quantityData', function ($q) {
-                $q->where('quantity', '>', 0);
+                    $q->where('quantity', '>', 0);
                 })->where(function ($query) {
                     $query->whereNull('catalog_items.parent_item_id');
                     $query->orWhere('catalog_items.parent_item_id', '0');
-                })->Where('admin_recommended','=',0)->orderByRaw("RAND()")->take(6)->get();
+                })
+                    ->Where('admin_recommended','=',0)->orderByRaw("RAND()")->take(6)->get();
                 if ($itemModel->count() < 1) {
                     throw new NotAcceptableHttpException(404);
                 }
@@ -323,6 +331,7 @@ class OlaHubLandingPageController extends BaseController
                 $query->where('discounted_price_start_date', '<=', date('Y-m-d') . " 00:00:01");
                 $query->where('discounted_price_end_date', '>=', date('Y-m-d') . " 23:59:59");
             });
+            $itemModel->where('is_published','=',1);
             $itemModel->orderByRaw("RAND()");
             $itemModel->take(6);
             $items = $itemModel->get();
