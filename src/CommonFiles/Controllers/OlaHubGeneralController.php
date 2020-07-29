@@ -82,13 +82,25 @@ class OlaHubGeneralController extends BaseController
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
         $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as flag, LOWER(code) as code")
+            ->where('phonecode','!=',"")
+            ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
+            ->orderBy('shipping_countries.name', 'asc')->get();
+        $allCountriesDropDown = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value,LOWER(code) as flag")
+            ->where('phonecode','!=',"")
+           
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
             $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text');
             // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
         }
+        foreach ($allCountriesDropDown as $A) {
+            $A->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($A, 'text');
+            // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
+        }
+     
         $return['allCountries'] = $allCountries;
+        $return['allCountriesDropDown'] = $allCountriesDropDown;
         $actionData["action_endData"] = json_encode(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler'));
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData($actionData);
 
