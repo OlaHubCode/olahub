@@ -18,9 +18,11 @@ class OlaHubGuestController extends BaseController
     protected $userHelper;
     protected $ipInfo;
     protected $lang;
+    protected $allData;
 
     public function __construct(Request $request)
     {
+        $this->allData = $request->all();
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->ipInfo = UserHelper::getIPInfo();
         $this->userHelper = new UserHelper;
@@ -431,9 +433,9 @@ class OlaHubGuestController extends BaseController
         return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []], 200);
     }
 
-    function appleBack(Request $request)
+    function appleBack()
     {
-        $data = $request->all();
+        $data = $this->allData;
         $r = explode(".", $data['id_token']);
         $r = base64_decode($r[1]);
         $email = json_decode($r)->email;
