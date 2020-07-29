@@ -188,28 +188,28 @@ class OlaHubLandingPageController extends BaseController
             $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($data, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
 
             // designer items start
-            $followedDesigner = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 2)->get();
-            $designerIds = [];
-            foreach ($followedDesigner as $followedDesignerID) {
-                $designerIds[] = $followedDesignerID->target_id;
-            }
+            // $followedDesigner = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 2)->get();
+            // $designerIds = [];
+            // foreach ($followedDesigner as $followedDesignerID) {
+            //     $designerIds[] = $followedDesignerID->target_id;
+            // }
 
-            $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
-                $query->whereNull('parent_item_id');
-                $query->orWhere('parent_item_id', '0');
-            }) ->Where('is_published', '=',1)
-                ->where('item_stock', '>', 0)
-                ->inRandomOrder()
-                ->whereIn('designer_id', $designerIds)
-                ->paginate(10);
+            // $dItems = \OlaHub\UserPortal\Models\DesignerItems::where(function ($query) {
+            //     $query->whereNull('parent_item_id');
+            //     $query->orWhere('parent_item_id', '0');
+            // }) ->Where('is_published', '=',1)
+            //     ->where('item_stock', '>', 0)
+            //     ->inRandomOrder()
+            //     ->whereIn('designer_id', $designerIds)
+            //     ->paginate(10);
 
-            foreach ($dItems as $item2) {
-                $dataNew = $this->handleDesignerItem($item2);
-                array_push($data['data'], $dataNew);
+            // foreach ($dItems as $item2) {
+            //     $dataNew = $this->handleDesignerItem($item2);
+            //     array_push($data['data'], $dataNew);
 
-            }
+            // }
 
-            // designer items end
+            // // designer items end
             shuffle($data['data']);
 
         }
