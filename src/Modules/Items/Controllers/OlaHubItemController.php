@@ -82,7 +82,9 @@ class OlaHubItemController extends BaseController
 
         if (count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
             unset($this->requestFilter['all']);
+
             if (isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0) {
+
                 $attributes = [];
                 foreach ($this->requestFilter['attributes'] as $one) {
                     $attrData = \OlaHub\UserPortal\Models\AttrValue::find($one);
@@ -101,10 +103,10 @@ class OlaHubItemController extends BaseController
                 }
 
                 $itemsQuery->select("catalog_items.*");
-
             }
 
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
+
             foreach ($filters['main'] as $input => $value) {
                 if (is_array($value) && count($value)) {
                     $itemsQuery->whereIn($input, $value);
@@ -112,6 +114,7 @@ class OlaHubItemController extends BaseController
                     $itemsQuery->where($input, $value);
                 }
             }
+
             foreach ($filters['relations'] as $model => $data) {
                 if ($model == 'brand') {
                     $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
@@ -127,6 +130,7 @@ class OlaHubItemController extends BaseController
                             if (is_array($value) && count($value)) {
                                 $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
                             } elseif (is_string($value) && strlen($value) > 0) {
+                                var_dump($input);
                                 $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                             }
                         }
@@ -170,7 +174,6 @@ class OlaHubItemController extends BaseController
                 }
             }
         }
-
         // Categories
         $q1 = $itemsQuery;
         $itemsIDs = $q1->pluck('id');

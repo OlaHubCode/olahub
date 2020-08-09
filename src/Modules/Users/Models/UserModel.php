@@ -199,13 +199,60 @@ class UserModel extends Model
 
     static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false)
     {
+        $words = explode(" ", $q);
         $userModel = (new UserModel)->newQuery();
         // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
-        $userModel->where(function ($query) use ($q) {
-            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
-                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
-                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
-        })->where('users.id', '<>', app('session')->get('tempID'));
+
+        $userModel->where(function ($query) use ($words) {
+
+            $query->where(function ($q1) use($words) {
+                foreach ($words as $word){
+                    $q1->where('first_name', $word);
+                    $q1->orWhere('last_name', $word);
+                    $q1->orWhere('email', $word);
+                    $q1->orWhere('mobile_no', $word);
+                }
+            });
+            $query->orWhere(function ($q2) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3)
+                    {
+                        $firstWords = substr($word, 0,3);
+                        $q2->Where('first_name', 'like', '%' . $firstWords . '%');
+
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q2->Where('first_name', 'like', '%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q2->Where('first_name', 'like', '%' . $word . '%');
+
+                    }
+                }
+            });
+            $query->orWhere(function ($q2) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3)
+                    {
+                        $firstWords = substr($word, 0,3);
+                        $q2->Where('last_name', 'like', '%' . $firstWords . '%');
+
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q2->Where('last_name', 'like', '%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q2->Where('last_name', 'like', '%' . $word . '%');
+
+                    }
+                }
+            });
+        })
+            ->where('users.id', '<>', app('session')->get('tempID'));
         if ($eventId) {
             $userModel->whereRaw('users.id NOT IN (select user_id from celebration_participants
                      where celebration_participants.celebration_id = "' . (int) $eventId . '" )
@@ -226,7 +273,11 @@ class UserModel extends Model
             return $userModel->count();
         }
     }
-
+//$userModel->where(function ($query) use ($q) {
+//            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
+//                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
+//                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
+//        })->where('users.id', '<>', app('session')->get('tempID'));
     static function getUserSlug($user)
     {
 

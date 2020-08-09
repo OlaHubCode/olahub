@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\PaymentMethod;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use OlaHub\UserPortal\Models\UserModel;
+use TheIconic\Tracking\GoogleAnalytics\Analytics;
 
 class OlaHubPaymentsMainController extends BaseController
 {
@@ -570,6 +571,7 @@ class OlaHubPaymentsMainController extends BaseController
         } elseif ($this->typeID == 3) {
             $this->finalizeSuccessCelebrationMails();
         }
+        $googleAnalytics = $this->googleAnalytics();
 
         if (!$sendEmails) {
             $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);
@@ -834,5 +836,39 @@ class OlaHubPaymentsMainController extends BaseController
                 $this->cartModel->calendar_id = $this->id;
                 return $this->cartModel->save();
         }
+    }
+
+    protected function googleAnalytics(){
+
+        $analytics = new Analytics(true);
+        $analytics->setProtocolVersion('1')
+            ->setTrackingId('UA-88242677-1')
+            ->setClientId($this->billing->user_id);
+
+
+        $analytics->setTransactionId($this->billing->billing_number) // transaction id. required
+            ->setRevenue($this->billing->billing_total)
+            ->setShipping($this->billing->shipping_fees)
+            ->setTax("0")
+            ->sendTransaction();
+
+        
+        foreach ($this->billingDetails as $item) {
+
+            $response = $analytics->setTransactionId($this->billing->billing_number) // transaction id. required, same value as above
+                ->setItemName($item->item_name) // required
+                ->setItemCode($item->item_id) // SKU or id
+                ->setItemCategory($item->item_type)
+                ->setItemPrice($item->item_price)
+                ->setItemQuantity($item->quantity)
+                ->sendItem();
+        }
+
+        return true;
+
+//        4242424242424242
+//1111
+//123
+
     }
 }

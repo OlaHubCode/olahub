@@ -8,6 +8,8 @@ use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use \OlaHub\UserPortal\Models\Post;
 use Illuminate\Support\Facades\DB;
 use OlaHub\UserPortal\Models\Occasion;
+use Irazasyed\LaravelGAMP\Facades\GAMP;
+
 
 class OlaHubGeneralController extends BaseController
 {
@@ -74,6 +76,7 @@ class OlaHubGeneralController extends BaseController
     }
     public function getAllCountries()
     {
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "getAllCountries"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting countries data"]);
 
@@ -627,6 +630,7 @@ class OlaHubGeneralController extends BaseController
                 or LOWER(`description`) sounds like '" . $q . "'";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
+//            var_dump($handle);
             // brands
             if ($handle[0]->search > 0) {
                 $searchData[] = [
