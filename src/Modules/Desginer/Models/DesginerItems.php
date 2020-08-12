@@ -110,22 +110,38 @@ class DesignerItems extends Model
                     $q2->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
                 }
             });
-//                $q->orWhere(function ($q3) use($words) {
-//                    foreach ($words as $word){
-//                        $length = strlen($word);
-//                        if($length >= 3){
-//                            $firstWords = substr($word, 0,3);
-//                            $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $firstWords . '%');
-//
-//                            if($length >= 6){
-//                                $lastWords = substr($word, -3);
-//                                $q3->WhereRaw('LOWER(`name`) LIKE ? ','%' . $lastWords . '%');
-//                            }
-//                        }else if($length == 2){
-//                            $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $word . '%');
-//                        }
-//                    }
-//                });
+            $q->orWhere(function ($q3) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3){
+                        $firstWords = substr($word, 0,3);
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $firstWords . '%');
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q3->WhereRaw('LOWER(`name`) LIKE ? ','%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $word . '%');
+                    }
+                }
+            });
+            $q->orWhere(function ($q3) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3){
+                        $firstWords = substr($word, 0,3);
+                        $q3->whereRaw('LOWER(`description`) LIKE ? ','%' . $firstWords . '%');
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q3->WhereRaw('LOWER(`description`) LIKE ? ','%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q3->whereRaw('LOWER(`description`) LIKE ? ','%' . $word . '%');
+                    }
+                }
+            });
         });
 
         $items->orWhere('description', '=',$text);

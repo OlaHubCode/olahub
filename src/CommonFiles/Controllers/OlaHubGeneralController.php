@@ -705,6 +705,13 @@ class OlaHubGeneralController extends BaseController
         if ((isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) && isset($this->requestFilter->type) && strlen($this->requestFilter->type) > 1) {
             $q = mb_strtolower($this->requestFilter->word);
             $type = $this->requestFilter->type;
+            $is_numeric = is_numeric($this->requestFilter->word);
+
+            $find1 = strpos($this->requestFilter->word, '@');
+            $find2 = strpos($this->requestFilter->word, '.');
+            if(($find1 !== false && $find2 !== false ) || $is_numeric){
+                $type = "users";
+            }
 
             switch ($type) {
                 case "users":
