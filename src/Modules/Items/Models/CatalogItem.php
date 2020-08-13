@@ -218,12 +218,22 @@ class CatalogItem extends Model
     }
     static function searchItem($text = 'a', $count = 15)
     {
+        $text_length = strlen($text) - substr_count($text, ' ');
+
         $text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::replaceSpecChars($text);
         $words = explode(" ", $text);
         $words = array_filter($words, function ($word) {
             return !empty($word);
         });
 
+        $words = array_filter($words, function ($word) {
+            $patterns     = array( "/(ا|إ|أ|آ)/", "/(ه|ة)/" );
+            $replacements = array( "[ا|إ|أ|آ]", "[ه|ة]" );
+
+            return preg_replace($patterns, $replacements, $word);
+
+        });
+var_dump($words);return " ";
         $items = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
@@ -275,9 +285,10 @@ class CatalogItem extends Model
                         $occQuery = [];
                         $occQuery2 = [];
                         foreach ($words as $word) {
+
                             array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') like Lower('%" . $word . "%') ");
                             array_push($occQuery2, "replace(LOWER(JSON_EXTRACT(name, '$.ar')), '\'', '') like Lower('%" . $word . "%') ");
-
+                            
                         }
                         $q4->whereRaw(join('and ', $occQuery));
                         $q4->orWhereRaw(join('and ', $occQuery2));
