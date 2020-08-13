@@ -793,4 +793,9 @@ abstract class OlaHubCommonHelper
         }
         return $returnDates;
     }
+
+    static function replaceSpecChars($string){
+        $replace = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '\'', '"', '±', '§', '`', '~', '?', ',', '<', '>', '/', '\\', '{', '}', '[', ']', '.', ':', ';'];
+        return (str_replace($replace, "", $string));
+    }
 }
