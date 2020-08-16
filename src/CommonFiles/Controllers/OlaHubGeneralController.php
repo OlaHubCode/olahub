@@ -1,7 +1,5 @@
 <?php
-
 namespace OlaHub\UserPortal\Controllers;
-
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;

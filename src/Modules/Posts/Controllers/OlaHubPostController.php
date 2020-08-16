@@ -327,15 +327,14 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
+      
       if(isset($this->requestData['mentions'])){
-
-        $allMentions=serialize ($this->requestData['mentions']);
-
-      }
-
+          $allMentions=serialize ($this->requestData['mentions']);
+          
+        }
+        
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
 
