@@ -528,7 +528,7 @@ class OlaHubPostController extends BaseController
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $userData = app('session')->get('tempData');
-        $log->setLogSessionData(['module_name' => "PostShares", 'function_name' => "sharePost"]);
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "sharePost"]);
 
         if (isset($this->requestData['postId']) && !$this->requestData['postId']) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
@@ -947,7 +947,7 @@ if ($post) {
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $userData = app('session')->get('tempData');
-        $log->setLogSessionData(['module_name' => "PostShares", 'function_name' => "removeSharePost"]);
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "removeSharePost"]);
 
         if (isset($this->requestData['postId']) && !$this->requestData['postId']) {
             $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);

@@ -105,6 +105,12 @@ class UserModel extends Model
             'relation' => false,
             'validation' => ''
         ],
+        'appleToken' => [
+            'column' => 'apple_token',
+            'type' => 'string',
+            'relation' => false,
+            'validation' => ''
+        ],
         'userGoogle' => [
             'column' => 'google_id',
             'type' => 'string',

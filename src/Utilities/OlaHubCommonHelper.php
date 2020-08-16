@@ -452,6 +452,7 @@ abstract class OlaHubCommonHelper
 
     static function getRequest($request)
     {
+
         $return = [
             'requestData' => [],
             'requestFilter' => [],

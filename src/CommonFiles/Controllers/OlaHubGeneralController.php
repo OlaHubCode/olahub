@@ -589,6 +589,8 @@ class OlaHubGeneralController extends BaseController
         $q = 'a';
         $searchData = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search all"]);
+        $ditems = [];
+
         if (isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) {
             $q = mb_strtolower($this->requestFilter->word);
             $searchQuery = [];
@@ -922,10 +924,10 @@ class OlaHubGeneralController extends BaseController
 
         if (!$supported) {
             $sellWithUsUnsupport = new \OlaHub\UserPortal\Models\SellWithUsUnsupport;
-            $sellWithUsUnsupport->merchant_name = $this->requestData->userName;
-            $sellWithUsUnsupport->merchant_email = $this->requestData->userEmail;
-            $sellWithUsUnsupport->merchant_phone_no = $this->requestData->userPhoneNumber;
-            $sellWithUsUnsupport->country_id = $this->requestData->country;
+            $sellWithUsUnsupport->merchant_name = $this->requestData['userName'];
+            $sellWithUsUnsupport->merchant_email = $this->requestData['userEmail'];
+            $sellWithUsUnsupport->merchant_phone_no = $this->requestData['userPhoneNumber'];
+            $sellWithUsUnsupport->country_id = $this->requestData['country'];
             $sellWithUsUnsupport->save();
             $return = ['status' => true, 'msg' => 'sentOurManagers', 'code' => 200];
         }
