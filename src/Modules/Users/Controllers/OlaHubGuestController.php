@@ -1043,10 +1043,10 @@ class OlaHubGuestController extends BaseController
         return response($return, 200);
     }
 
-    public function subscribe()
-    {
-        // $this->requestData['email']
-        $return = ['status' => true, 'msg' => 'successSubscribe'];
-        return response($return, 200);
-    }
+    // public function subscribe()
+    // {
+    //     // $this->requestData['email']
+    //     $return = ['status' => true, 'msg' => 'successSubscribe'];
+    //     return response($return, 200);
+    // }
 }

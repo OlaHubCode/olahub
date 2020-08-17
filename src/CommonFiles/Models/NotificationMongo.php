@@ -8,7 +8,7 @@ class Notifications extends Model
 {
 
     protected $table = 'users_notifications';
-    
+
 
     public function userData()
     {
@@ -20,7 +20,7 @@ class Notifications extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
     }
 
- 
+
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
@@ -91,7 +91,8 @@ class Notifications extends Model
             "add_post" => $word . " added new post in your community",
             "add_post_friend" => $word . " added a new post in your timeline",
             "notifi_user_vote_Post" => $word . "Creat a new vote",
-            "notifi_user_new_Post" => $word . "added a new post"
+            "notifi_user_new_Post" => $word . "added a new post",
+            "notifi_vote_on_post" => $word . "voted on your post"
 
         ];
         $langs->ar = [
@@ -126,7 +127,8 @@ class Notifications extends Model
             "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
             "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك",
             "notifi_user_new_Post" => "قام " . $word . "بإضافة منشور جديد",
-            "notifi_user_vote_Post" => "قام " . $word . " بإنشاء تصويت جديد"
+            "notifi_user_vote_Post" => "قام " . $word . " بإنشاء تصويت جديد",
+            "notifi_vote_on_post" => "قام " . $word . " بتصويت على منشورك"
             
         ];
         return $langs->$lang[$key];

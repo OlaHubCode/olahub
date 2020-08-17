@@ -30,9 +30,5 @@ $router->group([
     $router->post('hashTag', 'OlaHubPostController@hashPost');
     $router->post('ReportPost', 'OlaHubPostController@ReportPost');
     $router->get('getTophashTags', 'OlaHubPostController@getTophashTags');
-
-
-
+    $router->post('votersOnPost','OlaHubPostController@votersOnPost');
 });
-
-
