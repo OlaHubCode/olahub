@@ -142,9 +142,7 @@ class OlaHubPostController extends BaseController
                         ];
                         $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
                         $all[] = $item;
-
                     }
-
                 }
 
                 shuffle($all);
@@ -218,7 +216,6 @@ class OlaHubPostController extends BaseController
                         $return['data'][] = $item;
                     }
                 }
-
             }
 
 
@@ -299,23 +296,23 @@ class OlaHubPostController extends BaseController
 
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
-            $post = Post::where('post_id',$this->requestData['postId'])->first();
+            $post = Post::where('post_id', $this->requestData['postId'])->first();
 
             if ($post) {
                 $likes = $post->likes;
                 $likerData = [];
                 foreach ($likes as $like) {
                     $userData = $like->author;
-                    $name = $userData->first_name.' '.$userData->last_name ;
+                    $name = $userData->first_name . ' ' . $userData->last_name;
 
                     $likerData[] = [
                         'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
                         'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
-                        'likerName' => isset($name ) ? $name : NULL,
-                        'likerid' => isset($userData->id ) ? $userData->id  : NULL
+                        'likerName' => isset($name) ? $name : NULL,
+                        'likerid' => isset($userData->id) ? $userData->id  : NULL
                     ];
                 }
-                $return['data'] =$likerData;
+                $return['data'] = $likerData;
                 $return['status'] = TRUE;
                 $return['code'] = 200;
             }
@@ -324,15 +321,46 @@ class OlaHubPostController extends BaseController
         $log->saveLogSessionData();
         return response($return, 200);
     }
+    public function getTophashTags()
+    {
+
+        $allHash = [];
+        $topHashTags = Post::Where('content', 'like', '%#%')->get();
+        foreach ($topHashTags as $hash) {
+            $onePostHash=[];
+            $content = str_replace('<br>', ' ', $hash->content);
+            $bits = explode(' ',$content);
+            foreach ($bits as $bit) {
+                if (strlen($bit) > 0 && $bit[0] === '#'&&!(in_array($bit, $onePostHash))){
+                     $allHash[] = $bit;
+                     $onePostHash[] = $bit;
+                    };
+            }
+           
+        }
+        $x = array_count_values($allHash);
+        arsort($x);
+        $i = 0;
+        $topFive = [];
+
+        foreach ($x as $oneHash =>$key) {
+            if ($i==5) {
+                return (($topFive));
+            }
+            $topFive[$i] = ['hash'=>$oneHash,'count'=>$key];
+            $i++;
+        }
+
+        return (($topFive));
+    }
 
     public function addNewPost()
     {
-      
-      if(isset($this->requestData['mentions'])){
-          $allMentions=serialize ($this->requestData['mentions']);
-          
+
+        if (isset($this->requestData['mentions'])) {
+            $allMentions = serialize($this->requestData['mentions']);
         }
-        
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
@@ -341,7 +369,7 @@ class OlaHubPostController extends BaseController
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
-            $post->mentions= isset( $allMentions)?$allMentions:NULL;
+            $post->mentions = isset($allMentions) ? $allMentions : NULL;
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
@@ -423,15 +451,15 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
-            }      
-        
+            }
+
             $post->post_id = uniqid(app('session')->get('tempID'));
-              if (isset($this->requestData['friend'])) {
+            if (isset($this->requestData['friend'])) {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
                 $notification->type = 'post';
                 $notification->content = "notifi_Friend_Post";
                 $notification->friend_id = $post->user_id;
-                $notification->user_id =$this->requestData['friend'];
+                $notification->user_id = $this->requestData['friend'];
                 $notification->post_id = $post->post_id;
                 $notification->save();
 
@@ -524,7 +552,8 @@ class OlaHubPostController extends BaseController
         return response($return, 200);
     }
 
-    public function newSharePost(){
+    public function newSharePost()
+    {
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $userData = app('session')->get('tempData');
@@ -549,10 +578,10 @@ class OlaHubPostController extends BaseController
             $update = true;
         }
 
-        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200,'update'=> $update]]);
+        $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedPostUser', 'code' => 200, 'update' => $update]]);
         $log->saveLogSessionData();
 
-        return response(['status' => TRUE, 'code' => 200,'update'=> $update], 200);
+        return response(['status' => TRUE, 'code' => 200, 'update' => $update], 200);
     }
 
     public function addNewComment()
@@ -651,41 +680,37 @@ class OlaHubPostController extends BaseController
                                 ];
                             }
                         }
-                        $canEdit=false;
-                        $canDelete=false;
-                        $canEditReply=false;
-                        $canDeleteReply=false;
-if( (app('session')->get('tempID'))==$comment->user_id){
-    $canEdit=true;
-    $canDelete=true;
-
-}
-$post = Post::where('post_id', $this->requestData['postId'])->first();
-if ($post) {
-    if ($post->user_id == app('session')->get('tempID')) {
-        $canDelete=true;
-
-    }
-}
-if( (app('session')->get('tempID'))==$comment->user_id){
-    $canEditReply=true;
-    $canDeleteReply=true;
-
-}
-if ($post) {
-    if ($post->user_id == app('session')->get('tempID')) {
-        $canDeleteReply=true;
-
-    }
-}
+                        $canEdit = false;
+                        $canDelete = false;
+                        $canEditReply = false;
+                        $canDeleteReply = false;
+                        if ((app('session')->get('tempID')) == $comment->user_id) {
+                            $canEdit = true;
+                            $canDelete = true;
+                        }
+                        $post = Post::where('post_id', $this->requestData['postId'])->first();
+                        if ($post) {
+                            if ($post->user_id == app('session')->get('tempID')) {
+                                $canDelete = true;
+                            }
+                        }
+                        if ((app('session')->get('tempID')) == $comment->user_id) {
+                            $canEditReply = true;
+                            $canDeleteReply = true;
+                        }
+                        if ($post) {
+                            if ($post->user_id == app('session')->get('tempID')) {
+                                $canDeleteReply = true;
+                            }
+                        }
 
                         $return["data"][] = [
                             'comment_id' => $comment->id,
                             'user_id' => $comment->user_id,
-                            'canUpdate' =>$canEdit,
-                            'canDelete'=>$canDelete,
-                            'canEditReply'=>$canEditReply,
-                            'canDeleteReply'=>$canDeleteReply,
+                            'canUpdate' => $canEdit,
+                            'canDelete' => $canDelete,
+                            'canEditReply' => $canEditReply,
+                            'canDeleteReply' => $canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
@@ -862,7 +887,7 @@ if ($post) {
         $Comment = PostComments::where('Id', $this->requestData['commentId'])->first();
         $post = Post::where('post_id', $Comment->post_id)->first();
         if ($Comment) {
-            if ($Comment->user_id != app('session')->get('tempID')&& $post->user_id != app('session')->get('tempID')) {
+            if ($Comment->user_id != app('session')->get('tempID') && $post->user_id != app('session')->get('tempID')) {
                 if (isset($Comment->group_id) && $Comment->group_id > 0) {
                     $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($Comment->group_id);
                     if (!$group) {
@@ -923,27 +948,30 @@ if ($post) {
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-    public function hashPost(){
+    public function hashPost()
+    {
 
-          $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-          $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getHashPost"]);
-          $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
-          if (isset($this->requestData['postHash']) && $this->requestData['postHash']) {
-            $hashTag = substr_replace($this->requestData['postHash'], '#'.$this->requestData['postHash'], 0);
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getHashPost"]);
+        $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
+        if (isset($this->requestData['postHash']) && $this->requestData['postHash']) {
+
+            $hashTag = substr_replace($this->requestData['postHash'], '#' . $this->requestData['postHash'], 0);
             $post = Post::where('content', 'LIKE', '%' . $hashTag . '%')->paginate(15);
-              if ($post) {
-                  $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                  $return['status'] = TRUE;
-                  $return['code'] = 200;
-              }
-          }
-          $log->setLogSessionData(['response' => $return]);
-          $log->saveLogSessionData();
-          return response($return, 200);
+            if ($post) {
+                $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                $return['status'] = TRUE;
+                $return['code'] = 200;
+            }
+        }
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
+        return response($return, 200);
     }
 
 
-    public function removeSharePost(){
+    public function removeSharePost()
+    {
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $userData = app('session')->get('tempData');
@@ -966,34 +994,32 @@ if ($post) {
     }
 
 
-    
-public function ReportPost()
-{
-    $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-    $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "ReportPost"]);
 
-    if (empty($this->requestData['postId'])) {
+    public function ReportPost()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "ReportPost"]);
+
+        if (empty($this->requestData['postId'])) {
+            $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+            $log->saveLogSessionData();
+            return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        }
+        $post = Post::where('post_id', $this->requestData['postId'])->first();
+        $user = app('session')->get('tempID');
+        $postId = $this->requestData['postId'];
+        if ($post) {
+            $report = new PostReport();
+            $report->post_id = $postId;
+            $report->user_id = app('session')->get('tempID');
+            $report->save();
+
+            $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You report post successfully', 'code' => 200]]);
+            $log->saveLogSessionData();
+            return response(['status' => true, 'msg' => 'You report post successfully', 'code' => 200], 200);
+        }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
-    $post = Post::where('post_id', $this->requestData['postId'])->first();
-    $user = app('session')->get('tempID');
-    $postId = $this->requestData['postId'];
-     if ($post) {
-        $report = new PostReport();
-        $report->post_id = $postId;
-        $report->user_id = app('session')->get('tempID');
-        $report->save();
-    
-        $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'You report post successfully', 'code' => 200]]);
-        $log->saveLogSessionData();
-        return response(['status' => true, 'msg' => 'You report post successfully', 'code' => 200], 200);
-    }
-    $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-    $log->saveLogSessionData();
-    return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
- 
-}
-
 }

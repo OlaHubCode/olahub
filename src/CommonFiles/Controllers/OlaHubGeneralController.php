@@ -30,7 +30,49 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200,], 200);
     }
+  
+    public function sideBarAds(){
 
+
+        $sponsers_arr = [];
+     
+            $timelinePosts = DB::table('campaign_slot_prices')->where('country_id', app('session')->get('def_country')->id)->where('is_post', '1')->inRandomOrder()->limit(10)->get();
+            foreach ($timelinePosts as $onePost) {
+                    $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->get();
+                      
+                foreach ($sponsers as $one) {
+                    $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
+                    $liked = 0;
+                    if ($campaign) {
+                        $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
+                            ->where('country_id', app('session')->get('def_country')->id)
+                            ->where('campign_id', $campaign->id)
+                            ->first();
+                        if ($oldLike) {
+                            $liked = 1;
+                        }
+                    }
+
+                    $sponsers_arr[] = [
+                        'type' => 'sponser',
+                        "adToken" => isset($one->token) ? $one->token : NULL,
+                        'updated_at' => isset($one->updated_at) ? $one->updated_at : 0,
+                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($one->created_at),
+                        'post' => isset($one->_id) ? $one->_id : 0,
+                        "adSlot" => isset($one->slot) ? $one->slot : 0,
+                        "adRef" => isset($one->content_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->content_ref) : NULL,
+                        "adText" => isset($one->content_text) ? $one->content_text : NULL,
+                        "adLink" => isset($one->access_link) ? $one->access_link : NULL,
+                        "liked" => $liked,
+                    ];
+                }
+            }
+            return($sponsers_arr);
+        
+    }
+
+  
+  
     public function setAdsStatisticsData($getFrom)
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Set Ads statistics data"]);
