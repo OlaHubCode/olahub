@@ -1,5 +1,7 @@
 <?php
+
 namespace OlaHub\UserPortal\Controllers;
+
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
@@ -30,49 +32,49 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200,], 200);
     }
-  
-    public function sideBarAds(){
+
+    public function sideBarAds()
+    {
 
 
         $sponsers_arr = [];
-     
-            $timelinePosts = DB::table('campaign_slot_prices')->where('country_id', app('session')->get('def_country')->id)->where('is_post', '1')->inRandomOrder()->limit(10)->get();
-            foreach ($timelinePosts as $onePost) {
-                    $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->get();
-                      
-                foreach ($sponsers as $one) {
-                    $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
-                    $liked = 0;
-                    if ($campaign) {
-                        $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
-                            ->where('country_id', app('session')->get('def_country')->id)
-                            ->where('campign_id', $campaign->id)
-                            ->first();
-                        if ($oldLike) {
-                            $liked = 1;
-                        }
-                    }
 
-                    $sponsers_arr[] = [
-                        'type' => 'sponser',
-                        "adToken" => isset($one->token) ? $one->token : NULL,
-                        'updated_at' => isset($one->updated_at) ? $one->updated_at : 0,
-                        'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($one->created_at),
-                        'post' => isset($one->_id) ? $one->_id : 0,
-                        "adSlot" => isset($one->slot) ? $one->slot : 0,
-                        "adRef" => isset($one->content_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->content_ref) : NULL,
-                        "adText" => isset($one->content_text) ? $one->content_text : NULL,
-                        "adLink" => isset($one->access_link) ? $one->access_link : NULL,
-                        "liked" => $liked,
-                    ];
+        $timelinePosts = DB::table('campaign_slot_prices')->where('country_id', app('session')->get('def_country')->id)->where('is_post', '1')->inRandomOrder()->limit(10)->get();
+        foreach ($timelinePosts as $onePost) {
+            $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->get();
+
+            foreach ($sponsers as $one) {
+                $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
+                $liked = 0;
+                if ($campaign) {
+                    $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
+                        ->where('country_id', app('session')->get('def_country')->id)
+                        ->where('campign_id', $campaign->id)
+                        ->first();
+                    if ($oldLike) {
+                        $liked = 1;
+                    }
                 }
+
+                $sponsers_arr[] = [
+                    'type' => 'sponser',
+                    "adToken" => isset($one->token) ? $one->token : NULL,
+                    'updated_at' => isset($one->updated_at) ? $one->updated_at : 0,
+                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($one->created_at),
+                    'post' => isset($one->_id) ? $one->_id : 0,
+                    "adSlot" => isset($one->slot) ? $one->slot : 0,
+                    "adRef" => isset($one->content_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->content_ref) : NULL,
+                    "adText" => isset($one->content_text) ? $one->content_text : NULL,
+                    "adLink" => isset($one->access_link) ? $one->access_link : NULL,
+                    "liked" => $liked,
+                ];
             }
-            return($sponsers_arr);
-        
+        }
+        return ($sponsers_arr);
     }
 
-  
-  
+
+
     public function setAdsStatisticsData($getFrom)
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Set Ads statistics data"]);
@@ -434,20 +436,16 @@ class OlaHubGeneralController extends BaseController
                 } elseif (strstr($image, "http://23.100.10.45:8080/images/")) {
                     $one->avatar_url = str_replace("http://23.100.10.45:8080/images/", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://localhost/userproject/images/defaults/5b5d862798ff2.png")) {
+                } elseif (strstr($image, "http://localhost/userproject/images/defaults/5b5d862798ff2.png")) {
                     $one->avatar_url = str_replace("http://localhost/userproject/images/defaults/5b5d862798ff2.png", false, $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://localhost/userproject/images/")) {
+                } elseif (strstr($image, "http://localhost/userproject/images/")) {
                     $one->avatar_url = str_replace("http://localhost/userproject/images/", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg")) {
+                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg")) {
                     $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/")) {
+                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/")) {
                     $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/", "", $one->avatar_url);
                     $one->save();
                 }
@@ -901,8 +899,7 @@ class OlaHubGeneralController extends BaseController
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
                 } else if (isset($this->requestData->userPhoneNumber) && $this->requestData->userPhoneNumber) {
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
-                }
-                else if (isset($this->requestData->userEmail) && $this->requestData->userEmail) {
+                } else if (isset($this->requestData->userEmail) && $this->requestData->userEmail) {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
                 }
             }
@@ -1884,11 +1881,9 @@ class OlaHubGeneralController extends BaseController
             $following->type = 1;
         } else if ($type == 'category') {
             $following->type = 3;
-        }
-        else if ($type == 'occasion') {
+        } else if ($type == 'occasion') {
             $following->type = 4;
-        }
-        else  $following->type = 2;
+        } else  $following->type = 2;
         $following->save();
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
@@ -1899,11 +1894,9 @@ class OlaHubGeneralController extends BaseController
             $typeNum = 1;
         } else if ($type == 'category') {
             $typeNum = 3;
-        }
-        else if ($type == 'occasion') {
+        } else if ($type == 'occasion') {
             $typeNum = 4;
-        }
-        else $typeNum = 2;
+        } else $typeNum = 2;
 
         \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $id)
             ->where('type', $typeNum)->delete();

@@ -89,7 +89,9 @@ class Notifications extends Model
             "invite_group" => $word . " invited you to join community " . $word2,
             "ask_group" => $word . " asked to join your community",
             "add_post" => $word . " added new post in your community",
-            "add_post_friend" => $word . " added a new post in your timeline"
+            "add_post_friend" => $word . " added a new post in your timeline",
+            "notifi_user_vote_Post" => $word . "Creat a new vote",
+            "notifi_user_new_Post" => $word . "added a new post"
 
         ];
         $langs->ar = [
@@ -122,7 +124,10 @@ class Notifications extends Model
             "invite_group" => "قام " . $word . " بدعوتك بالإنضمام إلى مجتمع " . $word2,
             "ask_group" => "قام " . $word . " بطلب دعوة بالإنضمام إلى مجتمعك",
             "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
-            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك"
+            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك",
+            "notifi_user_new_Post" => "قام " . $word . "بإضافة منشور جديد",
+            "notifi_user_vote_Post" => "قام " . $word . " بإنشاء تصويت جديد"
+            
         ];
         return $langs->$lang[$key];
     }

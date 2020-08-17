@@ -327,27 +327,26 @@ class OlaHubPostController extends BaseController
         $allHash = [];
         $topHashTags = Post::Where('content', 'like', '%#%')->get();
         foreach ($topHashTags as $hash) {
-            $onePostHash=[];
+            $onePostHash = [];
             $content = str_replace('<br>', ' ', $hash->content);
-            $bits = explode(' ',$content);
+            $bits = explode(' ', $content);
             foreach ($bits as $bit) {
-                if (strlen($bit) > 0 && $bit[0] === '#'&&!(in_array($bit, $onePostHash))){
-                     $allHash[] = $bit;
-                     $onePostHash[] = $bit;
-                    };
+                if (strlen($bit) > 0 && $bit[0] === '#' && !(in_array($bit, $onePostHash))) {
+                    $allHash[] = $bit;
+                    $onePostHash[] = $bit;
+                };
             }
-           
         }
         $x = array_count_values($allHash);
         arsort($x);
         $i = 0;
         $topFive = [];
 
-        foreach ($x as $oneHash =>$key) {
-            if ($i==5) {
+        foreach ($x as $oneHash => $key) {
+            if ($i == 5) {
                 return (($topFive));
             }
-            $topFive[$i] = ['hash'=>$oneHash,'count'=>$key];
+            $topFive[$i] = ['hash' => $oneHash, 'count' => $key];
             $i++;
         }
 
@@ -478,6 +477,45 @@ class OlaHubPostController extends BaseController
                     "$userData->first_name $userData->last_name"
                 );
             }
+            // if (!isset($this->requestData['friend']) && !isset($this->requestData['group'])) {
+            //     $userData = app('session')->get('tempData');
+            //     $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+            //     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+            //     foreach ($friends as $friend) {
+
+            //         $notification = new \OlaHub\UserPortal\Models\Notifications();
+
+            //         if (isset($this->requestData['isVote']) && ($this->requestData['isVote'] == "true")) {
+            //             $notiType = 'userCreatNewVote';
+            //             $notiContent = 'notifi_user_vote_Post';
+            //         } else {
+            //             $notiType = 'userCreatNewpost';
+            //             $notiContent = 'notifi_user_new_Post';
+            //         }
+            //         $notification->type = $notiType;
+            //         $notification->content = $notiContent;
+            //         $notification->user_id = $friend;
+            //         $notification->friend_id = app('session')->get('tempID');
+            //         $notification->post_id = $post->post_id;
+            //         $notification->save();
+            //         // \OlaHub\UserPortal\Models\Notifications::sendFCM(
+            //         //     $friend,
+            //         //     $notiContent,
+            //         //     array(
+            //         //         "type" => "add_post_friend",
+            //         //         "postId" => $post->post_id,
+            //         //         "subject" => $post->content,
+            //         //         "username" => "$userData->first_name $userData->last_name",
+            //         //     ),
+            //         //     $owner->lang,
+            //         //     "$userData->first_name $userData->last_name"
+            //         // );
+            //     }
+
+
+               
+          
+            // }
 
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
