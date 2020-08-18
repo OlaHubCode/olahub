@@ -77,7 +77,7 @@ abstract class OlaHubCommonHelper
 
     static function returnCurrentLangField($objectData, $fieldName)
     {
-    
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Return field depending on current language", "action_startData" => json_encode($objectData) . $fieldName]);
         $return = NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
@@ -652,13 +652,13 @@ abstract class OlaHubCommonHelper
         $elapsed = new \DateTime($datetime);
         $newDate = new \DateTime;
         $diff = $newDate->diff($elapsed);
-        
+
         $elapsedDays = strtotime($datetime);
         $newDateDays = strtotime(date("Y-m-d h:i:s"));
         $diffDays = abs($elapsedDays - $newDateDays);
         // $y = $diff->format('%y');
         // $m = $diff->format('%m');
-        $d = floor($diffDays / (60*60*24));
+        $d = floor($diffDays / (60 * 60 * 24));
         // $d = $diff->format('%d');
         $h = $diff->format('%h');
         $m = $diff->format('%i');
@@ -794,8 +794,18 @@ abstract class OlaHubCommonHelper
         return $returnDates;
     }
 
-    static function replaceSpecChars($string){
+    static function replaceSpecChars($string)
+    {
         $replace = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '\'', '"', '±', '§', '`', '~', '?', ',', '<', '>', '/', '\\', '{', '}', '[', ']', '.', ':', ';'];
         return (str_replace($replace, "", $string));
+    }
+
+    static function replaceArabicChars($string)
+    {
+
+        $patterns     = array("/(ا|إ|أ|آ)/", "/(ه|ة)/");
+        $replacements = array("[ا|إ|أ|آ]", "[ه|ة]");
+
+        return preg_replace($patterns, $replacements, $string);
     }
 }

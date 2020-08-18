@@ -397,20 +397,16 @@ class OlaHubGeneralController extends BaseController
                 } elseif (strstr($image, "http://23.100.10.45:8080/images/")) {
                     $one->avatar_url = str_replace("http://23.100.10.45:8080/images/", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://localhost/userproject/images/defaults/5b5d862798ff2.png")) {
+                } elseif (strstr($image, "http://localhost/userproject/images/defaults/5b5d862798ff2.png")) {
                     $one->avatar_url = str_replace("http://localhost/userproject/images/defaults/5b5d862798ff2.png", false, $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://localhost/userproject/images/")) {
+                } elseif (strstr($image, "http://localhost/userproject/images/")) {
                     $one->avatar_url = str_replace("http://localhost/userproject/images/", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg")) {
+                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg")) {
                     $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/defaults/5b5d862798ff2.jpg", "", $one->avatar_url);
                     $one->save();
-                }
-                elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/")) {
+                } elseif (strstr($image, "http://23.97.242.159:8080/temp_photos/")) {
                     $one->avatar_url = str_replace("http://23.97.242.159:8080/temp_photos/", "", $one->avatar_url);
                     $one->save();
                 }
@@ -630,7 +626,7 @@ class OlaHubGeneralController extends BaseController
                 or LOWER(`description`) sounds like '" . $q . "'";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
-//            var_dump($handle);
+            //            var_dump($handle);
             // brands
             if ($handle[0]->search > 0) {
                 $searchData[] = [
@@ -672,8 +668,8 @@ class OlaHubGeneralController extends BaseController
 
             $ditems = [];
             $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, 5);
-            if ($items) {
-                $ditems["items"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler')['data'];
+            if ($items["data"]) {
+                $ditems["items"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler')['data'];
             }
 
             $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItem($q, 5);
@@ -699,7 +695,7 @@ class OlaHubGeneralController extends BaseController
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
         $q = 'a';
-        $count = 18;
+        $count = 20;
         $searchData = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start search according filter"]);
         if ((isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) && isset($this->requestFilter->type) && strlen($this->requestFilter->type) > 1) {
@@ -709,7 +705,7 @@ class OlaHubGeneralController extends BaseController
 
             $find1 = strpos($this->requestFilter->word, '@');
             $find2 = strpos($this->requestFilter->word, '.');
-            if(($find1 !== false && $find2 !== false ) || $is_numeric){
+            if (($find1 !== false && $find2 !== false) || $is_numeric) {
                 $type = "users";
             }
 
@@ -741,9 +737,12 @@ class OlaHubGeneralController extends BaseController
                     break;
                 case "items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items filter"]);
-                    $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count);
-                    if ($items->count() > 0) {
-                        $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
+                    $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count, true);
+                    if ($items["data"]->count()) {
+                        $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
+                    }
+                    if ($items["related"]) {
+                        $searchData["related"] = $items["related"];
                     }
                     break;
                 case "desginer_items":
@@ -872,8 +871,7 @@ class OlaHubGeneralController extends BaseController
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
                 } else if (isset($this->requestData->userPhoneNumber) && $this->requestData->userPhoneNumber) {
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
-                }
-                else if (isset($this->requestData->userEmail) && $this->requestData->userEmail) {
+                } else if (isset($this->requestData->userEmail) && $this->requestData->userEmail) {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNotRegisterUserInvition($user, $userData->first_name . ' ' . $userData->last_name, $password);
                 }
             }
@@ -1855,11 +1853,9 @@ class OlaHubGeneralController extends BaseController
             $following->type = 1;
         } else if ($type == 'category') {
             $following->type = 3;
-        }
-        else if ($type == 'occasion') {
+        } else if ($type == 'occasion') {
             $following->type = 4;
-        }
-        else  $following->type = 2;
+        } else  $following->type = 2;
         $following->save();
         return response(['status' => true, 'msg' => 'follow successfully', 'code' => 200], 200);
     }
@@ -1870,11 +1866,9 @@ class OlaHubGeneralController extends BaseController
             $typeNum = 1;
         } else if ($type == 'category') {
             $typeNum = 3;
-        }
-        else if ($type == 'occasion') {
+        } else if ($type == 'occasion') {
             $typeNum = 4;
-        }
-        else $typeNum = 2;
+        } else $typeNum = 2;
 
         \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $id)
             ->where('type', $typeNum)->delete();

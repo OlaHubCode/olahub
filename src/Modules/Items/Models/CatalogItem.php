@@ -216,228 +216,163 @@ class CatalogItem extends Model
         }
         return $return;
     }
-    static function searchItem($text = 'a', $count = 15)
+    static function searchItem($text = 'a', $count = 15, $withRelated = false)
     {
         $text_length = strlen($text) - substr_count($text, ' ');
-
+        $array = ['a', 'and', 'around', 'every', 'for', 'from', 'in', 'is', 'it', 'not', 'on', 'one', 'the', 'to', 'under'];
         $text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::replaceSpecChars($text);
         $words = explode(" ", $text);
-        $words = array_filter($words, function ($word) {
-            return !empty($word);
+        $words = array_filter($words, function ($word) use ($array) {
+            if (!empty($word) && !in_array($word, $array)) {
+                return $word;
+            }
         });
+        $occQuery = [];
+        foreach ($words as $word)
+            array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
 
-        $words = array_filter($words, function ($word) {
-            $patterns     = array( "/(ا|إ|أ|آ)/", "/(ه|ة)/" );
-            $replacements = array( "[ا|إ|أ|آ]", "[ه|ة]" );
-
-            return preg_replace($patterns, $replacements, $word);
-
-        });
-var_dump($words);return " ";
-        $items = CatalogItem::where(function ($query) {
-            $query->whereNull('parent_item_id');
-            $query->orWhere('parent_item_id', '0');
-        });
-
-        //        $findInAttribute = CatalogItem::where(function ($query) {
-        //            $query->whereNull('parent_item_id');
-        //            $query->orWhere('parent_item_id', '0');
-        //            })->WhereHas("valuesData", function ($q3) use ($words) {
-        //            $q3->WhereHas("valueMainData",function ($q4) use ($words){
-        //                $q4->where(function ($q1) use($words) {
-        //                    foreach ($words as $key => $word){
-        //                        if($key == 0){
-        //                            $q1->Where('attribute_value', 'like', '%' . $word . '%');
-        //
-        //                        }else{
-        //                            $q1->orWhere('attribute_value', 'like', '%' . $word . '%');
-        //                        }
-        //                    }
-        //                });
-        //            });
-        //        })->count();
-
-
-
+        $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
-        })
-            ->where(function ($q) use ($words) {
-                //search in categories
-                //                $q->orWhereHas("category", function ($q3) use ($words) {
-                //                    $q3->Where(function ($q2) use($words) {
-                //                        foreach ($words as $word){
-                //                            $q2->whereRaw('FIND_IN_SET(?, REPLACE(category_slug, "-", ","))', $word);
-                //                        }
-                //                    });
-                //                    //search in parent's categories
-                //                    $q3->orWhereHas("parentCategory",function ($q4) use ($words){
-                //                        foreach ($words as $word){
-                //                            $q4->whereRaw('FIND_IN_SET(?, REPLACE(category_slug, "-", ","))', $word);
-                //                        }
-                //                    });
-                //                });
-
-                //search in occasions
-                $q->whereHas("occasions", function ($q3) use ($words) {
-                    $q3->WhereHas("occasionMainData", function ($q4) use ($words) {
-                        $occQuery = [];
-                        $occQuery2 = [];
-                        foreach ($words as $word) {
-
-                            array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') like Lower('%" . $word . "%') ");
-                            array_push($occQuery2, "replace(LOWER(JSON_EXTRACT(name, '$.ar')), '\'', '') like Lower('%" . $word . "%') ");
-                            
-                        }
-                        $q4->whereRaw(join('and ', $occQuery));
-                        $q4->orWhereRaw(join('and ', $occQuery2));
-
-                    });
-                    
+        })->where(function ($q) use ($whereQuery) {
+            //occasions
+            $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+            // interests
+            $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+            //categories
+            $q->orWhereHas("category", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+                $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                    $q2->whereRaw($whereQuery);
                 });
+            });
+            //classification
+            $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+        });
+        $related = false;
+        $newWords = $words;
+        foreach ($newWords as $key => $word)
+            if (strlen($word) < 2)
+                unset($newWords[$key]);
 
-                //search in classification
-                //                $q->orWhereHas("classification", function ($q3) use ($words) {
-                //                    foreach ($words as $word){
-                //                        $q3->whereRaw('FIND_IN_SET(?, REPLACE(class_slug, "-", ","))', $word);
-                //                    }
-                //                });
-                //
-                //                //search in interests
-                //                $q->orWhereHas("interests", function ($q3) use ($words) {
-                //                    $q3->WhereHas("interestMainData",function ($q4) use ($words){
-                //                        foreach ($words as $word){
-                //                            $q4->whereRaw('FIND_IN_SET(?, REPLACE(interest_slug, "-", ","))', $word);
-                //                        }
-                //                    });
-                //                });
+        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
+        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
+        if ($withRelated) {
+            $related = [];
+            $occasions = Occasion::whereRaw($whereQuery)->whereHas('occasionItemsData')->get();
+            $categories = ItemCategory::whereRaw($whereQuery)->whereHas("itemsMainData")->get();
+            $interests = Interests::whereRaw($whereQuery)->whereHas("itemsRelation")->get();
 
-            })
-            ->orWhere('description', '=', $text)
-            ->orWhere('name', '=', $text);
-        //        ->orWhere('name', '=', $text)->count();
-
-        //        $items->where(function ($q) use($words,$find) {
-
-        //            $q->Where(function ($q2) use($words) {
-        //                foreach ($words as $word){
-        //                    $q2->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
-        //                }
-        //            });
-
-        //            $q->orWhereHas("category", function ($q3) use ($words,$find) {
-        //                $q3->Where(function ($q2) use($words,$find) {
-        //                    foreach ($words as $word){
-        //                        if($find !== 0) {
-        //                            $q2->whereRaw('FIND_IN_SET(?, REPLACE(category_slug, "-", ","))', $word);
-        //                        }elseif($word != 'and') {
-        //                            $q2->orWhere('category_slug', 'like', '%' . $word . '%');
-        //                        }
-        //                    }
-        //                });
-        //                $q3->orWhereHas("parentCategory",function ($q4) use ($words,$find){
-        //                    $q4->Where(function ($q1) use($words,$find) {
-        //                        foreach ($words as $word) {
-        //                            if($find !== 0) {
-        //                                $q1->whereRaw('FIND_IN_SET(?, REPLACE(category_slug, "-", ","))', $word);
-        //                            }elseif($word != 'and') {
-        //                                $q1->orWhere('category_slug', 'like', '%' . $word . '%');
-        //                            }
-        //                        }
-        //                    });
-        //                });
-        //            });
-
-        //            $q->orWhereHas("occasions", function ($q3) use ($words,$find) {
-        //                $q3->WhereHas("occasionMainData",function ($q4) use ($words,$find){
-        //                    $q4->Where(function ($q1) use($words,$find) {
-        //                        foreach ($words as $word) {
-        //                            if($find !== 0) {
-        //                                $q1->whereRaw('FIND_IN_SET(?, REPLACE(occasion_slug, "-", ","))', $word);
-        //                            }elseif($word != 'and') {
-        //                                $q1->orWhere('occasion_slug', 'like', '%' . $word . '%');
-        //                            }
-        //                        }
-        //                    });
-        //                });
-        //            });
-        //
-        //            $q->orWhereHas("classification", function ($q3) use ($words,$find) {
-        //                $q3->Where(function ($q1) use($words,$find) {
-        //                    foreach ($words as $word) {
-        //                        if($find !== 0) {
-        //                            $q1->whereRaw('FIND_IN_SET(?, REPLACE(class_slug, "-", ","))', $word);
-        //                        }elseif($word != 'and') {
-        //                            $q1->orWhere('class_slug', 'like', '%' . $word . '%');
-        //                        }
-        //                    }
-        //                });
-        //            });
-        //
-        //            $q->orWhereHas("interests", function ($q3) use ($words,$find) {
-        //                $q3->WhereHas("interestMainData",function ($q4) use ($words,$find){
-        //                    $q4->Where(function ($q1) use($words,$find) {
-        //                        foreach ($words as $word) {
-        //                            if($find !== 0) {
-        //                                $q1->whereRaw('FIND_IN_SET(?, REPLACE(interest_slug, "-", ","))', $word);
-        //                            }elseif($word != 'and') {
-        //                                $q1->orWhere('interest_slug', 'like', '%' . $word . '%');
-        //                            }
-        //                        }
-        //                    });
-        //                });
-        //            });
-
-
-        //        });
-
-        //        if($findInAttribute !== 0 && $find == 0 ){
-        //
-        //            $items->WhereHas("valuesData", function ($q3) use ($words) {
-        //                $q3->WhereHas("valueMainData",function ($q4) use ($words){
-        //                    $q4->where(function ($q1) use($words) {
-        //                        foreach ($words as $key => $word){
-        //                            if($key == 0){
-        //                                $q1->Where('attribute_value', 'like', '%' . $word . '%');
-        //
-        //                            }else{
-        //                                $q1->orWhere('attribute_value', 'like', '%' . $word . '%');
-        //                            }
-        //                        }
-        //                    });
-        //                });
-        //            });
-        //
-        //        }elseif($find == 0){
-        //            $items->orWhereHas("valuesData", function ($q3) use ($words) {
-        //                $q3->WhereHas("valueMainData",function ($q4) use ($words){
-        //                    $q4->where(function ($q1) use($words) {
-        //                        foreach ($words as $key => $word){
-        //                            if($key == 0){
-        //                                $q1->Where('attribute_value', 'like', '%' . $word . '%');
-        //                            }else{
-        //                                $q1->orWhere('attribute_value', 'like', '%' . $word . '%');
-        //                            }
-        //                        }
-        //                    });
-        //                });
-        //            });
-        //        }
-        //        $items->orWhere('description', '=',$text);
-        //        $items->orWhere('name', '=', $text);
-
-
-        if ($count > 0) {
-            return $find->paginate($count);
-        } else {
-            return $find->count();
+            if ($occasions->count()) {
+                foreach ($occasions as $occasion) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion, "name"),
+                        "type" => "occasion"
+                    ];
+                }
+            }
+            if ($categories->count()) {
+                foreach ($categories as $category) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name"),
+                        "type" => "category"
+                    ];
+                }
+            }
+            if ($interests->count()) {
+                foreach ($interests as $interest) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, "name"),
+                        "type" => "interest"
+                    ];
+                }
+            }
         }
-    }
+        // check the attributes values
+        if ($find->count() == 0) {
+            $tempWords = [];
+            $attrQuery = [];
 
-    //        $items = CatalogItem::where('name', 'LIKE', "%$text%")
-    //        ->whereNull("parent_item_id")
-    //        ->orWhere("parent_item_id", 0);
+            foreach ($words as $word)
+                array_push($attrQuery, "replace(replace(LOWER(attribute_value), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            $arrQuery = join(' or ', $attrQuery);
+            $findValue = AttrValue::whereRaw($arrQuery)->pluck('attribute_value')->toArray();
+
+            foreach ($findValue as $kw) {
+                foreach ($words as $word) {
+                    if (strpos(strtolower($kw), strtolower($word)) !== false && !in_array($word, $tempWords))
+                        $tempWords[] = $word;
+                }
+            }
+
+            $find->orWhere(function ($q1) use ($whereQuery, $tempWords) {
+                $q1->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                });
+                $q1->where(function ($qx) use ($tempWords) {
+                    foreach ($tempWords as $word) {
+                        $qx->whereHas("valuesData", function ($q2) use ($word) {
+                            $q2->whereHas("valueMainData", function ($q3) use ($word) {
+                                $q3->whereRaw("replace(replace(LOWER(attribute_value), '\'', ''), '\"', '') REGEXP '$word'");
+                            });
+                        });
+                    }
+                });
+                $q1->where(function ($q) use ($whereQuery) {
+                    $q->whereHas("occasionSync", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                    $q->orWhereHas("interestSync", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                    $q->orWhereHas("category", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                        $q2->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                            $q2->whereRaw($whereQuery);
+                        });
+                    });
+                    $q->orWhereHas("classification", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                });
+            });
+        }
+
+        // check the item name
+        if ($find->count() == 0) {
+            $itemQuery = [];
+            foreach ($words as $word)
+                array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            $itemQuery = join(' and ', $itemQuery);
+
+            $find->orWhere(function ($q1) use ($itemQuery) {
+                $q1->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                });
+                $q1->whereRaw($itemQuery);
+            });
+        }
+
+        $data = NULL;
+        if ($count > 0) {
+            $data = $find->paginate($count);
+        } else {
+            $data = $find->count();
+        }
+        return array(
+            "data" => $data,
+            "related" => $related
+        );
+    }
 
     static function searchItemByClassification($q = 'a', $classification = false, $count = 15)
     {
