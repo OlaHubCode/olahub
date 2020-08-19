@@ -88,7 +88,7 @@ class OlaHubGuestController extends BaseController
         } else {
             $userData = new UserModel;
         }
-        foreach ($this->requestData as $input => $value) {
+        foreach ($this->requestData as $input => $value) {  
             if (isset(UserModel::$columnsMaping[$input])) {
                 if ($input == 'userEmail' && is_numeric($value)) {
                     $input = 'userPhoneNumber';
