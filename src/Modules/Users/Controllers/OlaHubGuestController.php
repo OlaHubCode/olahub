@@ -62,7 +62,7 @@ class OlaHubGuestController extends BaseController
                 return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]], 200);
             }
         }
-        if (isset($this->requestData['refCode'])) {
+        if (!empty($this->requestData['refCode'])) {
             $checkRefCode = UserModel::checkReferenceCodeUser($this->requestData['refCode'], 'register');
             if ($checkRefCode === "notBegin") {
                 return response(['status' => false, 'msg' => 'notBegin', 'code' => 406], 200);
@@ -102,7 +102,7 @@ class OlaHubGuestController extends BaseController
         }
         $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
         $userData->save();
-        if (isset($this->requestData['refCode'])) {
+        if (!empty($this->requestData['refCode'])) {
             $codeRefUsed = new UsersReferenceCodeUsedModel;
             $codeRefUsed->code_id = $checkRefCode;
             $codeRefUsed->user_id = $userData->id;
