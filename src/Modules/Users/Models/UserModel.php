@@ -123,6 +123,7 @@ class UserModel extends Model
             'relation' => false,
             'validation' => ''
         ],
+
     ];
     static $columnsInvitationMaping = [
         'userFirstName' => [
@@ -181,6 +182,11 @@ class UserModel extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\Friends', 'user_id', 'id');
     }
 
+    public function refCode()
+    {
+        return $this->hasOne('OlaHub\UserPortal\Models\UsersReferenceCodeUsedModel', 'user_id', 'id');
+    }
+
     public function getColumns($requestData, $user = false)
     {
         if ($user) {
@@ -205,49 +211,45 @@ class UserModel extends Model
 
         $userModel->where(function ($query) use ($words) {
 
-            $query->where(function ($q1) use($words) {
-                foreach ($words as $word){
+            $query->where(function ($q1) use ($words) {
+                foreach ($words as $word) {
                     $q1->where('first_name', $word);
                     $q1->orWhere('last_name', $word);
                     $q1->orWhere('email', $word);
                     $q1->orWhere('mobile_no', $word);
                 }
             });
-            $query->orWhere(function ($q2) use($words) {
-                foreach ($words as $word){
+            $query->orWhere(function ($q2) use ($words) {
+                foreach ($words as $word) {
                     $length = strlen($word);
-                    if($length >= 3)
-                    {
-                        $firstWords = substr($word, 0,3);
+                    if ($length >= 3) {
+                        $firstWords = substr($word, 0, 3);
                         $q2->Where('first_name', 'like', '%' . $firstWords . '%');
 
 
-                        if($length >= 6){
+                        if ($length >= 6) {
                             $lastWords = substr($word, -3);
                             $q2->Where('first_name', 'like', '%' . $lastWords . '%');
                         }
-                    }else if($length == 2){
+                    } else if ($length == 2) {
                         $q2->Where('first_name', 'like', '%' . $word . '%');
-
                     }
                 }
             });
-            $query->orWhere(function ($q2) use($words) {
-                foreach ($words as $word){
+            $query->orWhere(function ($q2) use ($words) {
+                foreach ($words as $word) {
                     $length = strlen($word);
-                    if($length >= 3)
-                    {
-                        $firstWords = substr($word, 0,3);
+                    if ($length >= 3) {
+                        $firstWords = substr($word, 0, 3);
                         $q2->Where('last_name', 'like', '%' . $firstWords . '%');
 
 
-                        if($length >= 6){
+                        if ($length >= 6) {
                             $lastWords = substr($word, -3);
                             $q2->Where('last_name', 'like', '%' . $lastWords . '%');
                         }
-                    }else if($length == 2){
+                    } else if ($length == 2) {
                         $q2->Where('last_name', 'like', '%' . $word . '%');
-
                     }
                 }
             });
@@ -273,11 +275,11 @@ class UserModel extends Model
             return $userModel->count();
         }
     }
-//$userModel->where(function ($query) use ($q) {
-//            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
-//                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
-//                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
-//        })->where('users.id', '<>', app('session')->get('tempID'));
+    //$userModel->where(function ($query) use ($q) {
+    //            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
+    //                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
+    //                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
+    //        })->where('users.id', '<>', app('session')->get('tempID'));
     static function getUserSlug($user)
     {
 
@@ -307,5 +309,23 @@ class UserModel extends Model
     public function catalogItemViews()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItemViews', 'user_id');
+    }
+
+    static function checkReferenceCodeUser($code, $type)
+    {
+        $date = date("Y-m-d");
+        $check = UsersReferenceCodeModel::where('code', $code)->where('type', $type)->first();
+        if ($check) {
+            if ($date > $check->end_date) {
+                return "expired";
+            }
+            elseif ($date < $check->start_date) {
+                return "notBegin";
+            }
+            elseif ($date >= $check->srart_date && $date <= $check->end_date) {
+                return $check->id;
+            }
+        }
+        return false;
     }
 }
