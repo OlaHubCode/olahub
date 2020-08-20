@@ -32,6 +32,49 @@ class OlaHubGeneralController extends BaseController
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200], 200);
     }
 
+    public function sideBarAds()
+    {
+
+
+        $sponsers_arr = [];
+
+        $timelinePosts = DB::table('campaign_slot_prices')->where('country_id', app('session')->get('def_country')->id)->where('is_post', '1')->inRandomOrder()->limit(10)->get();
+        foreach ($timelinePosts as $onePost) {
+
+            $sponsers = \OlaHub\Models\AdsMongo::where('slot', $onePost->id)->where('country', app('session')->get('def_country')->id)->orderBy('id', 'RAND()')->get();
+
+            foreach ($sponsers as $one) {
+                $campaign = \OlaHub\Models\Ads::where('campign_token', $one->token)->first();
+                $liked = 0;
+                if ($campaign) {
+                    $oldLike = \OlaHub\UserPortal\Models\UserPoints::where('user_id', app('session')->get('tempID'))
+                        ->where('country_id', app('session')->get('def_country')->id)
+                        ->where('campign_id', $campaign->id)
+                        ->first();
+                    if ($oldLike) {
+                        $liked = 1;
+                    }
+                }
+
+                $sponsers_arr[] = [
+                    'type' => 'sponser',
+                    "adToken" => isset($one->token) ? $one->token : NULL,
+                    'updated_at' => isset($one->updated_at) ? $one->updated_at : 0,
+                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($one->created_at),
+                    'post' => isset($one->_id) ? $one->_id : 0,
+                    "adSlot" => isset($one->slot) ? $one->slot : 0,
+                    "adRef" => isset($one->content_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($one->content_ref) : NULL,
+                    "adText" => isset($one->content_text) ? $one->content_text : NULL,
+                    "adLink" => isset($one->access_link) ? $one->access_link : NULL,
+                    "liked" => $liked,
+                ];
+            }
+        }
+        return ($sponsers_arr);
+    }
+
+
+
     public function setAdsStatisticsData($getFrom)
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Set Ads statistics data"]);
@@ -52,6 +95,30 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End checking if there are old visits data"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response(["status" => true], 200);
+    }
+    public function rightSideAds()
+    {
+       
+       
+        $ads = \OlaHub\UserPortal\Models\CompanyStaticData::ofType("slider", "landing")
+        ->where("show_for", 3)
+        ->where('type_order', 9)
+        ->inRandomOrder()
+        ->limit(1)
+        ->get();
+        $adsReturn = [];
+        foreach ($ads as $ad) {
+            $image = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "content_ref");
+            if (\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkContentUrl($image)) {
+                $adsReturn[] = [
+                    "sliderRef" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($image),
+                    "sliderText" => isset($ad->content_text) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "content_text") : NULL,
+                    "sliderLink" => isset($ad->content_link) ? $ad->content_link : NULL,
+                   
+                ];
+            }
+        }
+        return response(["status" => true ,'data'=>$adsReturn]);
     }
 
     public function getCities($regionId)
@@ -82,12 +149,12 @@ class OlaHubGeneralController extends BaseController
         }
         $return['countries'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler');
         $allCountries = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value, phonecode, LOWER(code) as flag, LOWER(code) as code")
-            ->where('phonecode','!=',"")
+            ->where('phonecode', '!=', "")
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         $allCountriesDropDown = \OlaHub\UserPortal\Models\ShippingCountries::selectRaw("countries.name as text, countries.id as value,LOWER(code) as flag")
-            ->where('phonecode','!=',"")
-           
+            ->where('phonecode', '!=', "")
+
             ->join('countries', 'countries.id', 'shipping_countries.olahub_country_id')
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
@@ -98,7 +165,7 @@ class OlaHubGeneralController extends BaseController
             $A->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($A, 'text');
             // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
         }
-     
+
         $return['allCountries'] = $allCountries;
         $return['allCountriesDropDown'] = $allCountriesDropDown;
         $actionData["action_endData"] = json_encode(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($countries, '\OlaHub\UserPortal\ResponseHandlers\CountriesForPrequestFormsResponseHandler'));
@@ -344,6 +411,11 @@ class OlaHubGeneralController extends BaseController
             // dd($newItemscnotification);
             // return($newItemscnotification);
             foreach ($notification as $one) {
+                if( $one->content=='notifi_post_comment_for_follower'|| $one->content=='notifi_post_like_for_follower'){
+                    $postID = $one->post_id;
+                    $post = Post::where('post_id', $postID)->first();
+                    $posterName = \OlaHub\UserPortal\Models\UserModel::where('id',  $post->user_id)->first();
+                }
                 $userData = @$one["userData"][0];
                 $groupData = @$one["groupData"][0];
                 $celebrationData = @$one["celebrationData"][0];
@@ -364,6 +436,7 @@ class OlaHubGeneralController extends BaseController
                     "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : null,
                     "read" => $one->read,
                     "for_user" => $one->user_id,
+                    "poster_name"=>isset($posterName)?  "$posterName->first_name $posterName->last_name":""
                 ];
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $notification]);
@@ -389,7 +462,6 @@ class OlaHubGeneralController extends BaseController
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch all notification"]);
         $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
-
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         if ($notification->count() > 0) {
             $i = 0;
@@ -925,10 +997,10 @@ class OlaHubGeneralController extends BaseController
 
         if (!$supported) {
             $sellWithUsUnsupport = new \OlaHub\UserPortal\Models\SellWithUsUnsupport;
-            $sellWithUsUnsupport->merchant_name = $this->requestData->userName;
-            $sellWithUsUnsupport->merchant_email = $this->requestData->userEmail;
-            $sellWithUsUnsupport->merchant_phone_no = $this->requestData->userPhoneNumber;
-            $sellWithUsUnsupport->country_id = $this->requestData->country;
+            $sellWithUsUnsupport->merchant_name = $this->requestData['userName'];
+            $sellWithUsUnsupport->merchant_email = $this->requestData['userEmail'];
+            $sellWithUsUnsupport->merchant_phone_no = $this->requestData['userPhoneNumber'];
+            $sellWithUsUnsupport->country_id = $this->requestData['country'];
             $sellWithUsUnsupport->save();
             $return = ['status' => true, 'msg' => 'sentOurManagers', 'code' => 200];
         }
@@ -1299,6 +1371,9 @@ class OlaHubGeneralController extends BaseController
                 }
             } catch (Exception $ex) {
             }
+
+            // merchants
+           
             // Category items
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
                 ->select('catalog_item_categories.id')
@@ -1549,12 +1624,14 @@ class OlaHubGeneralController extends BaseController
                     $breakCommunity = $breakCommunity * 2;
                 }
             }
+           
             $return['data'] = $all;
         }
         if ($page == 1) {
             $return['celebrations'] = $celebrations;
             $return['upcoming'] = $upcoming;
         }
+        // dd($return)
         return response($return, 200);
     }
 

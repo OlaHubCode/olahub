@@ -68,7 +68,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                     'content'       => $vote->option,
                     'total'         => count($vote->usersVote),
                     'isUserVoted'   => $isUserVoted,
-                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date) : 0,
+                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date)-3 : 0,
                     'end_date'       => $vote->end_date 
                 );
                 $item = false;
