@@ -89,16 +89,64 @@ class DesignerItems extends Model
         return $return;
     }
 
-    static function searchItem($q = 'a', $count = 15)
+    static function searchItem($text = 'a', $count = 15)
     {
-        $items = DesignerItems::where('name', 'LIKE', "%$q%")
-            ->whereNull("parent_item_id")
-            ->orWhere("parent_item_id", 0);
-        // $items = DesignerItems::where('name', 'LIKE', "%$q%")->orWhereRaw('name sounds like ?', $q)
-        //     ->where(function ($q) {
-        //         $q->whereNull("parent_item_id");
-        //         $q->orWhere("parent_item_id", 0);
-        //     });
+        $words = explode(" ", $text);
+
+        $items = DesignerItems::where(function ($query) {
+            $query->whereNull('parent_item_id');
+            $query->orWhere('parent_item_id', '0');
+        });
+
+        $items->where(function ($q) use($words) {
+
+            $q->where(function ($q1) use($words) {
+                foreach ($words as $word){
+                    $q1->whereRaw('FIND_IN_SET(?, REPLACE(description, " ", ","))', $word);
+                }
+            });
+            $q->orWhere(function ($q2) use($words) {
+                foreach ($words as $word){
+                    $q2->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
+                }
+            });
+            $q->orWhere(function ($q3) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3){
+                        $firstWords = substr($word, 0,3);
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $firstWords . '%');
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q3->WhereRaw('LOWER(`name`) LIKE ? ','%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $word . '%');
+                    }
+                }
+            });
+            $q->orWhere(function ($q3) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3){
+                        $firstWords = substr($word, 0,3);
+                        $q3->whereRaw('LOWER(`description`) LIKE ? ','%' . $firstWords . '%');
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q3->WhereRaw('LOWER(`description`) LIKE ? ','%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q3->whereRaw('LOWER(`description`) LIKE ? ','%' . $word . '%');
+                    }
+                }
+            });
+        });
+
+        $items->orWhere('description', '=',$text);
+        $items->orWhere('name', '=', $text);
+
         if ($count > 0) {
             return $items->paginate($count);
         } else {

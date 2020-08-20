@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use \OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\Occasion;
+use Irazasyed\LaravelGAMP\Facades\GAMP;
+
 
 class OlaHubGeneralController extends BaseController
 {
@@ -139,6 +142,7 @@ class OlaHubGeneralController extends BaseController
     }
     public function getAllCountries()
     {
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "getAllCountries"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start getting countries data"]);
 
@@ -698,6 +702,7 @@ class OlaHubGeneralController extends BaseController
                 or LOWER(`description`) sounds like '" . $q . "'";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
+            //            var_dump($handle);
             // brands
             if ($handle[0]->search > 0) {
                 $searchData[] = [
@@ -739,8 +744,8 @@ class OlaHubGeneralController extends BaseController
 
             $ditems = [];
             $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, 5);
-            if ($items) {
-                $ditems["items"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler')['data'];
+            if ($items["data"]) {
+                $ditems["items"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler')['data'];
             }
 
             $designerItems = \OlaHub\UserPortal\Models\DesignerItems::searchItem($q, 5);
@@ -766,12 +771,19 @@ class OlaHubGeneralController extends BaseController
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
         $q = 'a';
-        $count = 18;
+        $count = 20;
         $searchData = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start search according filter"]);
         if ((isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) && isset($this->requestFilter->type) && strlen($this->requestFilter->type) > 1) {
             $q = mb_strtolower($this->requestFilter->word);
             $type = $this->requestFilter->type;
+            $is_numeric = is_numeric($this->requestFilter->word);
+
+            $find1 = strpos($this->requestFilter->word, '@');
+            $find2 = strpos($this->requestFilter->word, '.');
+            if (($find1 !== false && $find2 !== false) || $is_numeric) {
+                $type = "users";
+            }
 
             switch ($type) {
                 case "users":
@@ -801,9 +813,12 @@ class OlaHubGeneralController extends BaseController
                     break;
                 case "items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items filter"]);
-                    $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count);
-                    if ($items->count() > 0) {
-                        $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
+                    $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count, true);
+                    if ($items["data"]->count()) {
+                        $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
+                    }
+                    if ($items["related"]) {
+                        $searchData["related"] = $items["related"];
                     }
                     break;
                 case "desginer_items":
