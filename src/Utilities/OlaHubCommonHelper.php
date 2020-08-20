@@ -446,8 +446,16 @@ abstract class OlaHubCommonHelper
                     $data["userEmail"][] = "validation.uniqueEmail";
                 }
             }
+            if (!empty($requestData["userProfileUrl"])) {
+                $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("profile_url", $requestData["userProfileUrl"])
+                    ->where("id", "!=", app("session")->get("tempID"))->first();
+                if ($checkEmail) {
+                    $status = FALSE;
+                    $data["userProfileUrl"][] = "validation.uniqueUserName";
+                }
+            }
         }
-        return ['status' => $status, 'data' => $data];
+        return ['err'=>'uniqueUserName','status' => $status, 'data' => $data];
     }
 
     static function getRequest($request)

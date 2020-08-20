@@ -20,6 +20,8 @@ $router->group([], function () use ($router) {
     $router->get('app', function () {
         return '2.1';
     });
+    $router->get('sideBarAds', 'OlaHubGeneralController@sideBarAds');
+
     $router->post('countries', 'OlaHubGeneralController@getAllCountries');
     $router->post('list_countries', 'OlaHubGeneralController@getAllListedCountries');
     $router->post('interests', 'OlaHubGeneralController@getAllInterests');
@@ -35,6 +37,7 @@ $router->group([], function () use ($router) {
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
+    $router->get('rightSideAds', 'OlaHubGeneralController@rightSideAds');
     $router->post('contactUs', 'OlaHubGeneralController@contactUs');
     $router->group([
         'middleware' => ['checkAuth'],
@@ -51,7 +54,6 @@ $router->group([], function () use ($router) {
         $router->post('follow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userFollow');
         $router->post('unfollow/{type:\bbrands|occasion|category|designers|interests\b}/{id:[0-9]+}', 'OlaHubGeneralController@userUnFollow');
         $router->post('listFollowing', 'OlaHubGeneralController@listUserFollowing');
-        $router->get('sideBarAds', 'OlaHubGeneralController@sideBarAds');
         $router->get('getFriendsToMention/{FriendNameToFind}', 'OlaHubGeneralController@getFriendsToMention');
     });
 });

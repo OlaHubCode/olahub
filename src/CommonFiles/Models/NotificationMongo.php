@@ -26,6 +26,7 @@ class Notifications extends Model
     {
         $user = app('session')->get('tempData');
         $username = "$user->first_name $user->last_name";
+       
         $url = 'https://fcm.googleapis.com/fcm/send';
         $fields = array(
             'to' => '/topics/OlaHubFCM-' . $user_id,
@@ -90,9 +91,11 @@ class Notifications extends Model
             "ask_group" => $word . " asked to join your community",
             "add_post" => $word . " added new post in your community",
             "add_post_friend" => $word . " added a new post in your timeline",
-            "notifi_user_vote_Post" => $word . "Creat a new vote",
+            "notifi_user_vote_Post" => $word . "Created  a new vote",
             "notifi_user_new_Post" => $word . "added a new post",
-            "notifi_vote_on_post" => $word . "voted on your post"
+            "notifi_vote_on_post" => $word . "voted on your post",
+            "notifi_post_like_for_follower" =>  "Liked " .$word ."post",
+            "notifi_post_comment_for_follower" =>  " commented on " .$word ." post"
 
         ];
         $langs->ar = [
@@ -126,9 +129,12 @@ class Notifications extends Model
             "ask_group" => "قام " . $word . " بطلب دعوة بالإنضمام إلى مجتمعك",
             "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
             "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك",
-            "notifi_user_new_Post" => "قام " . $word . "بإضافة منشور جديد",
-            "notifi_user_vote_Post" => "قام " . $word . " بإنشاء تصويت جديد",
-            "notifi_vote_on_post" => "قام " . $word . " بتصويت على منشورك"
+            "notifi_user_new_Post" => " قام " . $word . " بإضافة منشور جديد",
+            "notifi_user_vote_Post" => " قام " . $word . " بإنشاء تصويت جديد",
+            "notifi_vote_on_post" => " قام " . $word . " بتصويت على منشورك",
+            "notifi_post_like_for_follower" => " أعجب بمنشور" . $word,
+            "notifi_post_comment_for_follower" => "علق على منشور" . $word,
+
             
         ];
         return $langs->$lang[$key];

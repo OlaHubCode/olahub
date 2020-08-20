@@ -196,13 +196,19 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-
         if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
+        }
+        if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
         }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
+            if ($validatorUser['err']=='uniqueUserName'){
+            return response(['status' => false, 'msg' => 'uniqueUserName', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
+
+            }
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
@@ -282,6 +288,20 @@ class OlaHubUserController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                 return response(['status' => true, 'msg' => 'confirm_email_sent'], 200);
             }
+        }
+        if (!empty($this->requestData['userProfileUrl']) && $userData->profile_url != $this->requestData['userProfileUrl']) {
+            $userProfileUrl = $this->requestData['userProfileUrl'];
+            $e = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($userProfileUrl) {
+                $q->where('profile_url', $userProfileUrl);
+            })->first();
+            if ($e) {
+                return response(['status' => false, 'msg' => 'email_exist', 'code' => 406], 200);
+            }
+       
+            $userData->profile_url = $this->requestData['userProfileUrl'];
+                $userData->save();
+             
+            
         }
 
         /********************/
