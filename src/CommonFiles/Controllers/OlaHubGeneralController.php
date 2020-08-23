@@ -101,27 +101,27 @@ class OlaHubGeneralController extends BaseController
     }
     public function rightSideAds()
     {
-       
-       
-        $ads = \OlaHub\UserPortal\Models\CompanyStaticData::ofType("slider", "landing")
-        ->where("show_for", 3)
-        ->where('type_order', 9)
-        ->inRandomOrder()
-        ->limit(1)
-        ->get();
+
+
+
+
+        $ads = \OlaHub\Models\AdSlotsCountries::whereIn('id', [5, 35])
+            ->inRandomOrder()
+            ->limit(1)
+            ->get();
         $adsReturn = [];
         foreach ($ads as $ad) {
-            $image = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "content_ref");
+            $image = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "default_image");
             if (\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkContentUrl($image)) {
                 $adsReturn[] = [
-                    "sliderRef" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($image),
-                    "sliderText" => isset($ad->content_text) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "content_text") : NULL,
-                    "sliderLink" => isset($ad->content_link) ? $ad->content_link : NULL,
-                   
+                    "sliderRef" =>  isset($ad->default_image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($image) : NULL,
+                    "sliderText" => isset($ad->content_text) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($ad, "default_text") : NULL,
+                    "sliderLink" => isset($ad->default_url) ? $ad->default_url : NULL,
+
                 ];
             }
         }
-        return response(["status" => true ,'data'=>$adsReturn]);
+        return response(["status" => true, 'data' => $adsReturn]);
     }
 
     public function getCities($regionId)
@@ -415,7 +415,7 @@ class OlaHubGeneralController extends BaseController
             // dd($newItemscnotification);
             // return($newItemscnotification);
             foreach ($notification as $one) {
-                if( $one->content=='notifi_post_comment_for_follower'|| $one->content=='notifi_post_like_for_follower'){
+                if ($one->content == 'notifi_post_comment_for_follower' || $one->content == 'notifi_post_like_for_follower') {
                     $postID = $one->post_id;
                     $post = Post::where('post_id', $postID)->first();
                     $posterName = \OlaHub\UserPortal\Models\UserModel::where('id',  $post->user_id)->first();
@@ -440,7 +440,7 @@ class OlaHubGeneralController extends BaseController
                     "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : null,
                     "read" => $one->read,
                     "for_user" => $one->user_id,
-                    "poster_name"=>isset($posterName)?  "$posterName->first_name $posterName->last_name":""
+                    "poster_name" => isset($posterName) ?  "$posterName->first_name $posterName->last_name" : ""
                 ];
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $notification]);
@@ -1388,7 +1388,7 @@ class OlaHubGeneralController extends BaseController
             }
 
             // merchants
-           
+
             // Category items
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)
                 ->select('catalog_item_categories.id')
@@ -1639,7 +1639,7 @@ class OlaHubGeneralController extends BaseController
                     $breakCommunity = $breakCommunity * 2;
                 }
             }
-           
+
             $return['data'] = $all;
         }
         if ($page == 1) {
