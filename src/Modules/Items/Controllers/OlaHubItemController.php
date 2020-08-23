@@ -130,7 +130,7 @@ class OlaHubItemController extends BaseController
                             if (is_array($value) && count($value)) {
                                 $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
                             } elseif (is_string($value) && strlen($value) > 0) {
-                                var_dump($input);
+                                // var_dump($input);
                                 $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                             }
                         }
