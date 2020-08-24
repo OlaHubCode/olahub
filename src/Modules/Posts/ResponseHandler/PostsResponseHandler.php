@@ -21,6 +21,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->friendData();
         $this->groupData();
         $this->likersData();
+        $this->setVoteData();
+
         return $this->return;
     }
 
@@ -42,8 +44,52 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
 
 
-      ];
+        ];
+    }
 
+    private function setVoteData()
+    {
+        $votes = $this->data->choices;
+        $dataVotes = [];
+        $userData = app('session')->get('tempID');
+
+        $isUserVoted = false;
+        if ($votes) {
+            foreach ($votes as $vote) {
+                foreach ($vote->usersVote as $voted) {
+                    if (!$isUserVoted && (isset($voted->user_id))) {
+
+                        $isUserVoted =  $voted->user_id == $userData  ? true : false;
+                    }
+                }
+                $newRow = array(
+                    'id'            => $vote->id,
+                    'type'          => $vote->type,
+                    'content'       => $vote->option,
+                    'total'         => count($vote->usersVote),
+                    'isUserVoted'   => $isUserVoted,
+                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date)-3 : 0
+                );
+                $item = false;
+                if ($vote->type == 'store') {
+                    $item = (new \OlaHub\UserPortal\Models\CatalogItem)->where('item_slug', $vote->option)->first();
+                } else if ($vote->type == 'designer') {
+                    $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
+                }
+                if ($item) {
+                    $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+                    $newRow['item_title'] = $item->name;
+                }
+                $dataVotes[] = $newRow;
+            }
+        }
+        $x = 0;
+        foreach ($dataVotes as $total) {
+            $x += $total['total'];
+        }
+        $this->return['isUserVoted'] = $isUserVoted;
+        $this->return['totalCountVote'] = $x;
+        $this->return['votes'] = $dataVotes;
     }
 
     private function setPostImg()

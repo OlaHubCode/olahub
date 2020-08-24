@@ -5,7 +5,6 @@ namespace OlaHub\UserPortal\Libraries;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
 class ImageReader {
-
     private $fileContent;
     private $fileMimeType;
     private $image_create_func;

@@ -9,6 +9,11 @@ class Designer extends Model
 
     protected $table = 'designers';
 
+    public function mainData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\DesignerItems', 'designer_id');
+    }
+
     static function searchDesigners($text = 'a', $count = 15)
     {
         $words = explode(" ", $text);

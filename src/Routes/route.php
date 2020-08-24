@@ -7,6 +7,7 @@
  * @copyright (c) 2018, OlaHub LLC
  * @version 1.0.0
  */
+
 $di = scandir(__DIR__ . '/../Modules');
 foreach ($di as $child) {
     $file = __DIR__ . "/../Modules/$child/Routes/route.php";
@@ -19,6 +20,8 @@ $router->group([], function () use ($router) {
     $router->get('app', function () {
         return '2.1';
     });
+    $router->get('sideBarAds', 'OlaHubGeneralController@sideBarAds');
+
     $router->post('countries', 'OlaHubGeneralController@getAllCountries');
     $router->post('list_countries', 'OlaHubGeneralController@getAllListedCountries');
     $router->post('interests', 'OlaHubGeneralController@getAllInterests');
@@ -34,6 +37,7 @@ $router->group([], function () use ($router) {
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
+    $router->get('rightSideAds', 'OlaHubGeneralController@rightSideAds');
     $router->post('contactUs', 'OlaHubGeneralController@contactUs');
     $router->group([
         'middleware' => ['checkAuth'],

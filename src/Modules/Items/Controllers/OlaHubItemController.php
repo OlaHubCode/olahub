@@ -472,6 +472,28 @@ class OlaHubItemController extends BaseController
             $return['data']["existInCelebration"] = $existInCelebration;
             $return['data']["acceptParticipant"] = $acceptParticipant;
         }
+        if (isset($this->requestFilter['registryId']) && $this->requestFilter['registryId']) {
+            $existInRegistry = FALSE;
+            $existRegistry = TRUE;
+            $acceptParticipant = FALSE;
+            $registry = \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->requestFilter['registryId'])->first();
+            if ($registry) {
+                $registryItem = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)
+                    ->where('item_type', 'store')
+                    ->where('item_id', $item->id)->first();
+                if ($registryItem) {
+                    $existInRegistry = TRUE;
+                }
+            } else {
+                $existRegistry = FALSE;
+            }
+            if ($registry->user_id == app('session')->get('tempID')) {
+                $acceptParticipant = TRUE;
+            }
+            $return['data']["existRegistry"] = $existRegistry;
+            $return['data']["existInRegistry"] = $existInRegistry;
+            $return['data']["acceptParticipant"] = $acceptParticipant;
+        }
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
@@ -1060,7 +1082,7 @@ class OlaHubItemController extends BaseController
             });
         }
 
-        if (count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
+        if (@count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
             unset($this->requestFilter['all']);
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
             $this->setFilterMainData($filters, $same);

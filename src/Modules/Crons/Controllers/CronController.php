@@ -275,10 +275,9 @@ class CronController extends BaseController
 
         $time = strtotime("-1 hour");
         $date = date("Y-m-d", $time);
-        $bills = \OlaHub\UserPortal\Models\UserBill::where("gift_date", "<=", $date)
-            ->where("gift_message_sent", "0")
-            ->where("pay_status", "2")
+        $bills = \OlaHub\UserPortal\Models\UserBill::withOutGlobalScope('currntUser')->where("gift_message_sent", "0")
             ->get();
+            // return $bills;
         foreach ($bills as $bill) {
             if (!$bill->gift_date) {
                 continue;

@@ -123,6 +123,7 @@ class OlaHubUserController extends BaseController
         if (isset($this->requestFilter['celebration'])) {
             $celebrationId = $this->requestFilter['celebration'];
         };
+        
         if (isset($this->requestFilter['registry'])) {
             $registryId = $this->requestFilter['registry'];
         };
@@ -147,7 +148,7 @@ class OlaHubUserController extends BaseController
                         }
                     }
                 }
-            }elseif ($registryId != null) {
+            } elseif ($registryId != null) {
                 $registry = \OlaHub\UserPortal\Models\RegistryModel::where('id', $registryId)->first();
                 $friends = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->get();
                 foreach ($friends as $friend) {
@@ -197,20 +198,26 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        
         if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
+            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
+        }
+        if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
         }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
+            if ($validatorUser['err']=='uniqueUserName'){
+            return response(['status' => false, 'msg' => 'uniqueUserName', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
+
+            }
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-       
+
         $userData = app('session')->get('tempData');
 
         /*** check changes ***/
@@ -284,6 +291,20 @@ class OlaHubUserController extends BaseController
                 return response(['status' => true, 'msg' => 'confirm_email_sent'], 200);
             }
         }
+        if (!empty($this->requestData['userProfileUrl']) && $userData->profile_url != $this->requestData['userProfileUrl']) {
+            $userProfileUrl = $this->requestData['userProfileUrl'];
+            $e = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($userProfileUrl) {
+                $q->where('profile_url', $userProfileUrl);
+            })->first();
+            if ($e) {
+                return response(['status' => false, 'msg' => 'email_exist', 'code' => 406], 200);
+            }
+       
+            $userData->profile_url = $this->requestData['userProfileUrl'];
+                $userData->save();
+             
+            
+        }
 
         /********************/
         if (!empty($this->requestData['userPhoneNumber']))
@@ -298,22 +319,20 @@ class OlaHubUserController extends BaseController
                     // $isFirstLogin = TRUE;
                     $log->saveLog($userData->id, $this->requestData, 'changed_password');
                 }
-               
             }
             if (isset(UserModel::$columnsMaping[$input])) {
                 $userData->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(UserModel::$columnsMaping, $input)} = $value;
-                
-            } 
+            }
         }
-        
+
         $userData->save();
-    
-        
+
+
 
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
         $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
         $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
-       
+
         $log->saveLog($userData->id, $this->requestData, 'update_profile');
         $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
         // $log->setLogSessionData(['response' => $return]);
@@ -325,7 +344,7 @@ class OlaHubUserController extends BaseController
 
     function logoutUser()
     {
-        
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "logoutUser"]);
 
@@ -353,7 +372,7 @@ class OlaHubUserController extends BaseController
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
-           // $user = app('session')->get('tempData');
+            // $user = app('session')->get('tempData');
             $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($userData, 'profile_picture', $this->requestData['userProfilePicture']);
             $userData->profile_picture = $imagePath;
             $saved = $userData->save();
@@ -478,7 +497,7 @@ class OlaHubUserController extends BaseController
             $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
             $userData->save();
             $log->saveLog($userData->id, $this->requestData, 'Two Steps For Security');
-            
+
             if ($method == 'phone') {
                 (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                 return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);

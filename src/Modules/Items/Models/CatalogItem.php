@@ -229,7 +229,8 @@ class CatalogItem extends Model
         });
         $occQuery = [];
         foreach ($words as $word)
-            array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
+            // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
+            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '$word'");
 
         $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
