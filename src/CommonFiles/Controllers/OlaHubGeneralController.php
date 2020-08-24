@@ -376,7 +376,7 @@ class OlaHubGeneralController extends BaseController
                             "type" => $one->type,
                             "content" => $one->content,
                             "user_name" => isset($category) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name") : "NULL",
-                            "avatar_url" => isset($category) ? ($category->category_slug) : var_dump($one->followed_slug),
+                            "avatar_url" => isset($category) ? ($category->category_slug) : "",
                             "for_user" => $one->user_id,
                         ];
                         break;
@@ -771,7 +771,7 @@ class OlaHubGeneralController extends BaseController
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
         $q = 'a';
-        $count = 20;
+        $count = 24;
         $searchData = [];
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start search according filter"]);
         if ((isset($this->requestFilter->word) && strlen($this->requestFilter->word) > 1) && isset($this->requestFilter->type) && strlen($this->requestFilter->type) > 1) {
@@ -1531,7 +1531,9 @@ class OlaHubGeneralController extends BaseController
             $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
         }
         // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("mainData")
+        ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+        // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {
             $timeline[] = $this->handlePostTimeline($designer, 'designer');
         }
