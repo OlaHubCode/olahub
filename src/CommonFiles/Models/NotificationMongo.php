@@ -103,7 +103,8 @@ class Notifications extends Model
             "notifi_user_new_Post" => $word . "added a new post",
             "notifi_vote_on_post" => $word . "voted on your post",
             "notifi_post_like_for_follower" =>  "Liked " .$word ."post",
-            "notifi_post_comment_for_follower" =>  " commented on " .$word ." post"
+            "notifi_post_comment_for_follower" =>  " commented on " .$word ." post",
+            "notifi_mention_post" =>  $word ."mentioned you in his post"
 
         ];
         $langs->ar = [
@@ -142,6 +143,8 @@ class Notifications extends Model
             "notifi_vote_on_post" => " قام " . $word . " بتصويت على منشورك",
             "notifi_post_like_for_follower" => " أعجب بمنشور" . $word,
             "notifi_post_comment_for_follower" => "علق على منشور" . $word,
+            "notifi_mention_post" => " قام " . $word . " بلإشارة اليك في منشوره ",
+
 
             
         ];

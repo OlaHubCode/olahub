@@ -327,7 +327,7 @@ class OlaHubPostController extends BaseController
     {
 
         $allHash = [];
-        $topHashTags = Post::Where('content', 'like', '%#%')->get();
+        $topHashTags = Post::Where('content', 'like', '%#%')->where('delete', 0)->get();
         foreach ($topHashTags as $hash) {
             $onePostHash = [];
             $content = str_replace('<br>', ' ', $hash->content);
@@ -357,18 +357,17 @@ class OlaHubPostController extends BaseController
 
     public function addNewPost()
     {
-
         if (isset($this->requestData['mentions'])) {
             $allMentions = serialize($this->requestData['mentions']);
         }
-
+        
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-
-
+        
+        
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
-
+            
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
@@ -377,7 +376,6 @@ class OlaHubPostController extends BaseController
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
             $groupData = NULL;
-
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
                 $post->group_id = $this->requestData['group'];
@@ -517,8 +515,40 @@ class OlaHubPostController extends BaseController
                 }
             }
 
+
+
             $post->save();
 
+
+            if (isset($this->requestData['mentions'])) {
+                $Mentions = $this->requestData['mentions'];
+                foreach ($Mentions as $mention) {
+                    $MentionedUserId = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $mention['user'])->first();
+                    $userId =  $MentionedUserId->id;
+                    $notification = new \OlaHub\UserPortal\Models\Notifications();
+
+                    $notiContent = 'notifi_mention_post';
+
+                    $notification->type = 'post';
+                    $notification->content = $notiContent;
+                    $notification->user_id = $userId;
+                    $notification->friend_id = app('session')->get('tempID');
+                    $notification->post_id = $post->post_id;
+                    $notification->save();
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $userId,
+                        $notiContent,
+                        array(
+                            "type" => $notiContent,
+                            "postId" => $post->post_id,
+                            "subject" => $post->content,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $owner->lang,
+                        "$userData->first_name $userData->last_name"
+                    );
+                }
+            }
             if (isset($this->requestData['isVote']) && $this->requestData['isVote'] == true) {
                 $postVote = new PostVote;
                 $dataRows = [];
@@ -566,15 +596,15 @@ class OlaHubPostController extends BaseController
         $followers = [];
         foreach ($likes as $userID) {
             $x = "ID" . $userID->user_id;
-            $followers[ $x] = [
-               
+            $followers[$x] = [
+
                 'user_id' => $userID->user_id
             ];
         }
         foreach ($comments as $userID) {
             $x = "ID" . $userID->user_id;
-            $followers[ $x] = [
-               
+            $followers[$x] = [
+
                 'user_id' => $userID->user_id
             ];
         }
@@ -586,9 +616,7 @@ class OlaHubPostController extends BaseController
             $like->save();
             foreach ($followers as $userId) {
 
-                if ($post->user_id != app('session')->get('tempID') &&($post->user_id!= $userId->user_id ) )
-             
-                 {
+                if ($post->user_id != app('session')->get('tempID') && ($post->user_id != $userId->user_id)) {
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'post';
                     $notification->content = "notifi_post_like_for_follower";
@@ -609,7 +637,7 @@ class OlaHubPostController extends BaseController
                             "postId" => $postId,
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
-                          
+
                         ),
                         $owner->lang,
                         "$userData->first_name $userData->last_name",
@@ -733,19 +761,19 @@ class OlaHubPostController extends BaseController
             $followers = [];
             foreach ($likes as $userID) {
                 $x = "ID" . $userID->user_id;
-                $followers[ $x ] = [
-                 
+                $followers[$x] = [
+
                     'user_id' => $userID->user_id
                 ];
             }
             foreach ($comments as $userID) {
                 $x = "ID" . $userID->user_id;
-                $followers[ $x] = [
-                
+                $followers[$x] = [
+
                     'user_id' => $userID->user_id
                 ];
             }
-    
+
             if ($post) {
                 $comment = new PostComments();
                 $comment->post_id = $postID;
@@ -753,12 +781,11 @@ class OlaHubPostController extends BaseController
                 $comment->comment = $this->requestData['content']['comment'];
                 $comment->save();
 
-               
+
                 foreach ($followers as $userId) {
 
-                
-                    if ($post->user_id != app('session')->get('tempID') &&($post->user_id!= $userId->user_id ) )
-                     {
+
+                    if ($post->user_id != app('session')->get('tempID') && ($post->user_id != $userId->user_id)) {
                         $notification = new \OlaHub\UserPortal\Models\Notifications();
                         $notification->type = 'post';
                         $notification->content = "notifi_post_comment_for_follower";
@@ -766,10 +793,10 @@ class OlaHubPostController extends BaseController
                         $notification->friend_id = app('session')->get('tempID');
                         $notification->post_id = $postID;
                         $notification->save();
-    
+
                         $userData = app('session')->get('tempData');
                         $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
-    
+
                         $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
                         \OlaHub\UserPortal\Models\Notifications::sendFCM(
                             $userId['user_id'],
@@ -779,7 +806,7 @@ class OlaHubPostController extends BaseController
                                 "postId" => $postID,
                                 "subject" => $post->content,
                                 "username" => "$userData->first_name $userData->last_name",
-                              
+
                             ),
                             $owner->lang,
                             "$userData->first_name $userData->last_name",
@@ -787,7 +814,7 @@ class OlaHubPostController extends BaseController
                         );
                     }
                 }
-    
+
 
                 $author = app('session')->get('tempData');
                 $authorName = "$author->first_name $author->last_name";
