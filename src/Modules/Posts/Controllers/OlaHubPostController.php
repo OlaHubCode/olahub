@@ -1093,7 +1093,7 @@ public function ReportPost()
                     $notification->user_id = $item->usersVote[0]->user_id;
                     $notification->save();
 
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(   
                         $item->usersVote[0]->user_id,
                         
                         "post_voting_end_date",
@@ -1101,7 +1101,7 @@ public function ReportPost()
                             "type" => "post_voting",
                             // "post_id" => $post->post_id,
                             // "username" => "$userData->first_name $userData->last_name",
-                            ),
+                            )
 
                         // $owner->lang,
                         // "$userData->first_name $userData->last_name"

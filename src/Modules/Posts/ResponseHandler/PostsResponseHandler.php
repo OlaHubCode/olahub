@@ -60,7 +60,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content'       => $vote->option,
             'total'         => count($vote->usersVote),
             'isUserVoted'   => isset($vote->usersVote[0]->user_id) ? true : false,
-            'endDate'       =>$vote->end_date < \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffIn($vote->end_date) : 0
+            'endDate'       => $vote->end_date > \Carbon\Carbon::now() ? \Carbon\Carbon::now()->diffInHours($vote->end_date) : 0
           );
           $item = false;
           if($vote->type == 'store'){
@@ -79,7 +79,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
       foreach($dataVotes as $total){
             $x += $total['total'];
       }
-      $this->return['isUserVoted']=$isUserVoted;
+            $this->return['isUserVoted']=$isUserVoted;
       $this->return['totalCountVote']=$x;
       $this->return['votes'] = $dataVotes;
     }

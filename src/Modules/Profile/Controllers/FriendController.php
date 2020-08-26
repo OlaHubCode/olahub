@@ -30,7 +30,7 @@ class FriendController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Profile", 'function_name' => "listFriendCalendar"]);
-
+        
         if (isset($this->requestData['userId']) && $this->requestData['userId'] > 0) {
             $userCalendar = \OlaHub\UserPortal\Models\CalendarModel::where('user_id', $this->requestData['userId'])->orderBy('calender_date', 'ASC')->get();
             if (count($userCalendar) > 0) {
