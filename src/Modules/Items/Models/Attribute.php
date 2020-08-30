@@ -3,9 +3,11 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Attribute extends Model {
 
+    use SoftDeletes;
     protected $table = 'catalog_item_attributes';
 
     public function valuesData() {

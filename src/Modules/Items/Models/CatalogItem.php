@@ -3,9 +3,11 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CatalogItem extends Model
 {
+    use SoftDeletes;
     protected $connection = 'mysql';
 
     public function __construct(array $attributes = array())
