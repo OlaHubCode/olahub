@@ -31,4 +31,6 @@ $router->group([
     $router->post('ReportPost', 'OlaHubPostController@ReportPost');
     $router->get('getTophashTags', 'OlaHubPostController@getTophashTags');
     $router->post('votersOnPost','OlaHubPostController@votersOnPost');
+    $router->put('updatePrivacyPost', 'OlaHubPostController@updatePrivacyPost');
+
 });
