@@ -2,9 +2,11 @@
 
 namespace OlaHub\UserPortal\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class ItemCategory extends \Illuminate\Database\Eloquent\Model
 {
-
+    use SoftDeletes;
     /**
      * The table associated with the model.
      *

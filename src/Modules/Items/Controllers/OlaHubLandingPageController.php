@@ -18,6 +18,7 @@ class OlaHubLandingPageController extends BaseController
 
     public function __construct(Request $request)
     {
+        
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
@@ -114,12 +115,12 @@ class OlaHubLandingPageController extends BaseController
         return response($return, 200);
     }
     public function getTrendingData()
-    {
+    {         
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getTrendingData"]);
         $data = [];
         if (app('session')->get('tempID')) {
-            
+
             $followedCategory = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 3)->pluck('target_id')->toArray();
             $followedBrands = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 1)->pluck('target_id')->toArray();
             $followedOccasion = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('type', 4)->pluck('target_id')->toArray();

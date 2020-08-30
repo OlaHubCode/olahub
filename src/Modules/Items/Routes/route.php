@@ -1,5 +1,4 @@
 <?php
-
 /**
  * MerBankInfos routes
  * Handling URL requests with method type to send to Controller

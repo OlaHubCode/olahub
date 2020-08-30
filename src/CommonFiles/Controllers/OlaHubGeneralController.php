@@ -1190,7 +1190,8 @@ class OlaHubGeneralController extends BaseController
                         $userPost->whereIn('user_id', $friends);
                         $userPost->whereIn('group_id', $myGroups);
                     });
-                })->orderBy('created_at', 'desc')->paginate(20);
+                })->where('privacy','!=',3)->orderBy('created_at', 'desc')->paginate(20);
+
                 if ($posts->count()) {
                     foreach ($posts as $post) {
                         $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');

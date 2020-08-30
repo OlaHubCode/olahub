@@ -42,6 +42,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content' => isset($this->data->content) ? $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
+            'privacy' => $this->data->privacy,
 
 
         ];
