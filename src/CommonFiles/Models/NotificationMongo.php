@@ -14,6 +14,10 @@ class Notifications extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\UserModel', 'id', 'friend_id');
     }
+    public function registryData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\RegistryModel', 'id', 'registry_id');
+    }
 
     public function groupData()
     {
