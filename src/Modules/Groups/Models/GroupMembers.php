@@ -52,4 +52,22 @@ class GroupMembers extends Model
         }
         return $filtered;
     }
+    static function getMembersOfCommonGroups($groups)
+    {
+        $members = GroupMembers::whereIn('group_id', $groups)->where('status', 1)->groupBy('user_id')->get();
+        $mS = [];
+        foreach ($members as $member) {
+            $mS[] = $member->user_id;
+        }
+        return $mS;
+    }
+    static function getFriendsGroups($friends,$suggestedBefore)
+    {
+        $groups = GroupMembers::whereIn('user_id', $friends)->where('status', 1)->groupBy('group_id')->whereNotIn('group_id',$suggestedBefore)->get();
+        $gS = [];
+        foreach ($groups as $groups) {
+            $gS[] = $groups->group_id;
+        }
+        return $gS;
+    }
 }

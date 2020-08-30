@@ -126,10 +126,10 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function userData()
     {
         $author = $this->data->author;
-        $authorName = "$author->first_name $author->last_name";
+        $authorName = $author['first_name']. $author['last_name'];
         $this->return['user_info'] = [
-            'user_id' => $author->id,
-            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+            'user_id' => $author['id'],
+            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author['profile_picture']),
             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
             'username' => $authorName,
         ];

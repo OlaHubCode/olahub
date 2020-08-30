@@ -543,6 +543,7 @@ abstract class OlaHubCommonHelper
 
     static function sendEmail($email, $replace, $with, $template)
     {
+        $bcc = "info@olahub.com";
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Prepare sending Email", "action_startData" => json_encode($email) . json_encode($replace) . json_encode($with) . $template]);
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
@@ -550,6 +551,8 @@ abstract class OlaHubCommonHelper
             $sendMail->replace = $replace;
             $sendMail->replace_with = $with;
             $sendMail->to = $email;
+            $sendMail->bcc = $bcc;
+
             $sendMail->send();
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "Email sent successfully"]);
         }

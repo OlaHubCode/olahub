@@ -342,14 +342,10 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
         $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
-
-        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw($week)
-            ->whereRaw("FIND_IN_SET($sessionUserId,user_id)")
-            ->inRandomOrder()
-            ->groupBy('followed_slug')
-            ->get();
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
+        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)->whereRaw("FIND_IN_SET($sessionUserId,user_id)")->groupBy('followed_slug')
+            ->inRandomOrder()->take(2)->get();
         //return($newItemscnotification);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         $allNotifications = [];
         $newItemsNotifications = [];
 
@@ -2066,6 +2062,231 @@ class OlaHubGeneralController extends BaseController
         if (count($friends) > 0) {$return['status'] = true;
             $return['code'] = 200;
             return response($return, 200);}
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+
+    public function getSuggestFriends()
+    {
+
+        $suggestedBefore = ($this->requestData->suggestedBefore);
+        $friendsOfFrinendsIds = [];
+        $mutualFriend = [];
+        $suggestFriends = [];
+        $suggestedFriendsIds = [];
+        $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+        $requestedFriends = \OlaHub\UserPortal\Models\Friends::getAllSentRequest(app('session')->get('tempID'));
+        if (count($friends) > 0) {
+            $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('id', $friends)->orWhereIn('user_id', $friends);
+            if (count($suggestedBefore) > 0) {
+                $friendsOfFrinends =  $friendsOfFrinends
+                    ->whereNotIn('friend_id', $suggestedBefore)
+                    ->whereNotIn('user_id', $suggestedBefore);
+            }
+            $friendsOfFrinends = $friendsOfFrinends
+
+                ->where('friend_id', '!=', app('session')->get('tempID'))
+                ->where('user_id', '!=', app('session')->get('tempID'))
+                ->where('status', 1)
+                ->whereNotIn('friend_id', $requestedFriends)
+                ->whereNotIn('user_id', $requestedFriends)
+                ->groupBy('friend_id')
+                ->groupBy('user_id')
+
+                ->limit(30)
+                ->get();
+            foreach ($friendsOfFrinends as $id) {
+                if (
+                    in_array($id->user_id, $friends) && in_array($id->friend_id, $friends)
+                    || $id->friend_id == app('session')->get('tempID')
+                    || $id->user_id == app('session')->get('tempID')
+                ) {
+                } else {
+                    if (in_array($id->user_id, $friends)) {
+                        $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
+                        $mutualFriends = count(array_intersect($suggesstFriends, $friends));
+
+                        $friendsOfFrinendsIds[] = $id->friend_id;
+                        $mutualFriend[$id->friend_id] = $mutualFriends;
+                    } else {
+                        $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->user_id));
+                        $mutualFriends = count(array_intersect($suggesstFriends, $friends));
+
+
+                        $friendsOfFrinendsIds[] = $id->user_id;
+                        $mutualFriend[$id->user_id] =  $mutualFriends;
+                    }
+                }
+            }
+            $friendsOfFriendUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friendsOfFrinendsIds)->inRandomOrder()->get();
+
+            foreach ($friendsOfFriendUsers as $suggest) {
+                $suggestedFriendsIds[] = $suggest->id;
+                $suggestFriends[] = [
+                    'type' => 'friendsOfFriend',
+
+                    "status" => 1,
+                    "profile" => $suggest->id,
+                    "mutualFriend" => $mutualFriend[$suggest->id],
+                    "name" => ucwords($suggest->first_name)  . ' ' . ucwords($suggest->last_name),
+                    "profile_url" => $suggest->profile_url,
+                    "user_gender" => isset($suggest->user_gender) ? $suggest->user_gender : NULL,
+                    "avatar" => isset($suggest->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                    "cover_photo" => isset($suggest->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo),
+                ];
+            }
+        }
+        if (count($suggestFriends) < 30) {
+
+            $userGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr((app('session')->get('tempID')));
+
+            $userGroupsCommonMember = \OlaHub\UserPortal\Models\GroupMembers::getMembersOfCommonGroups($userGroups);
+
+            $groupsMembers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $userGroupsCommonMember)
+                ->whereNotIn('id', $requestedFriends)
+                ->whereNotIn('id', $friends)
+                ->whereNotIn('id', $suggestedBefore)
+                ->inRandomOrder()
+                ->groupBy('id')
+                ->where('id', '!=', app('session')->get('tempID'))
+                ->limit(30 - count($suggestFriends))
+                ->get();
+            foreach ($groupsMembers as $suggest) {
+                $suggesstGroups = (\OlaHub\UserPortal\Models\GroupMembers::getGroupsArr($suggest->id));
+
+                $mutualGroups = count(array_intersect($suggesstGroups, $userGroups));
+
+                $suggestedFriendsIds[] = $suggest->id;
+                $suggestFriends[] = [
+                    'type' => 'groups',
+                    "status" => 1,
+                    "profile" => $suggest->id,
+                    "mutualFriend" => $mutualGroups,
+                    "name" => ucwords($suggest->first_name)  . ' ' . ucwords($suggest->last_name),
+                    "profile_url" => $suggest->profile_url,
+                    "user_gender" => isset($suggest->user_gender) ? $suggest->user_gender : NULL,
+                    "avatar" => isset($suggest->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                    "cover_photo" => isset($suggest->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo),
+                ];
+            }
+        }
+        if (count($suggestFriends) < 30) {
+
+            $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
+            $userIntreast = explode(",", $user->interests);
+            $fq = [];
+            foreach ($userIntreast as $i)
+                $fq[] = "FIND_IN_SET($i, interests)";
+
+
+            $mathedIntreast = \OlaHub\UserPortal\Models\UserModel::whereNotIn('id', $suggestedBefore)
+                ->whereNotIn('id', $suggestedBefore)
+                ->whereNotIn('id', $friends)
+                ->inRandomOrder()
+                ->whereRaw($fq[0])
+                ->where('id', '!=', app('session')->get('tempID'))
+                ->groupBy('id')
+                ->limit(30 - count($suggestFriends))
+                ->get();
+
+
+            foreach ($mathedIntreast as $suggest) {
+                $suggestedFriendsIds[] = $suggest->id;
+                $suggestFriends[] = [
+                    'type' => 'byIntreasts',
+                    "status" => 1,
+                    "profile" => $suggest->id,
+                    "mutualFriend" => 0,
+                    "name" => ucwords($suggest->first_name)  . ' ' . ucwords($suggest->last_name),
+                    "profile_url" => $suggest->profile_url,
+                    "user_gender" => isset($suggest->user_gender) ? $suggest->user_gender : NULL,
+                    "avatar" => isset($suggest->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                    "cover_photo" => isset($suggest->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo),
+                ];
+            }
+        }
+        if (count($suggestFriends) > 0) {
+
+            $return['SuggestED'] = $suggestedFriendsIds;
+            $return['data'] = $suggestFriends;
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            return response($return, 200);
+        }
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+    public function getSuggestGroups()
+    {
+        $userGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr((app('session')->get('tempID')));
+
+        $suggestedBefore = ($this->requestData->suggestedBefore);
+        $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+        if (count($friends) > 0) {
+            $friendsGroupsIds = \OlaHub\UserPortal\Models\GroupMembers::getFriendsGroups($friends, $suggestedBefore);
+        }
+        if (count($friendsGroupsIds) > 0) {
+            $groupsData = \OlaHub\UserPortal\Models\groups::whereIn('id', $friendsGroupsIds)
+                ->where('privacy', '!=', 1)
+                ->inRandomOrder()
+                ->whereNotIn('id', $userGroups)
+                ->limit(30)
+                ->get();
+
+            foreach ($groupsData as $suggest) {
+                $groupMembers = \OlaHub\UserPortal\Models\GroupMembers::getMembersArr($suggest->id);
+
+                $friendsInGroup = count(array_intersect($groupMembers, $friends));
+
+                $suggestedFriendsIds[] = $suggest->id;
+                $suggestFriends[] = [
+                    "status" => 1,
+                    'type' => 'friends',
+                    'privacy' => $suggest->privacy,
+                    "id" => $suggest->id,
+                    "friends" => $friendsInGroup,
+                    "name" => $suggest->name,
+                    "image" => isset($suggest->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->image) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                ];
+            }
+        }
+
+        if (count($suggestFriends) < 30) {
+            $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
+            $userIntreast = explode(",", $user->interests);
+            $fq = [];
+            foreach ($userIntreast as $i)
+                $fq[] = "FIND_IN_SET($i, interests)";
+
+            $groupsData = \OlaHub\UserPortal\Models\groups::where('privacy', '!=', 1)
+                ->inRandomOrder()
+                ->whereNotIn('id', $userGroups)
+                ->whereRaw($fq[0])
+                ->limit(30)
+                ->get();
+
+
+            foreach ($groupsData as $suggest) {
+
+                $suggestedFriendsIds[] = $suggest->id;
+                $suggestFriends[] = [
+                    "status" => 1,
+                    'type' => 'byIntreasts',
+                    "id" => $suggest->id,
+                    'privacy' => $suggest->privacy,
+                    "name" => $suggest->name,
+                    "image" => isset($suggest->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->image) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                ];
+            }
+        }
+        if (count($suggestFriends) > 0) {
+
+            $return['SuggestED'] = $suggestedFriendsIds;
+            $return['data'] = $suggestFriends;
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            return response($return, 200);
+        }
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 }

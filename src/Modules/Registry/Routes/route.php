@@ -19,7 +19,7 @@ $router->group([
         $router->post('updateRegistry', 'RegistryController@updateRegistry');
         $router->post('deleteRegistry', 'RegistryController@deleteRegistry');
         $router->get('list', 'RegistryController@ListRegistry');
-        $router->post('one', 'RegistryController@getOneRegistry');
+       
         $router->post('publish', 'RegistryController@publishRegistry');
         $router->post('wishes', 'RegistryController@registryWishes');
 
@@ -30,7 +30,10 @@ $router->group([
 
         $router->post('newGift', 'RegistryGiftController@newGift');
         $router->post('updateGiftQuantity', 'RegistryGiftController@updateRegistryItemQuantity');
-        $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');
+       
         $router->post('deleteGift', 'RegistryGiftController@removeRegistryItem');
     });
+    $router->post('one', 'RegistryController@getOneRegistry');
+    $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');
+    $router->post('listParticipants', 'RegistryParticipantController@ListRegistryParticipants');
 });

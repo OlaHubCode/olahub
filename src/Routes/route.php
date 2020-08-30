@@ -44,6 +44,8 @@ $router->group([], function () use ($router) {
     ], function () use ($router) {
         $router->post('search_user', 'OlaHubGeneralController@searchUsers');
         $router->post('invite', 'OlaHubGeneralController@inviteNewUser');
+        $router->post('getSuggestFriends', 'OlaHubGeneralController@getSuggestFriends');
+        $router->post('getSuggestGroups', 'OlaHubGeneralController@getSuggestGroups');
         $router->post('notification', 'OlaHubGeneralController@getUserNotification');
         $router->post('readNotification', 'OlaHubGeneralController@readNotification');
         $router->post('getAllNotifications', 'OlaHubGeneralController@getUserNotification');
