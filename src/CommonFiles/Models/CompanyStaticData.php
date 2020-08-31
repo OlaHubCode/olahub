@@ -17,7 +17,6 @@ class CompanyStaticData extends \Illuminate\Database\Eloquent\Model {
 
     use SoftDeletes;
 
-
     public function __construct(array $attributes = array()) {
         parent::__construct($attributes);
     }

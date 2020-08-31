@@ -209,9 +209,9 @@ class UserModel extends Model
         $userModel = (new UserModel)->newQuery();
         // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
 
-        $userModel->where(function ($query) use ($words) {
-
-            $query->where(function ($q1) use ($words) {
+        $userModel->where(function ($query) use ($words,$q) {
+            $query->WhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) = ?",$q);
+            $query->orWhere(function ($q1) use ($words) {
                 foreach ($words as $word) {
                     $q1->where('first_name', $word);
                     $q1->orWhere('last_name', $word);
@@ -254,7 +254,7 @@ class UserModel extends Model
                 }
             });
         })
-            ->where('users.id', '<>', app('session')->get('tempID'));
+        ->where('users.id', '<>', app('session')->get('tempID'));
         if ($eventId) {
             $userModel->whereRaw('users.id NOT IN (select user_id from celebration_participants
                      where celebration_participants.celebration_id = "' . (int) $eventId . '" )
