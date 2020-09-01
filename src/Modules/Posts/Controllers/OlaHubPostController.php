@@ -323,6 +323,10 @@ class OlaHubPostController extends BaseController
                                     $q1->orWhere('group_id', NULL);
                                 });
                             });
+                            $q->orwhere(function ($query2) use ($myGroups) {
+                                $query2->Where('privacy',2);
+                                $query2->whereIn('group_id', $myGroups);
+                            });
                             $q->orWhere('privacy',1);
                             $q->orWhere('user_id',app('session')->get('tempID'));
                         })
@@ -390,6 +394,10 @@ class OlaHubPostController extends BaseController
                         $q1->whereIn('group_id', $myGroups);
                         $q1->orWhere('group_id', NULL);
                     });
+                });
+                $q->orwhere(function ($query2) use ($myGroups) {
+                    $query2->Where('privacy',2);
+                    $query2->whereIn('group_id', $myGroups);
                 });
                 $q->orWhere('privacy',1);
                 $q->orWhere('user_id',app('session')->get('tempID'));
@@ -1260,6 +1268,10 @@ class OlaHubPostController extends BaseController
                                 $q1->whereIn('group_id', $myGroups);
                                 $q1->orWhere('group_id', NULL);
                             });
+                        });
+                        $q->orwhere(function ($query2) use ($myGroups) {
+                            $query2->Where('privacy',2);
+                            $query2->whereIn('group_id', $myGroups);
                         });
                         $q->orWhere('privacy',1);
                         $q->orWhere('user_id',app('session')->get('tempID'));

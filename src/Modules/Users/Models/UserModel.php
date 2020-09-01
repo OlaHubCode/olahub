@@ -232,8 +232,8 @@ class UserModel extends Model
 
         // related 
         $related = UserModel::where(function ($query) use ($relatedQuery,$words,$q) {
-                $query->Where(function ($q1) use ($relatedQuery) {
-                    $q1->WhereRaw($relatedQuery);
+                $query->where(function ($q1) use ($relatedQuery) {
+                    $q1->whereRaw($relatedQuery);
                 });
                 // $query->orWhere(function ($q2) use ($words) {
                 //     foreach ($words as $word) {
