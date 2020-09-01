@@ -652,8 +652,8 @@ class OlaHubGeneralController extends BaseController
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start search users"]);
             $users = \OlaHub\UserPortal\Models\UserModel::searchUsers($q, $event, $group, $count);
-            if ($users->count() > 0) {
-                $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($users, '\OlaHub\UserPortal\ResponseHandlers\searchUsersForPrequestFormsResponseHandler');
+            if ($users['data']->count() > 0) {
+                $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingResponseCollection($users['data'], '\OlaHub\UserPortal\ResponseHandlers\searchUsersForPrequestFormsResponseHandler');
                 $return['status'] = true;
                 $return['code'] = 200;
             }
@@ -697,9 +697,11 @@ class OlaHubGeneralController extends BaseController
             if (app('session')->get('tempID')) {
                 // users
                 $searchQuery[] = "select count(id) as search from users
-                where (LOWER(`email`) like '%" . $q . "%' or mobile_no like '%" . $q . "%'
-                and LOWER(`first_name`) sounds like '" . $q . "'
-                and LOWER(`last_name`) sounds like '" . $q . "')
+                where( (LOWER(`email`) like '%" . $q . "%' 
+                or mobile_no like '%" . $q . "%'
+                or concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like '" . $q . "'
+                or LOWER(`first_name`) sounds like '" . $q . "'
+                or LOWER(`last_name`) sounds like '" . $q . "'))
                 and id <> " . app('session')->get('tempID') . " and is_active = 1";
 
                 // groups
@@ -796,8 +798,11 @@ class OlaHubGeneralController extends BaseController
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search users filter"]);
                     if (app('session')->get('tempID')) {
                         $users = \OlaHub\UserPortal\Models\UserModel::searchUsers($q, false, false, $count, TRUE);
-                        if ($users->count() > 0) {
-                            $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($users, '\OlaHub\UserPortal\ResponseHandlers\UserSearchResponseHandler');
+                        if ($users["data"]->count() > 0) {
+                            $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($users["data"], '\OlaHub\UserPortal\ResponseHandlers\UserSearchResponseHandler');
+                        }
+                        if ($users["related"]) {
+                            $searchData["related"] = $users["related"];
                         }
                     }
                     break;
