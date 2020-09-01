@@ -81,9 +81,7 @@ class RegistryResponseHandler extends Fractal\TransformerAbstract
         $this->return['shipping_address']["shipping_address_full_name"] = isset($shippingAddress->shipping_address_full_name) ? $shippingAddress->shipping_address_full_name : NULL;
         $this->return['shipping_address']["shipping_address_city"] = isset($shippingAddress->shipping_address_city) ? $shippingAddress->shipping_address_city : NULL;
         $this->return['shipping_address']["shipping_address_state"] = isset($shippingAddress->shipping_address_state) ? $shippingAddress->shipping_address_state : NULL;
-        if ($shippingAddress->shipping_address_email) {
-            $this->return['shipping_address']["shipping_address_email"] = isset($shippingAddress->shipping_address_email) ? $shippingAddress->shipping_address_email : NULL;
-        }
+        $this->return['shipping_address']["shipping_address_email"] = isset($shippingAddress->shipping_address_email) ? $shippingAddress->shipping_address_email : NULL;
         $this->return['shipping_address']["shipping_address_phone_no"] = isset($shippingAddress->shipping_address_phone_no) ? $shippingAddress->shipping_address_phone_no : NULL;
         $this->return['shipping_address']["shipping_address_address_line1"] = isset($shippingAddress->shipping_address_address_line1) ? $shippingAddress->shipping_address_address_line1 : NULL;
         $this->return['shipping_address']["shipping_address_address_line2"] = isset($shippingAddress->shipping_address_address_line2) ? $shippingAddress->shipping_address_address_line2 : NULL;

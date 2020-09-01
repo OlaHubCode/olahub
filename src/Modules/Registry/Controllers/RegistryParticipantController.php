@@ -52,7 +52,7 @@ class RegistryParticipantController extends BaseController
             $log = new \OlaHub\UserPortal\Helpers\LogHelper();
             foreach ($usersId as $userId) {
                 $this->participant($userId);
-                if ($this->registry && $userId != app('session')->get('tempID')) {
+                if ($this->registry && $userId != app('session')->get('tempID') && $this->registry->is_published) {
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'registry';
                     $notification->content = "notifi_addParticipantRegistry";
@@ -120,31 +120,31 @@ class RegistryParticipantController extends BaseController
             if ($participant && $this->registry->user_id != $this->requestData['userId']) {
                 $participant->delete();
 
-                if ($this->requestData['userId'] != app('session')->get('tempID')) {
-                    $notification = new \OlaHub\UserPortal\Models\Notifications();
-                    $notification->type = 'registry';
-                    $notification->content = "notifi_removeParticipantRegistry";
-                    $notification->registry_id = $this->requestData['registryId'];
-                    $notification->user_id = $this->requestData['userId'];
-                    $notification->friend_id = app('session')->get('tempID');
-                    $notification->save();
+                // if ($this->requestData['userId'] != app('session')->get('tempID')) {
+                //     $notification = new \OlaHub\UserPortal\Models\Notifications();
+                //     $notification->type = 'registry';
+                //     $notification->content = "notifi_removeParticipantRegistry";
+                //     $notification->registry_id = $this->requestData['registryId'];
+                //     $notification->user_id = $this->requestData['userId'];
+                //     $notification->friend_id = app('session')->get('tempID');
+                //     $notification->save();
 
-                    $userData = app('session')->get('tempData');
-                    $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                        $targe->id,
-                        "registry_part_remove",
-                        array(
-                            "type" => "registry_part_remove",
-                            "registryId" => $this->registry->id,
-                            "registryTitle" => $this->registry->title,
-                            "username" => "$userData->first_name $userData->last_name",
-                        ),
-                        $targe->lang,
-                        "$userData->first_name $userData->last_name",
-                        $this->registry->title
-                    );
-                }
+                //     $userData = app('session')->get('tempData');
+                //     $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
+                //     \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                //         $targe->id,
+                //         "registry_part_remove",
+                //         array(
+                //             "type" => "registry_part_remove",
+                //             "registryId" => $this->registry->id,
+                //             "registryTitle" => $this->registry->title,
+                //             "username" => "$userData->first_name $userData->last_name",
+                //         ),
+                //         $targe->lang,
+                //         "$userData->first_name $userData->last_name",
+                //         $this->registry->title
+                //     );
+                // }
 
                 $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
                 $log->saveLogSessionData();
@@ -171,7 +171,7 @@ class RegistryParticipantController extends BaseController
             $participant->registry_id = $this->requestData['registryId'];
             $participant->user_id = $user_id;
             $participant->save();
-            if ($user_id != app('session')->get('tempID')) {
+            if ($user_id != app('session')->get('tempID') && $this->registry->is_published) {
                 if ($user->mobile_no) {
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendRegisterUserRegistryInvition($user, $this->registry->user_name, $this->registry->id, $this->registry->title);
                 }

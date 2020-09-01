@@ -33,10 +33,10 @@ class CelebrationController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create new celebration"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationModel::$columnsMaping, (array) $this->requestData);
-
-        if (isset($validator['status']) && !$validator['status'] && !$this->requestData['registryId']) {
+        $registryId = @$this->requestData['registryId'];
+        if (isset($validator['status']) && !$validator['status'] && !$registryId) {
             if ($validator['data']['celebrationOwner']) {
-                if (!empty($this->requestData['userFullName']) && !is_numeric($this->requestData['userFullName'])) {
+                if (!empty($this->requestData['userFullName'])) {
                     $user_id = NULL;
                     $phone =  $this->requestData["shipping_address_phone_no"];
                     $country_id = $this->requestData["celebrationCountry"];
