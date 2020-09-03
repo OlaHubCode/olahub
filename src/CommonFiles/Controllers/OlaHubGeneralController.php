@@ -342,8 +342,14 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
         $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
 
-        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::with('brandData')->with('interestData')->whereRaw($week)->whereRaw("FIND_IN_SET($sessionUserId,user_id)")->groupBy('followed_slug')
-            ->inRandomOrder()->take(2)->get();
+
+        $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw($week)
+            ->whereRaw("FIND_IN_SET($sessionUserId,user_id)")
+            ->inRandomOrder()
+            ->limit(2)
+            ->groupBy('followed_slug')
+            ->get();
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         //return($newItemscnotification);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         $allNotifications = [];

@@ -648,7 +648,7 @@ class OlaHubPostController extends BaseController
             $like->save();
             foreach ($followers as $userId) {
 
-                if ($post->user_id != app('session')->get('tempID') && ($post->user_id != $userId->user_id)) {
+                if ($post->user_id != app('session')->get('tempID') && ($post->user_id !=  $userId['user_id'])) {
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'post';
                     $notification->content = "notifi_post_like_for_follower";
@@ -816,8 +816,7 @@ class OlaHubPostController extends BaseController
 
                 foreach ($followers as $userId) {
 
-
-                    if ($post->user_id != app('session')->get('tempID') && ($post->user_id != $userId->user_id)) {
+                    if ($post->user_id != app('session')->get('tempID') && ($post->user_id !=  $userId['user_id'])) {
                         $notification = new \OlaHub\UserPortal\Models\Notifications();
                         $notification->type = 'post';
                         $notification->content = "notifi_post_comment_for_follower";
