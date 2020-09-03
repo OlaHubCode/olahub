@@ -464,6 +464,21 @@ class OlaHubPostController extends BaseController
                 } else {
                     $post->is_approve = 1;
                 }
+                switch($groupData->privacy){
+                    case "1":
+                        $post->privacy = 3;
+                    break;
+                    case "2":
+                        $post->privacy = 2;
+                    break;
+                    case "3":
+                        $post->privacy = 1;
+                    break;
+                    default:
+                        $post->privacy = 1;
+                    break;
+                }
+
             } else {
                 $post->group_id = NULL;
                 $post->is_approve = 1;
