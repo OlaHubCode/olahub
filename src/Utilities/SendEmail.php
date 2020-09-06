@@ -11,10 +11,10 @@ class SendEmails {
             $subject,
             $body,
             $to,
-            $ccMail;
-
+            $ccMail,
+            $bccMail;
     function send() {        
-        Mail::to($this->to)->send(new EmailFunction($this->body, $this->subject,  $this->ccMail));
+        Mail::to($this->to)->bcc($this->bccMail)->send(new EmailFunction($this->body, $this->subject,  $this->ccMail));
         return true;
     }
 

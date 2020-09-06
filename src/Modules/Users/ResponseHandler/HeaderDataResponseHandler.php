@@ -4,6 +4,7 @@ namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\UserModel;
 use League\Fractal;
+use OlaHub\UserPortal\Models\Post;
 
 class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
 
@@ -17,6 +18,7 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
         $this->setDefCoverImageData();
         $this->setPoints();
         $this->setUserBalance();
+        $this->setLastPrivacy();
         return $this->return;
     }
 
@@ -84,6 +86,17 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
         } else {
             $this->return['userCoverPhoto'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false,'COVER_PHOTO');
         }
+    }
+
+    private function setLastPrivacy() {
+        $this->return['lastPrivacy'] = 1;
+        if($this->data->id){
+            $lastPost = Post::where('user_id',$this->data->id)->orderBy('id','desc')->first();
+            if($lastPost){
+                $this->return['lastPrivacy'] = $lastPost->privacy;
+            }
+        }
+        
     }
     
 

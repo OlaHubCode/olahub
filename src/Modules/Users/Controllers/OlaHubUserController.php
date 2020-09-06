@@ -8,6 +8,7 @@ use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\UserShippingAddressModel;
 use Illuminate\Support\Facades\Crypt;
+use OlaHub\UserPortal\Models\UsersReferenceCodeUsedModel;
 
 class OlaHubUserController extends BaseController
 {
@@ -58,6 +59,7 @@ class OlaHubUserController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getProfileInfo"]);
 
         $user = app('session')->get('tempData');
+        
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\ProfileInfoResponseHandler');
             $return['status'] = true;

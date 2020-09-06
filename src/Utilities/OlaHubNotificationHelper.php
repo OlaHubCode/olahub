@@ -12,12 +12,14 @@ class OlaHubNotificationHelper {
     public $template_code;
     public $to;
     public $cc;
+    public $bcc;
     public $replace;
     public $replace_with;
     private $body;
     private $subject;
     private $final_to;
     private $final_cc = [];
+    private $final_bcc = [];
     private $template_data;
     private $notifTypes = [
         'email',
@@ -45,11 +47,13 @@ class OlaHubNotificationHelper {
         $this->getBodyData();
         $this->getTo();
         $this->getCC();
+        $this->getBCC();
         $sendEmail = new \OlaHub\UserPortal\Libraries\SendEmails;
         $sendEmail->subject = $this->subject;
         $sendEmail->body = $this->body;
         $sendEmail->to = $this->final_to;
         $sendEmail->ccMail = $this->final_cc;
+        $sendEmail->bccMail = $this->final_bcc;
         $sendEmail->send();
     }
 
@@ -60,7 +64,7 @@ class OlaHubNotificationHelper {
         $this->getTo();
         $username = 'ohub_api';
         $password = 'oL_Aa$d_2$%d';
-        $sendSmsApiUrl = "https://bulksms.arabiacell.net/index.php/api/send_sms/send";
+        $sendSmsApiUrl = "https://smsgate.arabiacell.net/index.php/api/send_sms/send";
         $senderId = 'OlaHub';
         $phoneNumberFormated = $this->final_to;
 
@@ -149,6 +153,14 @@ class OlaHubNotificationHelper {
             $this->final_cc = $this->cc;
         } elseif (strlen($this->cc) > 0) {
             $this->final_cc[] = $this->cc;
+        }
+    }
+
+    private function getBCC() {
+        if (is_array($this->bcc) && count($this->bcc)) {
+            $this->final_bcc = $this->bcc;
+        } elseif (strlen($this->bcc) > 0) {
+            $this->final_bcc[] = $this->bcc;
         }
     }
 

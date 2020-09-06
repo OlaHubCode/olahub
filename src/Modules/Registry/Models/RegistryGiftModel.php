@@ -2,8 +2,10 @@
 
 namespace OlaHub\UserPortal\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class RegistryGiftModel extends Model {
+    use SoftDeletes;
 
     protected $table = 'registries_items';
     

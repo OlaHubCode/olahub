@@ -55,8 +55,8 @@ class OlaHubWishListsController extends BaseController
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
 
-        if ($this->requestData['itemType'] == 'designer') {
-        }
+        // if ($this->requestData['itemType'] == 'designer') {
+        // }
         $data = WishList::withoutGlobalScope("wishlistCountry")->where('item_id', $this->requestData['itemID'])->where('user_id', app('session')->get('tempID'))->get();
         if ($data->count() > 0) {
             foreach ($data as $one) {

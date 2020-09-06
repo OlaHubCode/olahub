@@ -82,7 +82,9 @@ class OlaHubItemController extends BaseController
 
         if (count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
             unset($this->requestFilter['all']);
+
             if (isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0) {
+
                 $attributes = [];
                 foreach ($this->requestFilter['attributes'] as $one) {
                     $attrData = \OlaHub\UserPortal\Models\AttrValue::find($one);
@@ -101,10 +103,10 @@ class OlaHubItemController extends BaseController
                 }
 
                 $itemsQuery->select("catalog_items.*");
-
             }
 
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
+
             foreach ($filters['main'] as $input => $value) {
                 if (is_array($value) && count($value)) {
                     $itemsQuery->whereIn($input, $value);
@@ -112,6 +114,7 @@ class OlaHubItemController extends BaseController
                     $itemsQuery->where($input, $value);
                 }
             }
+
             foreach ($filters['relations'] as $model => $data) {
                 if ($model == 'brand') {
                     $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
@@ -127,6 +130,7 @@ class OlaHubItemController extends BaseController
                             if (is_array($value) && count($value)) {
                                 $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
                             } elseif (is_string($value) && strlen($value) > 0) {
+                                // var_dump($input);
                                 $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
                             }
                         }
@@ -170,7 +174,6 @@ class OlaHubItemController extends BaseController
                 }
             }
         }
-
         // Categories
         $q1 = $itemsQuery;
         $itemsIDs = $q1->pluck('id');
@@ -547,6 +550,7 @@ class OlaHubItemController extends BaseController
         if ($item->parent_item_id > 0) {
             $itemID = $item->parent_item_id;
         }
+
         $items = CatalogItem::where('id', '!=', $itemID)
             ->where("is_voucher", "0")
             ->where(function ($query) use ($item) {
@@ -558,7 +562,8 @@ class OlaHubItemController extends BaseController
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
             })
-            ->groupBy('id')->orderByRaw("RAND()")->take(8)->get();
+            ->groupBy('id')->orderByRaw("RAND()")->take(5)->get();
+        
         $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
         $return['status'] = true;
         $return['code'] = 200;
@@ -567,10 +572,105 @@ class OlaHubItemController extends BaseController
         return response($return, 200);
     }
 
-    /*
-     * Start filters functions
-     */
+    public function getOneItemMostViewedItems($slug)
+    {
 
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItemMostViewedItems"]);
+
+        $this->itemsModel = (new CatalogItem)->newQuery();
+        $this->itemsModel->where('item_slug', $slug);
+        $item = $this->itemsModel->first();
+        if (!$item) {
+            throw new NotAcceptableHttpException(404);
+        }
+        $itemID = $item->id;
+        if ($item->parent_item_id > 0) {
+            $itemID = $item->parent_item_id;
+        }
+
+        if(app('session')->get('tempID') != null) {
+            $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
+            if (count($user->catalogItemViews) > 0) {
+                $ids = $user->catalogItemViews->pluck('item_id')->toArray();
+                $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+                $itemModel->where('id', '!=', $itemID);
+                $itemModel->whereHas('quantityData', function ($q) {
+                    $q->where('quantity', '>', 0);
+                })->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                })->where('is_published','=',1)
+                    ->whereIn('id', $ids);
+                $itemModel->orderBy('updated_at', 'DESC');
+                $itemModel->take(5);
+                $items = $itemModel->get();
+                $need = 5 - $items->count();
+
+                if ($items->count() < 5) {
+                    $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+                    $itemModel->where('id', '!=', $itemID);
+                    $itemModel->whereHas('quantityData', function ($q) {
+                        $q->where('quantity', '>', 0);
+                    })->where(function ($query) {
+                        $query->whereNull('parent_item_id');
+                        $query->orWhere('parent_item_id', '0');
+                    })->where('is_published','=',1);
+                    $itemModel->orderBy('total_views', 'DESC');
+                    $itemModel->orderBy('name', 'ASC');
+                    $itemModel->take($need);
+                    $items2 = $itemModel->get();
+                    if ($items2->count() < 1) {
+                        throw new NotAcceptableHttpException(404);
+                    }
+                    foreach ($items2 as $item){
+                        $items[]=$item;
+                    }
+                }
+            }else{
+                $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+                $itemModel->where('id', '!=', $itemID);
+                $itemModel->whereHas('quantityData', function ($q) {
+                    $q->where('quantity', '>', 0);
+                })->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                });
+                $itemModel->where('is_published','=',1);
+                $itemModel->orderBy('total_views', 'DESC');
+                $itemModel->orderBy('name', 'ASC');
+                $itemModel->take(5);
+                $items = $itemModel->get();
+                if ($items->count() < 1) {
+                    throw new NotAcceptableHttpException(404);
+                }
+            }
+        }else{
+            $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
+            $itemModel->where('id', '!=', $itemID);
+            $itemModel->whereHas('quantityData', function ($q) {
+                $q->where('quantity', '>', 0);
+            })->where(function ($query) {
+                $query->whereNull('parent_item_id');
+                $query->orWhere('parent_item_id', '0');
+            });
+            $itemModel->where('is_published','=',1);
+            $itemModel->orderBy('total_views', 'DESC');
+            $itemModel->orderBy('name', 'ASC');
+            $itemModel->take(5);
+            $items = $itemModel->get();
+            if ($items->count() < 1) {
+                throw new NotAcceptableHttpException(404);
+            }
+        }
+
+        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+        $return['status'] = true;
+        $return['code'] = 200;
+        $log->setLogSessionData(['response' => $return]);
+        $log->saveLogSessionData();
+        return response($return, 200);
+    }
     public function getItemFiltersClassessData($all = false)
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();

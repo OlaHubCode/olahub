@@ -185,4 +185,5 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
         $this->vpcConnection->addDigitalOrderField("vpc_SecureHash", $secureHash);
         $this->vpcConnection->addDigitalOrderField("vpc_SecureHashType", "SHA256");
     }
+  
 }
