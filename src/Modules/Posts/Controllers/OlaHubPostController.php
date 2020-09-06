@@ -114,7 +114,13 @@ class OlaHubPostController extends BaseController
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
-                        $usInfo = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $u = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $usInfo = [
+                            'user_id' => $u->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($u->profile_picture),
+                            'profile_url' => $u->profile_url,
+                            'username' => "$u->first_name $u->last_name",
+                        ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             $all[] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
@@ -212,7 +218,13 @@ class OlaHubPostController extends BaseController
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
-                        $usInfo = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $u = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $usInfo = [
+                            'user_id' => $u->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($u->profile_picture),
+                            'profile_url' => $u->profile_url,
+                            'username' => "$u->first_name $u->last_name",
+                        ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
