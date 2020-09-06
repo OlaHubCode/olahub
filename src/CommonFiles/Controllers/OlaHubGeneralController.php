@@ -2088,6 +2088,7 @@ class OlaHubGeneralController extends BaseController
         $suggestedFriendsIds = [];
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
         $requestedFriends = \OlaHub\UserPortal\Models\Friends::getAllSentRequest(app('session')->get('tempID'));
+        $blocked = \OlaHub\UserPortal\Models\Friends::getAllblocked(app('session')->get('tempID'));
         if (count($friends) > 0) {
             $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('id', $friends)->orWhereIn('user_id', $friends);
             if (count($suggestedBefore) > 0) {
@@ -2102,6 +2103,8 @@ class OlaHubGeneralController extends BaseController
                 ->where('status', 1)
                 ->whereNotIn('friend_id', $requestedFriends)
                 ->whereNotIn('user_id', $requestedFriends)
+                ->whereNotIn('friend_id', $blocked)
+                ->whereNotIn('user_id', $blocked)
                 ->groupBy('friend_id')
                 ->groupBy('user_id')
 
@@ -2156,6 +2159,7 @@ class OlaHubGeneralController extends BaseController
 
             $groupsMembers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $userGroupsCommonMember)
                 ->whereNotIn('id', $requestedFriends)
+                ->whereNotIn('id', $blocked)
                 ->whereNotIn('id', $friends)
                 ->whereNotIn('id', $suggestedBefore)
                 ->inRandomOrder()
