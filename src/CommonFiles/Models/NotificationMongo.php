@@ -29,13 +29,13 @@ class Notifications extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\CelebrationModel', 'id', 'celebration_id');
     }
 
- 
+
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
         $user = app('session')->get('tempData');
         $username = "$user->first_name $user->last_name";
-       
+
         $url = 'https://fcm.googleapis.com/fcm/send';
         $fields = array(
             'to' => '/topics/OlaHubFCM-' . $user_id,
@@ -103,9 +103,9 @@ class Notifications extends Model
             "notifi_user_vote_Post" => $word . "Created  a new vote",
             "notifi_user_new_Post" => $word . "added a new post",
             "notifi_vote_on_post" => $word . "voted on your post",
-            "notifi_post_like_for_follower" =>  "Liked " .$word ."post",
-            "notifi_post_comment_for_follower" =>  " commented on " .$word ." post",
-            "notifi_mention_post" =>  $word ."mentioned you in his post"
+            "notifi_post_like_for_follower" =>  "Liked " . $word . "post",
+            "notifi_post_comment_for_follower" =>  " commented on " . $word . " post",
+            "notifi_mention_post" =>  $word . "mentioned you in his post"
 
         ];
         $langs->ar = [
@@ -147,8 +147,8 @@ class Notifications extends Model
             "notifi_mention_post" => " قام " . $word . " بلإشارة اليك في منشوره ",
 
 
-            
+
         ];
-        return $langs->$lang[$key];
+        return @$langs->$lang[$key] || "en";
     }
 }

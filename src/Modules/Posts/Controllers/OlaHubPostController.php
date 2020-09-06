@@ -12,6 +12,7 @@ use OlaHub\UserPortal\Models\PostShares;
 use OlaHub\UserPortal\Models\PostReport;
 use OlaHub\UserPortal\Models\VotePostUser;
 use OlaHub\UserPortal\Models\PostVote;
+use OlaHub\UserPortal\Models\PostLikes;
 
 class OlaHubPostController extends BaseController
 {
@@ -301,11 +302,13 @@ class OlaHubPostController extends BaseController
             $post = Post::where('post_id', $this->requestData['postId'])->first();
 
             if ($post) {
-                $likes = $post->likes;
+                $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
+
+                // $likes = $post->likes;
                 $likerData = [];
                 foreach ($likes as $like) {
                     $userData = $like->author;
-                    $name = $userData->first_name . ' ' . $userData->last_name;
+                    $name = isset($userData->first_name) ? $userData->first_name . ' ' . $userData->last_name : "";
 
                     $likerData[] = [
                         'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
@@ -314,7 +317,9 @@ class OlaHubPostController extends BaseController
                         'likerid' => isset($userData->id) ? $userData->id  : NULL
                     ];
                 }
+               
                 $return['data'] = $likerData;
+                $return['lastPage'] = $likes->lastPage();
                 $return['status'] = TRUE;
                 $return['code'] = 200;
             }
@@ -360,14 +365,14 @@ class OlaHubPostController extends BaseController
         if (isset($this->requestData['mentions'])) {
             $allMentions = serialize($this->requestData['mentions']);
         }
-        
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        
-        
+
+
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
         if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
-            
+
             $post = new Post;
             $post->user_id = app('session')->get('tempID');
             $post->post_id = uniqid(app('session')->get('tempID'));
@@ -509,7 +514,7 @@ class OlaHubPostController extends BaseController
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
                         ),
-                        $owner->lang,
+                        @$owner->lang || "en",
                         "$userData->first_name $userData->last_name"
                     );
                 }
@@ -627,7 +632,6 @@ class OlaHubPostController extends BaseController
 
                     $userData = app('session')->get('tempData');
                     $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
-
                     $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
                     \OlaHub\UserPortal\Models\Notifications::sendFCM(
                         $userId['user_id'],
