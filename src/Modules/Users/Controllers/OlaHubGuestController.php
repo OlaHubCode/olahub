@@ -443,9 +443,10 @@ class OlaHubGuestController extends BaseController
         $redirectLink = 'userAccess?';
         if (!empty($data['id_token']) && !empty($email)) {
             $user = UserHelper::buildAppleData($data);
-            return redirect()->to($redirectLink . json_encode($user));
+            return response($user, 200);
+            //return redirect()->to($redirectLink . json_encode($user));
         }
-        return redirect()->to($redirectLink . json_encode(['error' => "could_not_find_token"]));
+        //return redirect()->to($redirectLink . json_encode(['error' => "could_not_find_token"]));
     }
 
     function loginWithApple()
