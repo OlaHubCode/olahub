@@ -280,10 +280,10 @@ class RegistryController extends BaseController
 
     public function getOneRegistry()
     {
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
-        $userData = app('session')->get('tempData');
+        //$log = new \OlaHub\UserPortal\Helpers\Logs();
+        //$userData = app('session')->get('tempData');
 
-        $log->saveLog($userData->id, $this->requestData, ' get_One_Registry');
+       // $log->saveLog($userData->id, $this->requestData, ' get_One_Registry');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Get one Registry"]);
 
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {

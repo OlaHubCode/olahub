@@ -3,8 +3,11 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CatalogItemViews extends Model {
+
+    use SoftDeletes;
 
     protected $table = 'catalog_items_views';
 
@@ -16,12 +19,24 @@ class CatalogItemViews extends Model {
         $request = \Illuminate\Http\Request::capture();
         $userIP = $request->ip();
         $userBrowser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getUserBrowserAndOS($request->userAgent());
-        $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->first();
+        if(app('session')->get('tempID')){
+            $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->where('user_id', app('session')->get('tempID'))->first();
+        }else{
+            $oldView = CatalogItemViews::where('item_id',$item->id)->where('browser_name',$userBrowser)->where('user_ip',$userIP)->first();
+        }
+        if($oldView){
+            $date = date('Y-m-d H:i:s');
+            $oldView->updated_at = $date;
+            $oldView->save();
+        }
         if(!$oldView){
             $oldView = new CatalogItemViews;
             $oldView->item_id = $item->id;
             $oldView->browser_name = $userBrowser;
             $oldView->user_ip = $userIP;
+            if(app('session')->get('tempID')){
+                $oldView->user_id = app('session')->get('tempID');
+            }
             $oldView->save();
             $item->total_views++;
             $item->save();

@@ -3,10 +3,11 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CartItems extends Model
 {
-
+    use SoftDeletes;
     protected $table = 'shopping_carts_details';
 
     protected static function boot()

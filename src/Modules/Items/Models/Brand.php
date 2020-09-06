@@ -73,13 +73,45 @@ class Brand extends Model
         return $return;
     }
 
-    static function searchBrands($q = 'a', $count = 15)
+    static function searchBrands($text = 'a', $count = 15)
     {
-        $brands = Brand::whereRaw('LOWER(`name`) like ?', "%$q%");
+//        $brands = Brand::whereRaw('LOWER(`name`) like ?', "%$q%");
+
+        $words = explode(" ", $text);
+
+        $items = Brand::where(function ($q) use($words) {
+
+            $q->where(function ($q1) use($words) {
+                foreach ($words as $word){
+                    $q1->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
+                }
+            });
+            $q->orWhere(function ($q3) use($words) {
+                foreach ($words as $word){
+                    $length = strlen($word);
+                    if($length >= 3)
+                    {
+                        $firstWords = substr($word, 0,3);
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $firstWords . '%');
+
+                        if($length >= 6){
+                            $lastWords = substr($word, -3);
+                            $q3->WhereRaw('LOWER(`name`) LIKE ? ','%' . $lastWords . '%');
+                        }
+                    }else if($length == 2){
+                        $q3->whereRaw('LOWER(`name`) LIKE ? ','%' . $word . '%');
+                    }
+                }
+            });
+        });
+
+        $items->orWhere('name', '=', $text);
+
+
         if ($count > 0) {
-            return $brands->paginate($count);
+            return $items->paginate($count);
         } else {
-            return $brands->count();
+            return $items->count();
         }
     }
 }

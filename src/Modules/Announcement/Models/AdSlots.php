@@ -11,11 +11,12 @@
 
 namespace OlaHub\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Jenssegers\Mongodb\Eloquent\HybridRelations;
 use Illuminate\Database\Eloquent\Model;
 
 class AdSlots extends Model {
-
+    use SoftDeletes;
     use HybridRelations;
 
     protected $table = 'campaign_slots';

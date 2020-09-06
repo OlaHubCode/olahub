@@ -11,11 +11,12 @@
 
 namespace OlaHub\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Jenssegers\Mongodb\Eloquent\HybridRelations;
 use Illuminate\Database\Eloquent\Model;
 
 class AdSlotsCountries extends Model {
-
+    use SoftDeletes;
     use HybridRelations;
 
     public function __construct(array $attributes = array()) {

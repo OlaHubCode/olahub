@@ -64,19 +64,42 @@ class groups extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\GroupMembers', 'group_id');
     }
 
-    static function searchGroups($q = 'a', $count = 15)
+    static function searchGroups($text = 'a', $count = 15)
     {
-        $groupsModel = (new groups)->newQuery();
-        $groupsModel->where(function ($query) use ($q) {
-            $query->whereRaw('LOWER(`name`)  like ?', "%$q%")
-                ->orWhereRaw('LOWER(`description`)  like ?', "%$q%");
-        })->whereIn("privacy", [2, 3]);
+        $words = explode(" ", $text);
+
+        $items = groups::whereIn("privacy", [2, 3]);
+        $items->where(function ($q) use($words) {
+
+            $q->where(function ($q1) use($words) {
+                foreach ($words as $word){
+                    $q1->whereRaw('FIND_IN_SET(?, REPLACE(description, " ", ","))', $word);
+                }
+            });
+            $q->orWhere(function ($q2) use($words) {
+                foreach ($words as $word){
+                    $q2->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
+                }
+            });
+        });
+
+        $items->orWhere('description', '=',$text);
+        $items->orWhere('name', '=', $text);
+
+//        $groupsModel = (new groups)->newQuery();
+//        $groupsModel->where(function ($query) use ($q) {
+//            $query->whereRaw('LOWER(`name`)  like ?', "%$q%")
+//                ->orWhereRaw('LOWER(`description`)  like ?', "%$q%");
+//        })->whereIn("privacy", [2, 3]);
 
 
         if ($count > 0) {
-            return $groupsModel->paginate($count);
+            return $items->paginate($count);
         } else {
-            return $groupsModel->get()->count();
+            return $items->get()->count();
         }
     }
+
+
+   
 }

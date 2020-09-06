@@ -123,6 +123,7 @@ class UserModel extends Model
             'relation' => false,
             'validation' => ''
         ],
+
     ];
     static $columnsInvitationMaping = [
         'userFirstName' => [
@@ -181,6 +182,11 @@ class UserModel extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\Friends', 'user_id', 'id');
     }
 
+    public function refCode()
+    {
+        return $this->hasOne('OlaHub\UserPortal\Models\UsersReferenceCodeUsedModel', 'user_id', 'id');
+    }
+
     public function getColumns($requestData, $user = false)
     {
         if ($user) {
@@ -199,13 +205,68 @@ class UserModel extends Model
 
     static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false)
     {
-        $userModel = (new UserModel)->newQuery();
         // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
-        $userModel->where(function ($query) use ($q) {
-            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
-                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
-                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
-        })->where('users.id', '<>', app('session')->get('tempID'));
+        $words = explode(" ", $q);
+        $userQuery =[];
+        foreach ($words as $word)
+            array_push($userQuery, "concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) REGEXP '$word'");
+
+        $whereQuery = join(' and ', $userQuery);
+        $relatedQuery = join(' or ', $userQuery);
+        $userModel = (new UserModel)->newQuery();
+
+        $userModel->where(function ($query) use ($words,$q,$whereQuery) {
+            $query->whereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) = ?",$q);
+            $query->orWhereRaw($whereQuery);
+            $query->orWhere('first_name',$q);
+            $query->orWhere('last_name',$q);
+            $query->orWhere(function ($q1) use ($words) {
+                foreach ($words as $word) {
+                    $q1->where('email', $word);
+                    $q1->orWhere('mobile_no', $word);
+                }
+            });
+           
+        })
+        ->where('users.id', '<>', app('session')->get('tempID'));
+
+        // related 
+        $related = UserModel::where(function ($query) use ($relatedQuery,$words,$q) {
+                $query->where(function ($q1) use ($relatedQuery) {
+                    $q1->whereRaw($relatedQuery);
+                });
+                // $query->orWhere(function ($q2) use ($words) {
+                //     foreach ($words as $word) {
+                //         $length = strlen($word);
+                //         if ($length >= 3) {
+                //             $firstWords = substr($word, 0, 3);
+                //             $q2->Where('first_name', 'like', '%' . $firstWords . '%');
+                //             if ($length >= 6) {
+                //                 $lastWords = substr($word, -3);
+                //                 $q2->Where('first_name', 'like', '%' . $lastWords . '%');
+                //             }
+                //         } else if ($length == 2) {
+                //             $q2->Where('first_name', 'like', '%' . $word . '%');
+                //         }
+                //     }
+                // });
+                // $query->orWhere(function ($q2) use ($words) {
+                //     foreach ($words as $word) {
+                //         $length = strlen($word);
+                //         if ($length >= 3) {
+                //             $firstWords = substr($word, 0, 3);
+                //             $q2->Where('last_name', 'like', '%' . $firstWords . '%');
+                //             if ($length >= 6) {
+                //                 $lastWords = substr($word, -3);
+                //                 $q2->Where('last_name', 'like', '%' . $lastWords . '%');
+                //             }
+                //         } else if ($length == 2) {
+                //             $q2->Where('last_name', 'like', '%' . $word . '%');
+                //         }
+                //     }
+                // });
+            })->where('users.id', '<>', app('session')->get('tempID'))->limit(10)->get();
+
         if ($eventId) {
             $userModel->whereRaw('users.id NOT IN (select user_id from celebration_participants
                      where celebration_participants.celebration_id = "' . (int) $eventId . '" )
@@ -221,12 +282,20 @@ class UserModel extends Model
             $userModel->where('is_active', '1');
         }
         if ($count > 0) {
-            return $userModel->paginate($count);
+            $data = $userModel->paginate($count);
         } else {
-            return $userModel->count();
+             $data = $userModel->count();
         }
+        return array(
+            "data" => $data,
+            "related" => $related
+        );
     }
-
+    //$userModel->where(function ($query) use ($q) {
+    //            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
+    //                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
+    //                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
+    //        })->where('users.id', '<>', app('session')->get('tempID'));
     static function getUserSlug($user)
     {
 
@@ -251,5 +320,28 @@ class UserModel extends Model
             $return = false;
         }
         return $return;
+    }
+
+    public function catalogItemViews()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CatalogItemViews', 'user_id');
+    }
+
+    static function checkReferenceCodeUser($code, $type)
+    {
+        $date = date("Y-m-d");
+        $check = UsersReferenceCodeModel::where('code', $code)->where('type', $type)->first();
+        if ($check) {
+            if ($date > $check->end_date) {
+                return "expired";
+            }
+            elseif ($date < $check->start_date) {
+                return "notBegin";
+            }
+            elseif ($date >= $check->srart_date && $date <= $check->end_date) {
+                return $check->id;
+            }
+        }
+        return false;
     }
 }
