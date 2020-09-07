@@ -340,7 +340,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
-        $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
+        $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->paginate(20);
 
 
         $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw($week)
@@ -452,6 +452,8 @@ class OlaHubGeneralController extends BaseController
             $data = [
                 'newItemsNotifications' => $newItemsNotifications,
                 'allNotifications' => $allNotifications,
+                'lastPage' => $notification->lastPage()
+
             ];
             return $data;
         } else {
