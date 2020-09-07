@@ -2087,10 +2087,11 @@ class OlaHubGeneralController extends BaseController
         $suggestFriends = [];
         $suggestedFriendsIds = [];
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+        // dd($friends);
         $requestedFriends = \OlaHub\UserPortal\Models\Friends::getAllSentRequest(app('session')->get('tempID'));
         $blocked = \OlaHub\UserPortal\Models\Friends::getAllblocked(app('session')->get('tempID'));
         if (count($friends) > 0) {
-            $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('id', $friends)->orWhereIn('user_id', $friends);
+            $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('friend_id', $friends)->orWhereIn('user_id', $friends);
             if (count($suggestedBefore) > 0) {
                 $friendsOfFrinends =  $friendsOfFrinends
                     ->whereNotIn('friend_id', $suggestedBefore)
@@ -2107,7 +2108,6 @@ class OlaHubGeneralController extends BaseController
                 ->whereNotIn('user_id', $blocked)
                 ->groupBy('friend_id')
                 ->groupBy('user_id')
-
                 ->limit(30)
                 ->get();
             foreach ($friendsOfFrinends as $id) {
@@ -2120,17 +2120,15 @@ class OlaHubGeneralController extends BaseController
                     if (in_array($id->user_id, $friends)) {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
-
                         $friendsOfFrinendsIds[] = $id->friend_id;
                         $mutualFriend[$id->friend_id] = $mutualFriends;
                     } else {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->user_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
-
-
                         $friendsOfFrinendsIds[] = $id->user_id;
                         $mutualFriend[$id->user_id] =  $mutualFriends;
                     }
+              
                 }
             }
             $friendsOfFriendUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friendsOfFrinendsIds)->inRandomOrder()->get();

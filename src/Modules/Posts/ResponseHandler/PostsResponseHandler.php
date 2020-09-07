@@ -43,6 +43,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'privacy' => $this->data->privacy,
+            'isApprove'=> $this->data->is_approve==1?true:false
 
 
         ];
