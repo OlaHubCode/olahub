@@ -48,4 +48,18 @@ class Friends extends Model
         }
         return $filterd;
     }
+    static function getAllblocked($id)
+    {
+        $friends = Friends::where('user_id', $id)->orWhere('friend_id', $id)->get();
+        $filterd = [];
+        if (count($friends)) {
+            foreach ($friends as $friend) {
+                if ($friend->user_id != $id && !in_array($friend->user_id, $filterd) && $friend->status == 3)
+                    array_push($filterd, $friend->user_id);
+                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd)&&$friend->status == 3)
+                    array_push($filterd, $friend->friend_id);
+            }
+        }
+        return $filterd;
+    }
 }

@@ -340,7 +340,7 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get user notification"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch user notification"]);
-        $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->get();
+        $notification = \OlaHub\UserPortal\Models\Notifications::with('userData')->where('user_id', (int) app('session')->get('tempID'))->orderBy("created_at", "DESC")->paginate(20);
 
 
         $newItemscnotification = \OlaHub\UserPortal\Models\UserNotificationNewItems::whereRaw($week)
@@ -452,6 +452,8 @@ class OlaHubGeneralController extends BaseController
             $data = [
                 'newItemsNotifications' => $newItemsNotifications,
                 'allNotifications' => $allNotifications,
+                'lastPage' => $notification->lastPage()
+
             ];
             return $data;
         } else {
@@ -2087,9 +2089,11 @@ class OlaHubGeneralController extends BaseController
         $suggestFriends = [];
         $suggestedFriendsIds = [];
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
+        // dd($friends);
         $requestedFriends = \OlaHub\UserPortal\Models\Friends::getAllSentRequest(app('session')->get('tempID'));
+        $blocked = \OlaHub\UserPortal\Models\Friends::getAllblocked(app('session')->get('tempID'));
         if (count($friends) > 0) {
-            $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('id', $friends)->orWhereIn('user_id', $friends);
+            $friendsOfFrinends = \OlaHub\UserPortal\Models\Friends::whereIn('friend_id', $friends)->orWhereIn('user_id', $friends);
             if (count($suggestedBefore) > 0) {
                 $friendsOfFrinends =  $friendsOfFrinends
                     ->whereNotIn('friend_id', $suggestedBefore)
@@ -2102,9 +2106,10 @@ class OlaHubGeneralController extends BaseController
                 ->where('status', 1)
                 ->whereNotIn('friend_id', $requestedFriends)
                 ->whereNotIn('user_id', $requestedFriends)
+                ->whereNotIn('friend_id', $blocked)
+                ->whereNotIn('user_id', $blocked)
                 ->groupBy('friend_id')
                 ->groupBy('user_id')
-
                 ->limit(30)
                 ->get();
             foreach ($friendsOfFrinends as $id) {
@@ -2117,17 +2122,15 @@ class OlaHubGeneralController extends BaseController
                     if (in_array($id->user_id, $friends)) {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
-
                         $friendsOfFrinendsIds[] = $id->friend_id;
                         $mutualFriend[$id->friend_id] = $mutualFriends;
                     } else {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->user_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
-
-
                         $friendsOfFrinendsIds[] = $id->user_id;
                         $mutualFriend[$id->user_id] =  $mutualFriends;
                     }
+              
                 }
             }
             $friendsOfFriendUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friendsOfFrinendsIds)->inRandomOrder()->get();
@@ -2156,6 +2159,7 @@ class OlaHubGeneralController extends BaseController
 
             $groupsMembers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $userGroupsCommonMember)
                 ->whereNotIn('id', $requestedFriends)
+                ->whereNotIn('id', $blocked)
                 ->whereNotIn('id', $friends)
                 ->whereNotIn('id', $suggestedBefore)
                 ->inRandomOrder()
