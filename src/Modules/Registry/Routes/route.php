@@ -28,10 +28,10 @@ $router->group([
         $router->post('listParticipants', 'RegistryParticipantController@ListRegistryParticipants');
         $router->post('inviteNotRegisterUsers', 'RegistryParticipantController@inviteNotRegisterUsers');
 
-        $router->post('newGift', 'RegistryGiftController@newGift');
         $router->post('updateGiftQuantity', 'RegistryGiftController@updateRegistryItemQuantity');
-       
+        
         $router->post('deleteGift', 'RegistryGiftController@removeRegistryItem');
+        $router->post('newGift', 'RegistryGiftController@newGift');
     });
     $router->post('one', 'RegistryController@getOneRegistry');
     $router->post('listGifts', 'RegistryGiftController@ListRegistryGifts');
