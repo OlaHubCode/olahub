@@ -19,7 +19,6 @@ $router->group([
         $router->post('/list', 'MainController@listGroups');
         $router->post('/list/all', 'MainController@listAllGroups');
         $router->post('/create', 'MainController@createNewGroup');
-        $router->post('/one', 'MainController@getOneGroup');
         $router->put('/update', 'MainController@updateGroup');
         $router->delete('/delete', 'MainController@deleteGroup');
         $router->post('/invite', 'MainController@inviteUserToGroup');
@@ -41,7 +40,8 @@ $router->group([
         $router->post('/approvePost', 'MainController@approveAdminPost');
         $router->post('/rejectPost', 'MainController@rejectGroupPost');
         $router->post('/listPendingPost', 'MainController@listPendingGroupPost');
-    
+        
     });
+    $router->post('/one', 'MainController@getOneGroup');
     
 });

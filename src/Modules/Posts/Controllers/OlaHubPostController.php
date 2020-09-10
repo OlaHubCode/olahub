@@ -43,11 +43,12 @@ class OlaHubPostController extends BaseController
         }
         $userID = $type == 'friend' ? $this->requestData['userId'] : app('session')->get('tempID');
         $user = \OlaHub\UserPortal\Models\UserModel::find($userID);
+
         $userInfo = [
-            'user_id' => $user->id,
-            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
-            'profile_url' => $user->profile_url,
-            'username' => "$user->first_name $user->last_name",
+            'user_id' => isset($user->id)?$user->id:"",
+            'avatar_url' => isset($user->id)?\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture):"",
+            'profile_url' =>  isset($user->profile_url)?$user->profile_url:"",
+            'username' =>  isset($user->id)?"$user->first_name $user->last_name":"",
         ];
         if ($type == 'group') {
             $group = groups::where('id', $this->requestData['groupId'])->orWhere('slug', $this->requestData["groupId"])->first();
