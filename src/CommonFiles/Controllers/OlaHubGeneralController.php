@@ -2109,12 +2109,19 @@ class OlaHubGeneralController extends BaseController
                 ->get();
             foreach ($friendsOfFrinends as $id) {
                 if (
-                    ((in_array($id->user_id, $requestedFriends)) || (in_array($id->friend_id, $requestedFriends)))
+                    in_array($id->user_id, $suggestedBefore) 
+                    || 
+                    in_array($id->friend_id, $suggestedBefore)
                     ||
-                    ((in_array($id->user_id, $friends)) && (in_array($id->friend_id, $friends)))
+                    in_array($id->user_id, $requestedFriends) 
+                    || 
+                    in_array($id->friend_id, $requestedFriends)
+                    ||
+                    (in_array($id->user_id, $friends) &&in_array($id->friend_id, $friends))
                     || $id->friend_id == app('session')->get('tempID') || $id->user_id == app('session')->get('tempID')
                 ) {
                 } else {
+                 
                     if (in_array($id->user_id, $friends)) {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
@@ -2128,6 +2135,7 @@ class OlaHubGeneralController extends BaseController
                     }
                 }
             }
+
             $friendsOfFriendUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friendsOfFrinendsIds)->inRandomOrder()->get();
 
             foreach ($friendsOfFriendUsers as $suggest) {
@@ -2168,6 +2176,7 @@ class OlaHubGeneralController extends BaseController
 
                 $suggestedFriendsIds[] = $suggest->id;
                 $suggestFriends[] = [
+                    'id' => $suggest->id,
                     'type' => 'groups',
                     "status" => 1,
                     "profile" => $suggest->id,
