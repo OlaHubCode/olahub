@@ -216,17 +216,163 @@ class CatalogItem extends Model
         }
         return $return;
     }
-
-    static function searchItem($q = 'a', $count = 15)
+    static function searchItem($text = 'a', $count = 15, $withRelated = false)
     {
-        $items = CatalogItem::where('name', 'LIKE', "%$q%")
-            ->whereNull("parent_item_id")
-            ->orWhere("parent_item_id", 0);
-        if ($count > 0) {
-            return $items->paginate($count);
-        } else {
-            return $items->count();
+        $text_length = strlen($text) - substr_count($text, ' ');
+        $array = ['a', 'and', 'around', 'every', 'for', 'from', 'in', 'is', 'it', 'not', 'on', 'one', 'the', 'to', 'under'];
+        $text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::replaceSpecChars($text);
+        $words = explode(" ", $text);
+        $words = array_filter($words, function ($word) use ($array) {
+            if (!empty($word) && !in_array($word, $array)) {
+                return $word;
+            }
+        });
+        $occQuery = [];
+        foreach ($words as $word)
+            // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
+            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '$word'");
+
+        $whereQuery = join(' and ', $occQuery);
+        $find = CatalogItem::where(function ($query) {
+            $query->whereNull('parent_item_id');
+            $query->orWhere('parent_item_id', '0');
+        })->where(function ($q) use ($whereQuery) {
+            //occasions
+            $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+            // interests
+            $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+            //categories
+            $q->orWhereHas("category", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+                $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                    $q2->whereRaw($whereQuery);
+                });
+            });
+            //classification
+            $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
+                $q1->whereRaw($whereQuery);
+            });
+        });
+        $related = false;
+        $newWords = $words;
+        foreach ($newWords as $key => $word)
+            if (strlen($word) < 2)
+                unset($newWords[$key]);
+
+        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
+        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
+        if ($withRelated) {
+            $related = [];
+            $occasions = Occasion::whereRaw($whereQuery)->whereHas('occasionItemsData')->get();
+            $categories = ItemCategory::whereRaw($whereQuery)->whereHas("itemsMainData")->get();
+            $interests = Interests::whereRaw($whereQuery)->whereHas("itemsRelation")->get();
+
+            if ($occasions->count()) {
+                foreach ($occasions as $occasion) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasion, "name"),
+                        "type" => "occasion"
+                    ];
+                }
+            }
+            if ($categories->count()) {
+                foreach ($categories as $category) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name"),
+                        "type" => "category"
+                    ];
+                }
+            }
+            if ($interests->count()) {
+                foreach ($interests as $interest) {
+                    $related[] = [
+                        "name" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interest, "name"),
+                        "type" => "interest"
+                    ];
+                }
+            }
         }
+        // check the attributes values
+        if ($find->count() == 0) {
+            $tempWords = [];
+            $attrQuery = [];
+
+            foreach ($words as $word)
+                array_push($attrQuery, "replace(replace(LOWER(attribute_value), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            $arrQuery = join(' or ', $attrQuery);
+            $findValue = AttrValue::whereRaw($arrQuery)->pluck('attribute_value')->toArray();
+
+            foreach ($findValue as $kw) {
+                foreach ($words as $word) {
+                    if (strpos(strtolower($kw), strtolower($word)) !== false && !in_array($word, $tempWords))
+                        $tempWords[] = $word;
+                }
+            }
+
+            $find->orWhere(function ($q1) use ($whereQuery, $tempWords) {
+                $q1->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                });
+                $q1->where(function ($qx) use ($tempWords) {
+                    foreach ($tempWords as $word) {
+                        $qx->whereHas("valuesData", function ($q2) use ($word) {
+                            $q2->whereHas("valueMainData", function ($q3) use ($word) {
+                                $q3->whereRaw("replace(replace(LOWER(attribute_value), '\'', ''), '\"', '') REGEXP '$word'");
+                            });
+                        });
+                    }
+                });
+                $q1->where(function ($q) use ($whereQuery) {
+                    $q->whereHas("occasionSync", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                    $q->orWhereHas("interestSync", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                    $q->orWhereHas("category", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                        $q2->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                            $q2->whereRaw($whereQuery);
+                        });
+                    });
+                    $q->orWhereHas("classification", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                });
+            });
+        }
+
+        // check the item name
+        if ($find->count() == 0) {
+            $itemQuery = [];
+            foreach ($words as $word)
+                array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            $itemQuery = join(' and ', $itemQuery);
+
+            $find->orWhere(function ($q1) use ($itemQuery) {
+                $q1->where(function ($query) {
+                    $query->whereNull('parent_item_id');
+                    $query->orWhere('parent_item_id', '0');
+                });
+                $q1->whereRaw($itemQuery);
+            });
+        }
+
+        $data = NULL;
+        if ($count > 0) {
+            $data = $find->paginate($count);
+        } else {
+            $data = $find->count();
+        }
+        return array(
+            "data" => $data,
+            "related" => $related
+        );
     }
 
     static function searchItemByClassification($q = 'a', $classification = false, $count = 15)

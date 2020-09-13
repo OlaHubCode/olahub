@@ -29,6 +29,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract
             "userFullName" => isset($this->data->first_name) ? $this->data->first_name . ' ' . $this->data->last_name : NULL,
             "userFirstName" => isset($this->data->first_name) ? $this->data->first_name : NULL,
             "userLastName" => isset($this->data->last_name) ? $this->data->last_name : NULL,
+            "userProfileUrl" => isset($this->data->profile_url	) ? $this->data->profile_url	 : NULL,
             "userPhoneNumber" => isset($this->data->mobile_no) ? (new \OlaHub\UserPortal\Helpers\UserHelper)->handleUserPhoneNumber($this->data->mobile_no) : NULL,
             "userEmail" => isset($this->data->email) ? $this->data->email : NULL,
             "userBirthday" => isset($this->data->user_birthday) ? $this->data->user_birthday : NULL,

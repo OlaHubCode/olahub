@@ -273,8 +273,24 @@ class OlaHubCartController extends BaseController
                 if ($this->celebration) {
                     if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {
                         $log->saveLog($userData->id, $this->request, 'Add To Cart ');
-
                         return response(['status' => false, 'msg' => 'NotAllowToDeleteThisGift', 'code' => 400], 200);
+                    }
+                    if ($this->celebration->registry_id) {
+                        $item = (new \OlaHub\UserPortal\Models\RegistryGiftModel)->where('registry_id', $this->celebration->registry_id)
+                            ->where('item_id', $this->requestData->itemID)->where('item_type', $itemType)->first();
+                        $item->status = 1;
+                        $item->quantity += $data->quantity;
+                        $item->save();
+                        $allItems = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $this->celebration->registry_id)->get();
+                        $existItem = false;
+                        foreach ($allItems as $aitem) {
+                            if ($aitem->status != 1)
+                                $existItem = true;
+                        }
+                        if (!$existItem) {
+                            \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->celebration->registry_id)->update(['status' => 1]);
+                            \OlaHub\UserPortal\Models\CelebrationModel::where('id', $this->celebration->id)->delete();
+                        }
                     }
                 }
                 $data->delete();

@@ -79,7 +79,7 @@ class Handler extends ExceptionHandler {
         }
 
         if ($e instanceof BadRequestHttpException) {
-            return response()->json((['status' => false, 'msg' => 'occuredDuringSendNotification', 'code' => 500]), 200);
+            // return response()->json((['status' => false, 'msg' => 'occuredDuringSendNotification', 'code' => 500]), 200);
         }
 
         if (env('APP_ENV') == 'local') {

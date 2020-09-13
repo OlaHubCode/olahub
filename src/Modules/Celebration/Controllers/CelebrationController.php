@@ -33,10 +33,10 @@ class CelebrationController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "Create new celebration"]);
 
         $validator = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(CelebrationModel::$columnsMaping, (array) $this->requestData);
-
-        if (isset($validator['status']) && !$validator['status']) {
+        $registryId = @$this->requestData['registryId'];
+        if (isset($validator['status']) && !$validator['status'] && !$registryId) {
             if ($validator['data']['celebrationOwner']) {
-                if (!empty($this->requestData['userFullName']) && !is_numeric($this->requestData['userFullName'])) {
+                if (!empty($this->requestData['userFullName'])) {
                     $user_id = NULL;
                     $phone =  $this->requestData["shipping_address_phone_no"];
                     $country_id = $this->requestData["celebrationCountry"];
@@ -77,7 +77,6 @@ class CelebrationController extends BaseController
         }
         $saved = $this->saveCelebrationData();
         if ($saved) {
-            //$this->firstParticipant();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($this->celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
@@ -279,7 +278,7 @@ class CelebrationController extends BaseController
             }
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to celebration"]);
             \OlaHub\UserPortal\Models\Notifications::where('type', 'celebration')->where('celebration_id', $this->requestData['celebrationId'])->delete();
-           
+
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'celebrationDeletedSuccessfully', 'code' => 200]]);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
@@ -316,6 +315,21 @@ class CelebrationController extends BaseController
             $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $cart->id)->get();
             if (count($cartDetails) > 0) {
                 foreach ($cartDetails as $cartDetail) {
+                    if ($celebration->registry_id) {
+                        $item = (new \OlaHub\UserPortal\Models\RegistryGiftModel)->where('registry_id', $celebration->registry_id)
+                            ->where('item_id', $cartDetail->item_id)->where('item_type', $cartDetail->item_type)->first();
+                        $item->status = 1;
+                        $item->quantity += $cartDetail->quantity;
+                        $item->save();
+                        $allItems = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $celebration->registry_id)->get();
+                        $boughtItem = false;
+                        foreach ($allItems as $aitem) {
+                            if ($aitem->status != 1)
+                                $boughtItem = true;
+                        }
+                        if (!$boughtItem)
+                            \OlaHub\UserPortal\Models\RegistryModel::where('id', $celebration->registry_id)->update(['status' => 1]);
+                    }
                     $cartDetail->delete();
                 }
             }
@@ -339,7 +353,7 @@ class CelebrationController extends BaseController
 
     private function firstParticipant()
     {
-        
+
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Celebration", 'function_name' => "First participant"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Make celebration creator participant in this celebration"]);
@@ -384,6 +398,21 @@ class CelebrationController extends BaseController
                 $this->cartData->celebration_id = $this->celebration->id;
                 $this->cartData->user_id = null;
                 $this->cartData->save();
+            }
+            if ($this->celebration->registry_id) {
+                $newCart = new \OlaHub\UserPortal\Models\Cart();
+                $newCart->celebration_id = $this->celebration->id;
+                $newCart->user_id = null;
+                $newCart->save();
+                foreach ($this->requestData['gifts'] as $item) {
+                    \OlaHub\UserPortal\Models\CartItems::addItemToCartByID($newCart, $item['itemId'], "", "", $item['itemType'], $item['itemQty']);
+                    $nitem = (new \OlaHub\UserPortal\Models\RegistryGiftModel)->where('registry_id', $this->celebration->registry_id)
+                        ->where('item_id', $item['itemId'])->where('item_type', $item['itemType'])->first();
+                    $nitem->status = 2;
+                    $nitem->quantity -= $item['itemQty'];
+                    $nitem->save();
+                    \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->celebration->registry_id)->update(['status' => 2]);
+                }
             }
             $this->firstParticipant();
             $owner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->requestData['celebrationOwner'])->first();

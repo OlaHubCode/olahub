@@ -40,6 +40,13 @@ class ValidationServiceProvider extends ServiceProvider
             }
             return false;
         });
+
+        Validator::extend('registry_date', function ($attribute, $value, $parameters, $validator) {
+            if($value > date("Y-m-d H:i:s", strtotime("+3 days")) && $value < date("Y-m-d H:i:s", strtotime("+1 year"))){
+                return true;
+            }
+            return false;
+        });
         
         
     }

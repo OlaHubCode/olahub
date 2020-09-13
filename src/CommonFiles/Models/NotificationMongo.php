@@ -20,12 +20,21 @@ class Notifications extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\groups', 'id', 'group_id');
     }
 
+    public function celebrationData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CelebrationModel', 'id', 'celebration_id');
+    }
 
+    public function registryData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\RegistryModel', 'id', 'registry_id');
+    }
 
     static function sendFCM($user_id, $key, $data, $lang = 'en', $title = NULL, $word = NULL, $word2 = NULL)
     {
         $user = app('session')->get('tempData');
         $username = "$user->first_name $user->last_name";
+       
         $url = 'https://fcm.googleapis.com/fcm/send';
         $fields = array(
             'to' => '/topics/OlaHubFCM-' . $user_id,
@@ -70,7 +79,9 @@ class Notifications extends Model
             "post_comment" => "Commented on your post",
             "post_reply" => "Replied to your comment in a post",
             "cel_part_add" => "Added you to the " . $word . " celebration",
+            "registry_part_add" => "Added you to the " . $word . " registry",
             "cel_part_remove" => "Removed you from the " . $word . " celebration",
+            "registry_part_remove" => "Removed you from the " . $word . " registry",
             "accept_celebration" => "Accepted the invitation to the " . $word . " celebration",
             "reject_celebration" => "Rejected the invitation to the " . $word . " celebration",
             "leave_celebration" => "Just left the " . $word . " celebration",
@@ -87,7 +98,13 @@ class Notifications extends Model
             "invite_group" => $word . " invited you to join community " . $word2,
             "ask_group" => $word . " asked to join your community",
             "add_post" => $word . " added new post in your community",
-            "add_post_friend" => $word . " added a new post in your timeline"
+            "add_post_friend" => $word . " added a new post in your timeline",
+            "notifi_user_vote_Post" => $word . "Created  a new vote",
+            "notifi_user_new_Post" => $word . "added a new post",
+            "notifi_vote_on_post" => $word . "voted on your post",
+            "notifi_post_like_for_follower" =>  "Liked " .$word ."post",
+            "notifi_post_comment_for_follower" =>  " commented on " .$word ." post",
+            "notifi_mention_post" =>  $word ."mentioned you in his post"
 
         ];
         $langs->ar = [
@@ -101,7 +118,9 @@ class Notifications extends Model
             "post_comment" => "قام بالتعليق على منشورك",
             "post_reply" => "رد على تعليق لك في منشور",
             "cel_part_add" => "قام بإضافتك إلى الإحتفال " . $word,
+            "registry_part_add" => "قام بإضافتك إلى الدعوة " . $word,
             "cel_part_remove" => "قام بإزالتك من الإحتفال " . $word,
+            "registry_part_remove" => "قام بإزالتك من الدعوة " . $word,
             "accept_celebration" => "وافق على طلب الإنضمام إلى الإحتفال " . $word,
             "reject_celebration" => "رفض  طلب الإنضمام إلى الإحتفال " . $word,
             "leave_celebration" => "غادر الإحتفال" . $word,
@@ -118,7 +137,16 @@ class Notifications extends Model
             "invite_group" => "قام " . $word . " بدعوتك بالإنضمام إلى مجتمع " . $word2,
             "ask_group" => "قام " . $word . " بطلب دعوة بالإنضمام إلى مجتمعك",
             "add_post" => "قام " . $word . " بإضافة منشور جديد إلى مجتمع",
-            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك"
+            "add_post_friend" => "قام " . $word . " بإضافة منشور جديد إلى يومياتك",
+            "notifi_user_new_Post" => " قام " . $word . " بإضافة منشور جديد",
+            "notifi_user_vote_Post" => " قام " . $word . " بإنشاء تصويت جديد",
+            "notifi_vote_on_post" => " قام " . $word . " بتصويت على منشورك",
+            "notifi_post_like_for_follower" => " أعجب بمنشور" . $word,
+            "notifi_post_comment_for_follower" => "علق على منشور" . $word,
+            "notifi_mention_post" => " قام " . $word . " بلإشارة اليك في منشوره ",
+
+
+            
         ];
         return $langs->$lang[$key];
     }

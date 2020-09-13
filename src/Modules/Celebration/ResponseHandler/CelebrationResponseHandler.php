@@ -53,7 +53,8 @@ class CelebrationResponseHandler extends Fractal\TransformerAbstract {
             "existCelebrationParticipantPaied" => isset($paiedParticipant)? TRUE : FALSE,
             "existCelebrationGift" => isset($cartItems)? TRUE : FALSE,
             "hiddenScheduleBtn" => isset($this->data->original_celebration_date) && ($this->data->original_celebration_date == date("Y-m-d", strtotime("+3 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+2 days")) || $this->data->original_celebration_date == date("Y-m-d", strtotime("+1 days")) || $this->data->original_celebration_date < date("Y-m-d")) ? TRUE : FALSE,
-            "hideUncommit" => isset($onePaid) ? true : false
+            "hideUncommit" => isset($onePaid) ? true : false,
+            "registryId" => isset($this->data->registry_id) ? $this->data->registry_id : NULL
         ];
     }
     

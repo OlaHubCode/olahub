@@ -317,4 +317,17 @@ class UserHelper extends OlaHubCommonHelper
         }
         return $return;
     }
+    
+    public static function buildAppleData($data)
+    {
+        $output = array();
+        $user = null;
+        if(isset($data['user']))
+            $user = json_decode($data['user']);
+        $output['apple_token'] = $data['id_token'];
+        $output['first_name'] = !empty($user) ? $user->name->firstName : "";
+        $output['last_name'] = !empty($user) ? $user->name->lastName : "";
+        $output['email'] = $data['email'] ? $data['email'] : "";
+        return $output;
+    }
 }

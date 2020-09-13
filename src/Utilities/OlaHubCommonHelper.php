@@ -77,7 +77,7 @@ abstract class OlaHubCommonHelper
 
     static function returnCurrentLangField($objectData, $fieldName)
     {
-    
+
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Return field depending on current language", "action_startData" => json_encode($objectData) . $fieldName]);
         $return = NULL;
         $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
@@ -446,12 +446,21 @@ abstract class OlaHubCommonHelper
                     $data["userEmail"][] = "validation.uniqueEmail";
                 }
             }
+            if (!empty($requestData["userProfileUrl"])) {
+                $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("profile_url", $requestData["userProfileUrl"])
+                    ->where("id", "!=", app("session")->get("tempID"))->first();
+                if ($checkEmail) {
+                    $status = FALSE;
+                    $data["userProfileUrl"][] = "validation.uniqueUserName";
+                }
+            }
         }
-        return ['status' => $status, 'data' => $data];
+        return ['err' => 'uniqueUserName', 'status' => $status, 'data' => $data];
     }
 
     static function getRequest($request)
     {
+
         $return = [
             'requestData' => [],
             'requestFilter' => [],
@@ -651,14 +660,14 @@ abstract class OlaHubCommonHelper
         $elapsed = new \DateTime($datetime);
         $newDate = new \DateTime;
         $diff = $newDate->diff($elapsed);
-        
+
         $elapsedDays = strtotime($datetime);
         $newDateDays = strtotime(date("Y-m-d h:i:s"));
         $diffDays = abs($elapsedDays - $newDateDays);
-        // $y = $diff->format('%y');
-        // $m = $diff->format('%m');
-        $d = floor($diffDays / (60*60*24));
-        // $d = $diff->format('%d');
+        $y = $diff->format('%y');
+        $ms = $diff->format('%m');
+        // $d = floor($diffDays / (60 * 60 * 24));
+        $d = $diff->format('%d');
         $h = $diff->format('%h');
         $m = $diff->format('%i');
         $s = $diff->format('%s');
@@ -671,6 +680,10 @@ abstract class OlaHubCommonHelper
         // $diff = $diff - ($m * 60);
         // $s = $diff;
 
+        if ($y > 0)
+            return OlaHubCommonHelper::translation($lang, 'post_years', (int) $y);
+        if ($ms > 0)
+            return OlaHubCommonHelper::translation($lang, 'post_months', (int) $ms);
         if ($d > 0)
             return OlaHubCommonHelper::translation($lang, 'post_days', (int) $d);
         if ($h > 0)
@@ -687,12 +700,16 @@ abstract class OlaHubCommonHelper
     {
         $langs = new \StdClass;
         $langs->en = [
+            "post_years" => $word . ($word > 1 ? " Years" : " Year") . " ago",
+            "post_months" => $word . ($word > 1 ? " Months" : " Month") . " ago",
             "post_days" => $word . ($word > 1 ? " Days" : " Day") . " ago",
             "post_hours" => $word . ($word > 1 ? " Hours" : " Hour") . " ago",
             "post_minutes" => $word . ($word > 1 ? " Minutes" : " Minute") . " ago",
             "post_seconds" => ($word > 5 ? $word . " Seconds ago" : "Just now")
         ];
         $langs->ar = [
+            "post_years" => "منذ " . ($word > 10 ? $word . " سنة" : ($word > 1 ? $word . " سنوات" : " سنة")),
+            "post_months" => "منذ " . ($word > 10 ? $word . " شهر" : ($word > 1 ? $word . " أشهر" : " شهر")),
             "post_days" => "منذ " . ($word > 10 ? $word . " يوم" : ($word > 1 ? $word . " أيام" : " يوم")),
             "post_hours" => "منذ " . ($word > 10 ? $word . " ساعة" : ($word > 1 ? $word . " ساعات" : " ساعة")),
             "post_minutes" => "منذ " . ($word > 10 ? $word . " دقيقة" : ($word > 1 ? $word . " دقائق" : " دقيقة")),
@@ -791,5 +808,20 @@ abstract class OlaHubCommonHelper
             $returnDates++;
         }
         return $returnDates;
+    }
+
+    static function replaceSpecChars($string)
+    {
+        $replace = ['!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '=', '+', '\'', '"', '±', '§', '`', '~', '?', ',', '<', '>', '/', '\\', '{', '}', '[', ']', '.', ':', ';'];
+        return (str_replace($replace, "", $string));
+    }
+
+    static function replaceArabicChars($string)
+    {
+
+        $patterns     = array("/(ا|إ|أ|آ)/", "/(ه|ة)/");
+        $replacements = array("[ا|إ|أ|آ]", "[ه|ة]");
+
+        return preg_replace($patterns, $replacements, $string);
     }
 }

@@ -25,6 +25,7 @@ $router->group([
     $router->post('brands', 'OlaHubHeaderMenuController@getBrandsData');
     $router->post('trending', 'OlaHubLandingPageController@getTrendingData');
     $router->post('offers', 'OlaHubLandingPageController@getMostOfferData');
+    $router->post('recommended', 'OlaHubLandingPageController@getRecommendedData');
     $router->post('homeOccasions', 'OlaHubLandingPageController@getOccasionsData');
     $router->post('homeInterests', 'OlaHubLandingPageController@getInterestsData');
     $router->post('uploadCustomImage', 'OlaHubItemController@uploadCustomImage');
@@ -78,6 +79,7 @@ $router->group([
     $router->post('/', 'OlaHubItemController@getOneItem');
     $router->post('/attribute', 'OlaHubItemController@getOneItemAttrsData');
     $router->post('related', 'OlaHubItemController@getOneItemRelatedItems');
+    $router->post('mostViewed', 'OlaHubItemController@getOneItemMostViewedItems');
     $router->post('reviews', 'OlaHubItemReviewsController@getReviews');
 
     
