@@ -452,10 +452,11 @@ abstract class OlaHubCommonHelper
                 if ($checkEmail) {
                     $status = FALSE;
                     $data["userProfileUrl"][] = "validation.uniqueUserName";
+                    return ['err' => 'uniqueUserName', 'status' => $status, 'data' => $data];
                 }
             }
+            return ['err' => 'errorData', 'status' => $status, 'data' => $data];
         }
-        return ['err' => 'uniqueUserName', 'status' => $status, 'data' => $data];
     }
 
     static function getRequest($request)
