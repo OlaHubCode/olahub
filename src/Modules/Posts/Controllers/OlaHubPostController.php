@@ -1170,7 +1170,7 @@ class OlaHubPostController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
     public function updatePost()
-    {
+    {   
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "updatePost"]);
 

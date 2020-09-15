@@ -40,6 +40,7 @@ $router->group([], function () use ($router) {
     $router->post('allCountries', 'OlaHubGeneralController@getAllUnsupportCountries');
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
+    $router->get('faq', 'OlaHubGeneralController@getFAQ');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
     $router->get('rightSideAds', 'OlaHubGeneralController@rightSideAds');
     $router->post('contactUs', 'OlaHubGeneralController@contactUs');
