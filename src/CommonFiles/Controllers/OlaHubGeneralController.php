@@ -407,10 +407,8 @@ class OlaHubGeneralController extends BaseController
                             "for_user" => $one->user_id,
                         ];
                         break;
-
                 }
             }
-
         }
 
         if ($notification->count() > 0) {
@@ -1021,10 +1019,10 @@ class OlaHubGeneralController extends BaseController
 
         if (!$supported) {
             $sellWithUsUnsupport = new \OlaHub\UserPortal\Models\SellWithUsUnsupport;
-            $sellWithUsUnsupport->merchant_name = $this->requestData['userName'];
-            $sellWithUsUnsupport->merchant_email = $this->requestData['userEmail'];
-            $sellWithUsUnsupport->merchant_phone_no = $this->requestData['userPhoneNumber'];
-            $sellWithUsUnsupport->country_id = $this->requestData['country'];
+            $sellWithUsUnsupport->merchant_name = $this->requestData->userName;
+            $sellWithUsUnsupport->merchant_email = $this->requestData->userEmail;
+            $sellWithUsUnsupport->merchant_phone_no = $this->requestData->userPhoneNumber;
+            $sellWithUsUnsupport->country_id = $this->requestData->country;
             $sellWithUsUnsupport->save();
             $return = ['status' => true, 'msg' => 'sentOurManagers', 'code' => 200];
         }
@@ -1203,7 +1201,7 @@ class OlaHubGeneralController extends BaseController
                         $userPost->whereIn('user_id', $friends);
                         $userPost->whereIn('group_id', $myGroups);
                     });
-                })->where('privacy','!=',3)->orderBy('created_at', 'desc')->paginate(20);
+                })->where('privacy', '!=', 3)->orderBy('created_at', 'desc')->paginate(20);
 
                 if ($posts->count()) {
                     foreach ($posts as $post) {
@@ -1428,7 +1426,6 @@ class OlaHubGeneralController extends BaseController
                     if (is_object($im)) {
                         $timeline[] = $this->handlePostTimeline($im, 'item_category');
                     }
-
                 } else {
 
                     $timeline[] = $this->handlePostTimeline($im, 'category_multi_item');
@@ -1464,7 +1461,6 @@ class OlaHubGeneralController extends BaseController
                     if (is_object($im)) {
                         $timeline[] = $this->handlePostTimeline($im, 'occasion_item');
                     }
-
                 } else {
 
                     $timeline[] = $this->handlePostTimeline($im, 'occasion_multi_item');
@@ -1502,7 +1498,6 @@ class OlaHubGeneralController extends BaseController
                     if (is_object($im)) {
                         $timeline[] = $this->handlePostTimeline($im, 'intrests_item');
                     }
-
                 } else {
 
                     $timeline[] = $this->handlePostTimeline($im, 'intrests_multi_item');
@@ -1527,12 +1522,10 @@ class OlaHubGeneralController extends BaseController
                     if (is_object($id)) {
                         $timeline[] = $this->handlePostTimeline($id, 'designer_item');
                     }
-
                 } else {
                     $timeline[] = $this->handlePostTimeline($id, 'designer_multi_item');
                 }
             }
-
         }
 
         // merchants
@@ -1542,7 +1535,7 @@ class OlaHubGeneralController extends BaseController
         }
         // designers
         $designers = \OlaHub\UserPortal\Models\Designer::whereHas("mainData")
-        ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
+            ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {
             $timeline[] = $this->handlePostTimeline($designer, 'designer');
@@ -1568,7 +1561,6 @@ class OlaHubGeneralController extends BaseController
                 if (is_object($im)) {
                     $timeline[] = $this->handlePostTimeline($im, 'item');
                 }
-
             } else {
                 $timeline[] = $this->handlePostTimeline($im, 'multi_item');
             }
@@ -2073,9 +2065,11 @@ class OlaHubGeneralController extends BaseController
                 ];
             }
         }
-        if (count($friends) > 0) {$return['status'] = true;
+        if (count($friends) > 0) {
+            $return['status'] = true;
             $return['code'] = 200;
-            return response($return, 200);}
+            return response($return, 200);
+        }
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
@@ -2087,6 +2081,7 @@ class OlaHubGeneralController extends BaseController
         $friendsOfFrinendsIds = [];
         $mutualFriend = [];
         $suggestFriends = [];
+
         $suggestedFriendsIds = [];
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
         // dd($friends);
@@ -2114,11 +2109,19 @@ class OlaHubGeneralController extends BaseController
                 ->get();
             foreach ($friendsOfFrinends as $id) {
                 if (
-                    in_array($id->user_id, $friends) && in_array($id->friend_id, $friends)
-                    || $id->friend_id == app('session')->get('tempID')
-                    || $id->user_id == app('session')->get('tempID')
+                    in_array($id->user_id, $suggestedBefore) 
+                    || 
+                    in_array($id->friend_id, $suggestedBefore)
+                    ||
+                    in_array($id->user_id, $requestedFriends) 
+                    || 
+                    in_array($id->friend_id, $requestedFriends)
+                    ||
+                    (in_array($id->user_id, $friends) &&in_array($id->friend_id, $friends))
+                    || $id->friend_id == app('session')->get('tempID') || $id->user_id == app('session')->get('tempID')
                 ) {
                 } else {
+                 
                     if (in_array($id->user_id, $friends)) {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));
@@ -2130,16 +2133,15 @@ class OlaHubGeneralController extends BaseController
                         $friendsOfFrinendsIds[] = $id->user_id;
                         $mutualFriend[$id->user_id] =  $mutualFriends;
                     }
-              
                 }
             }
+
             $friendsOfFriendUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friendsOfFrinendsIds)->inRandomOrder()->get();
 
             foreach ($friendsOfFriendUsers as $suggest) {
                 $suggestedFriendsIds[] = $suggest->id;
                 $suggestFriends[] = [
                     'type' => 'friendsOfFriend',
-
                     "status" => 1,
                     "profile" => $suggest->id,
                     "mutualFriend" => $mutualFriend[$suggest->id],
@@ -2174,6 +2176,7 @@ class OlaHubGeneralController extends BaseController
 
                 $suggestedFriendsIds[] = $suggest->id;
                 $suggestFriends[] = [
+                    'id' => $suggest->id,
                     'type' => 'groups',
                     "status" => 1,
                     "profile" => $suggest->id,
@@ -2235,7 +2238,7 @@ class OlaHubGeneralController extends BaseController
     public function getSuggestGroups()
     {
         $userGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr((app('session')->get('tempID')));
-
+        $suggestGroup = [];
         $suggestedBefore = ($this->requestData->suggestedBefore);
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
         if (count($friends) > 0) {
@@ -2246,6 +2249,8 @@ class OlaHubGeneralController extends BaseController
                 ->where('privacy', '!=', 1)
                 ->inRandomOrder()
                 ->whereNotIn('id', $userGroups)
+                ->whereNotIn('id', $suggestedBefore)
+
                 ->limit(30)
                 ->get();
 
@@ -2255,7 +2260,7 @@ class OlaHubGeneralController extends BaseController
                 $friendsInGroup = count(array_intersect($groupMembers, $friends));
 
                 $suggestedFriendsIds[] = $suggest->id;
-                $suggestFriends[] = [
+                $suggestGroup[] = [
                     "status" => 1,
                     'type' => 'friends',
                     'privacy' => $suggest->privacy,
@@ -2267,7 +2272,7 @@ class OlaHubGeneralController extends BaseController
             }
         }
 
-        if (count($suggestFriends) < 30) {
+        if (count($suggestGroup) < 30) {
             $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
             $userIntreast = explode(",", $user->interests);
             $fq = [];
@@ -2276,8 +2281,11 @@ class OlaHubGeneralController extends BaseController
 
             $groupsData = \OlaHub\UserPortal\Models\groups::where('privacy', '!=', 1)
                 ->inRandomOrder()
+                ->whereNotIn('id', $suggestedBefore)
+
                 ->whereNotIn('id', $userGroups)
                 ->whereRaw($fq[0])
+
                 ->limit(30)
                 ->get();
 
@@ -2285,7 +2293,7 @@ class OlaHubGeneralController extends BaseController
             foreach ($groupsData as $suggest) {
 
                 $suggestedFriendsIds[] = $suggest->id;
-                $suggestFriends[] = [
+                $suggestGroup[] = [
                     "status" => 1,
                     'type' => 'byIntreasts',
                     "id" => $suggest->id,
@@ -2295,10 +2303,10 @@ class OlaHubGeneralController extends BaseController
                 ];
             }
         }
-        if (count($suggestFriends) > 0) {
+        if (count($suggestGroup) > 0) {
 
             $return['SuggestED'] = $suggestedFriendsIds;
-            $return['data'] = $suggestFriends;
+            $return['data'] = $suggestGroup;
             $return['status'] = TRUE;
             $return['code'] = 200;
             return response($return, 200);

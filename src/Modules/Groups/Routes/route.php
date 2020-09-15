@@ -41,7 +41,7 @@ $router->group([
         $router->post('/approvePost', 'MainController@approveAdminPost');
         $router->post('/rejectPost', 'MainController@rejectGroupPost');
         $router->post('/listPendingPost', 'MainController@listPendingGroupPost');
-    
+        
     });
     $router->post('/one', 'MainController@getOneGroup');
     $router->post('/relatedMerchant', 'MainController@getBrandsRelatedGroupInterests');

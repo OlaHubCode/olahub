@@ -149,6 +149,6 @@ class Notifications extends Model
 
 
         ];
-        return @$langs->$lang[$key] || "en";
+        return $key ? $langs->$lang[$key] : $langs->$lang['en'];
     }
 }
