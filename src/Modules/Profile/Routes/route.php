@@ -19,7 +19,7 @@ $router->group([
 
     $router->post('/calendar', 'FriendController@listFriendCalendar');
     $router->post('/wishList', 'FriendController@listFriendWishList');
-    $router->post('/info', 'FriendController@getProfileInfo');
+    //$router->post('/info', 'FriendController@getProfileInfo');
     $router->post('/sendFriend', 'FriendController@sendFriendRequest');
     $router->post('/upComingEvent', 'FriendController@listUserUpComingEvent');
     $router->post('/sendFriend', 'FriendController@sendFriendRequest');
@@ -30,4 +30,6 @@ $router->group([
     $router->post('/blockUser', 'FriendController@blockUser');
 
     });
+
+    $router->post('/info', 'FriendController@getProfileInfo');
 });

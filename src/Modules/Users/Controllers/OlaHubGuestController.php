@@ -7,9 +7,8 @@ use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserModel;
 use OlaHub\UserPortal\Helpers\UserHelper;
 use Illuminate\Support\Facades\Crypt;
-use OlaHub\UserPortal\Models\UsersReferenceCodeUsedModel;
 use OlaHub\UserPortal\Models\UserSubscribe;
-
+use OlaHub\UserPortal\Models\UsersReferenceCodeUsedModel;
 
 class OlaHubGuestController extends BaseController
 {
@@ -21,9 +20,11 @@ class OlaHubGuestController extends BaseController
     protected $userHelper;
     protected $ipInfo;
     protected $lang;
+    protected $allData;
 
     public function __construct(Request $request)
     {
+        $this->allData = $request->all();
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->ipInfo = UserHelper::getIPInfo();
         $this->userHelper = new UserHelper;
@@ -449,9 +450,9 @@ class OlaHubGuestController extends BaseController
         return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []], 200);
     }
 
-    function appleBack(Request $request)
+    function appleBack()
     {
-        $data = $request->all();
+        $data = $this->allData;
         $r = explode(".", $data['id_token']);
         $r = base64_decode($r[1]);
         $email = json_decode($r)->email;
@@ -459,9 +460,10 @@ class OlaHubGuestController extends BaseController
         $redirectLink = 'userAccess?';
         if (!empty($data['id_token']) && !empty($email)) {
             $user = UserHelper::buildAppleData($data);
-            return redirect()->to($redirectLink . json_encode($user));
+            return response($user, 200);
+            //return redirect()->to($redirectLink . json_encode($user));
         }
-        return redirect()->to($redirectLink . json_encode(['error' => "could_not_find_token"]));
+        //return redirect()->to($redirectLink . json_encode(['error' => "could_not_find_token"]));
     }
 
     function loginWithApple()

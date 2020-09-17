@@ -25,6 +25,8 @@ class MainGroupResponseHandler extends Fractal\TransformerAbstract
 
     private function setDefaultData()
     {
+        $members = \OlaHub\UserPortal\Models\GroupMembers::where('group_id', $this->data->id)->where('status', 1)->count();
+
         $this->return = [
             "groupId" => isset($this->data->id) ? $this->data->id : 0,
             "groupName" => isset($this->data->name) ? $this->data->name : NULL,
@@ -32,15 +34,19 @@ class MainGroupResponseHandler extends Fractal\TransformerAbstract
             "groupPrivacy" => isset($this->data->privacy) ? $this->data->privacy : 0,
             "groupPostApprove" => isset($this->data->posts_approve) ? $this->data->posts_approve : 0,
             "onlyMyStores" => isset($this->data->only_my_stores) ? $this->data->only_my_stores : FALSE,
-            "groupMembersNumbers" => count($this->data->members),
+            "groupMembersNumbers" => $members,
             "isGroupCreator" => $this->data->creator == app('session')->get('tempID') ? TRUE : FALSE,
             "isGroupMember" => FALSE,
             "isGroupRequest" => FALSE,
             "isGroupResponse" => FALSE,
         ];
     }
+
+
     private function memberStatus()
     {
+
+
         // 1=member, 2=response, 3=request
         $member = \OlaHub\UserPortal\Models\GroupMembers::where('group_id', $this->data->id)->where('user_id', app('session')->get('tempID'))->first();
         if (isset($member)) {

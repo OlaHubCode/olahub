@@ -40,6 +40,7 @@ $router->group([], function () use ($router) {
     $router->post('allCountries', 'OlaHubGeneralController@getAllUnsupportCountries');
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
+    $router->get('faq', 'OlaHubGeneralController@getFAQ');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
     $router->get('rightSideAds', 'OlaHubGeneralController@rightSideAds');
     $router->post('contactUs', 'OlaHubGeneralController@contactUs');
@@ -48,6 +49,8 @@ $router->group([], function () use ($router) {
     ], function () use ($router) {
         $router->post('search_user', 'OlaHubGeneralController@searchUsers');
         $router->post('invite', 'OlaHubGeneralController@inviteNewUser');
+        $router->post('getSuggestFriends', 'OlaHubGeneralController@getSuggestFriends');
+        $router->post('getSuggestGroups', 'OlaHubGeneralController@getSuggestGroups');
         $router->post('notification', 'OlaHubGeneralController@getUserNotification');
         $router->post('readNotification', 'OlaHubGeneralController@readNotification');
         $router->post('getAllNotifications', 'OlaHubGeneralController@getUserNotification');

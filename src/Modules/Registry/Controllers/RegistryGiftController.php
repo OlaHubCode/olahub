@@ -143,9 +143,15 @@ class RegistryGiftController extends BaseController
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
             $items = RegistryGiftModel::where('registry_id', $this->requestData['registryId'])->get();
             foreach ($items as $key => $item) {
-                $nitem = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $item->item_id)->first();
-                $qty = $nitem->quantityData()->first();
-                if (!$qty->quantity && $item->status < 3) {
+                if ($item->item_type == 'store'){
+                    $nitem = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $item->item_id)->first();
+                    $qty = @$nitem->quantityData()->first()->quantity;
+                }
+                else{
+                    $nitem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
+                    $qty = $nitem->item_stock;
+                }
+                if (!$qty && $item->status < 3) {
                     $item->delete();
                     unset($items[$key]);
                 }

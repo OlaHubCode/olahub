@@ -43,6 +43,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'privacy' => $this->data->privacy,
+            'isApprove'=> $this->data->is_approve==1?true:false
 
 
         ];
@@ -69,7 +70,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                     'content'       => $vote->option,
                     'total'         => count($vote->usersVote),
                     'isUserVoted'   => $isUserVoted,
-                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date)-3 : 0
+                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date)-3 : 0,
+                    'end_date'       => $vote->end_date 
                 );
                 $item = false;
                 if ($vote->type == 'store') {
@@ -78,7 +80,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                     $item = (new \OlaHub\UserPortal\Models\DesignerItems)->where('item_slug', $vote->option)->first();
                 }
                 if ($item) {
-                    $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]) : NULL;
+                    $newRow['item_img'] = isset($item->images) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($item->images[0]['content_ref']) : NULL;
                     $newRow['item_title'] = $item->name;
                 }
                 $dataVotes[] = $newRow;
@@ -126,10 +128,10 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function userData()
     {
         $author = $this->data->author;
-        $authorName = "$author->first_name $author->last_name";
+        $authorName = $author['first_name']. $author['last_name'];
         $this->return['user_info'] = [
-            'user_id' => $author->id,
-            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
+            'user_id' => $author['id'],
+            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author['profile_picture']),
             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
             'username' => $authorName,
         ];

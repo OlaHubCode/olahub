@@ -82,19 +82,13 @@ class RegistryController extends BaseController
                 }
             }
 
-            if (isset($this->requestData['registryImage'])) {
-                $image = (new \OlaHub\UserPortal\Helpers\RegistryHelper)->uploadImage($this->registry, 'image', $this->requestData['registryImage']);
+            $image = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryImage'], "registries/" . $this->registry->id);
+            if ($image) {
                 $this->registry->image = $image;
             }
-            if (isset($this->requestData['registryVideo'])) {
-                $video = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData['registryVideo'], DEFAULT_IMAGES_PATH . "registries/" . $this->registry->id, "registries/" . $this->registry->id, false);
-                if (array_key_exists('path', $video)) {
-                    if ($this->registry->video) {
-                        $oldImage = $this->registry->video;
-                        @unlink(DEFAULT_IMAGES_PATH . '/' . $oldImage);
-                    }
-                    $this->registry->video = $video['path'];
-                }
+            $video = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryVideo'], "registries/" . $this->registry->id);
+            if ($video) {
+                $this->registry->video = $video;
             }
 
             $saved = $this->registry->save();
@@ -142,20 +136,20 @@ class RegistryController extends BaseController
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete Registry"]);
             $registry->delete();
 
-            foreach ($participants as $Participant) {
+            // foreach ($participants as $Participant) {
 
-                $participantData = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $Participant->user_id)->first();
+            //     $participantData = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $Participant->user_id)->first();
 
-                if ($participantData->mobile_no && $participantData->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-                } else if ($participantData->mobile_no) {
-                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-                } else if ($participantData->email) {
-                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-                }
-            }
-            (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to registry"]);
+            //     if ($participantData->mobile_no && $participantData->email) {
+            //         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
+            //         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
+            //     } else if ($participantData->mobile_no) {
+            //         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
+            //     } else if ($participantData->email) {
+            //         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
+            //     }
+            // }
+            // (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to registry"]);
             \OlaHub\UserPortal\Models\Notifications::where('type', 'registry')->where('registry_id', $this->requestData['registryId'])->delete();
 
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'registryDeletedSuccessfully', 'code' => 200]]);
@@ -184,7 +178,8 @@ class RegistryController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Delete registry details"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete registry details", "action_startData" => $registry]);
-        $items = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)->where('created_by', app('session')->get('tempID'))->delete();
+        $items = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)->delete();
+        $items = \OlaHub\UserPortal\Models\RegistryUsersModel::where('registry_id', $registry->id)->delete();
 
         //        $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('registry_id', $registry->id)->first();
         //
@@ -285,10 +280,10 @@ class RegistryController extends BaseController
 
     public function getOneRegistry()
     {
-        $log = new \OlaHub\UserPortal\Helpers\Logs();
-        $userData = app('session')->get('tempData');
+        //$log = new \OlaHub\UserPortal\Helpers\Logs();
+        //$userData = app('session')->get('tempData');
 
-        $log->saveLog($userData->id, $this->requestData, ' get_One_Registry');
+       // $log->saveLog($userData->id, $this->requestData, ' get_One_Registry');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Get one Registry"]);
 
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
@@ -339,7 +334,6 @@ class RegistryController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-
         $log->saveLog($userData->id, $this->requestData, 'publish_Registry');
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
             $registry = RegistryModel::where('id', $this->requestData['registryId'])
@@ -347,6 +341,35 @@ class RegistryController extends BaseController
             if ($registry) {
                 $registry->is_published = 1;
                 $registry->save();
+                $participants = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->get();
+                if (count($participants) > 0) {
+                    foreach ($participants as $participant) {
+                        $notification = new \OlaHub\UserPortal\Models\Notifications();
+                        $notification->type = 'registry';
+                        $notification->content = "notifi_addParticipantRegistry";
+                        $notification->registry_id = $this->registry->id;
+                        $notification->user_id = $participant->user_id;
+                        $notification->friend_id = app('session')->get('tempID');
+                        $notification->save();
+
+                        $userData = app('session')->get('tempData');
+
+                        $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $participant->user_id)->first();
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                            $targe->id,
+                            "registry_part_add",
+                            array(
+                                "type" => "registry_part_add",
+                                "registryId" => $this->registry->id,
+                                "registryTitle" => $this->registry->title,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $targe->lang,
+                            "$userData->first_name $userData->last_name",
+                            $this->registry->title
+                        );
+                    }
+                }
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($registry, '\OlaHub\UserPortal\ResponseHandlers\RegistryResponseHandler');
                 $return['status'] = true;
                 $return['code'] = 200;
