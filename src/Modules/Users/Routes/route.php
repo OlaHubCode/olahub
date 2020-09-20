@@ -28,6 +28,8 @@ $router->group([
     $router->post('setupTwoStep', 'OlaHubUserController@setupTwoStep');
     $router->post('authorizedLogins', 'OlaHubUserController@authorizedLogins');
     $router->post('authorizedRemove', 'OlaHubUserController@authorizedRemove');
+    $router->post('countFriendsRequest', 'OlaHubUserController@countFriendsRequest');
+
 });
 
 $router->post('registration', 'OlaHubGuestController@registerUser');

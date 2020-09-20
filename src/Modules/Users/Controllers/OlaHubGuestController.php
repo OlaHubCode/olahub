@@ -141,6 +141,7 @@ class OlaHubGuestController extends BaseController
 
     function login()
     {
+        // phpinfo();
 
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "login"]);

@@ -42,11 +42,17 @@ class Friends extends Model
             foreach ($friends as $friend) {
                 if ($friend->user_id != $id && !in_array($friend->user_id, $filterd) && $friend->status == 2)
                     array_push($filterd, $friend->user_id);
-                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd)&&$friend->status == 2)
+                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd) && $friend->status == 2)
                     array_push($filterd, $friend->friend_id);
             }
         }
         return $filterd;
+    }
+    static function getFriendsRequest($id)
+    {
+        $myRequest = Friends::where('friend_id', $id)->where('status',2)->count();
+   
+        return $myRequest;
     }
     static function getAllblocked($id)
     {
@@ -56,7 +62,7 @@ class Friends extends Model
             foreach ($friends as $friend) {
                 if ($friend->user_id != $id && !in_array($friend->user_id, $filterd) && $friend->status == 3)
                     array_push($filterd, $friend->user_id);
-                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd)&&$friend->status == 3)
+                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd) && $friend->status == 3)
                     array_push($filterd, $friend->friend_id);
             }
         }

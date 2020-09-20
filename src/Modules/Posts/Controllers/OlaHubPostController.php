@@ -607,7 +607,7 @@ class OlaHubPostController extends BaseController
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
                         ),
-                        @$owner->lang || "en",
+                        $owner->lang,
                         "$userData->first_name $userData->last_name"
                     );
                 }
