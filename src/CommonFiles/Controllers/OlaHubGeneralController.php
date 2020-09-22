@@ -332,6 +332,26 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response($return, 200);
     }
+    public function getFAQ(){
+
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "FAQ"]);
+
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch FAQ", "action_startData" => 'FAQ']);
+        // $faq = \OlaHub\UserPortal\Models\FAQ::with('cateData')->get();
+        $faq = \OlaHub\UserPortal\Models\FaqCategory::with('faq')->get();
+        if (!$faq) {
+            throw new NotAcceptableHttpException(404);
+        }
+
+        $return['data'] = $faq;
+        $return['status'] = true;
+        $return['code'] = 200;
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End fetch static pages"]);
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
+        return response($return, 200);
+
+    }
 
     public function getUserNotification()
     {

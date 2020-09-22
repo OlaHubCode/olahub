@@ -8,6 +8,10 @@
  * @version 1.0.0
  */
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
+
 $di = scandir(__DIR__ . '/../Modules');
 foreach ($di as $child) {
     $file = __DIR__ . "/../Modules/$child/Routes/route.php";
@@ -36,6 +40,7 @@ $router->group([], function () use ($router) {
     $router->post('allCountries', 'OlaHubGeneralController@getAllUnsupportCountries');
     $router->post('setStatistics/{getFrom:\bc|saif|farah\b}', 'OlaHubGeneralController@setAdsStatisticsData');
     $router->get('page/{type:\bterms|payment|privacy|contact\b}', 'OlaHubGeneralController@getStaticPage');
+    $router->get('faq', 'OlaHubGeneralController@getFAQ');
     $router->post('timeline', 'OlaHubGeneralController@getUserTimeline');
     $router->get('rightSideAds', 'OlaHubGeneralController@rightSideAds');
     $router->post('contactUs', 'OlaHubGeneralController@contactUs');
@@ -58,4 +63,32 @@ $router->group([], function () use ($router) {
         $router->post('listFollowing', 'OlaHubGeneralController@listUserFollowing');
         $router->get('getFriendsToMention/{FriendNameToFind}', 'OlaHubGeneralController@getFriendsToMention');
     });
+});
+
+$router->get('mysitemap', function(){
+
+    // create new sitemap object
+    $sitemap = App::make("sitemap");
+    
+    // add items to the sitemap (url, date, priority, freq)
+    // $sitemap->add(url('/'), '2012-08-25T20:10:00+02:00', '1.0', 'daily');
+    
+    // $sitemap->add(URL::to('page'), '2012-08-26T12:30:00+02:00', '0.9', 'monthly');
+    
+    // get all posts from db
+    $posts = DB::table('catalog_items')->orderBy('created_at', 'desc')->get();
+
+    // add every post to the sitemap
+    foreach ($posts as $post)
+    {
+        $sitemap->add('https://olahub.com/product/'.$post->item_slug, $post->updated_at, 0.8, "monthly");
+    }
+
+    $path = DEFAULT_IMAGES_PATH;
+    // var_dump($path); die();
+    // generate your sitemap (format, filename)
+    $sitemap->store('xml', 'sitemap',$path);
+    // $sitemap->store('xml', 'sitemap');
+    // this will generate file mysitemap.xml to your public folder
+
 });

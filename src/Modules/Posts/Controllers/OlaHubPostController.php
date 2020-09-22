@@ -116,12 +116,19 @@ class OlaHubPostController extends BaseController
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
+                        $u = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $usInfo = [
+                            'user_id' => $u->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($u->profile_picture),
+                            'profile_url' => $u->profile_url,
+                            'username' => "$u->first_name $u->last_name",
+                        ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                            $all[] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
                         }
                     }
                 }
@@ -213,12 +220,19 @@ class OlaHubPostController extends BaseController
                     })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
+                        $u = \OlaHub\UserPortal\Models\UserModel::find($litem->user_id);
+                        $usInfo = [
+                            'user_id' => $u->id,
+                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($u->profile_picture),
+                            'profile_url' => $u->profile_url,
+                            'username' => "$u->first_name $u->last_name",
+                        ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                            $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
                         }
                     }
                 }
@@ -1156,7 +1170,7 @@ class OlaHubPostController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
     public function updatePost()
-    {
+    {   
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "updatePost"]);
 

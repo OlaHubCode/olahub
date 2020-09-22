@@ -19,6 +19,7 @@ $router->group([
         $router->post('/list', 'MainController@listGroups');
         $router->post('/list/all', 'MainController@listAllGroups');
         $router->post('/create', 'MainController@createNewGroup');
+        //$router->post('/one', 'MainController@getOneGroup');
         $router->put('/update', 'MainController@updateGroup');
         $router->delete('/delete', 'MainController@deleteGroup');
         $router->post('/invite', 'MainController@inviteUserToGroup');
@@ -34,8 +35,8 @@ $router->group([
         $router->post('/requestJoin', 'MainController@joinClosedGroup');
         $router->post('/cancelRequestJoin', 'MainController@cancelJoinClosedGroup');
         $router->post('/uploadImage', 'MainController@uploadGroupImageAndCover');
-        $router->post('/relatedMerchant', 'MainController@getBrandsRelatedGroupInterests');
-        $router->post('/relatedDesigners', 'MainController@getDesignersRelatedGroupInterests');
+        // $router->post('/relatedMerchant', 'MainController@getBrandsRelatedGroupInterests');
+        // $router->post('/relatedDesigners', 'MainController@getDesignersRelatedGroupInterests');
         
         $router->post('/approvePost', 'MainController@approveAdminPost');
         $router->post('/rejectPost', 'MainController@rejectGroupPost');
@@ -43,5 +44,6 @@ $router->group([
         
     });
     $router->post('/one', 'MainController@getOneGroup');
-    
+    $router->post('/relatedMerchant', 'MainController@getBrandsRelatedGroupInterests');
+    $router->post('/relatedDesigners', 'MainController@getDesignersRelatedGroupInterests');
 });
