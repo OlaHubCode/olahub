@@ -191,6 +191,10 @@ class OlaHubPostController extends BaseController
                         $userPost->where('friend_id', NULL);
                         $userPost->where('group_id', NULL);
                     });
+                    $q->orWhere(function ($userPost) use ($userID) {
+                        // $userPost->where('user_id', app('session')->get('tempID'));
+                        $userPost->where('friend_id', $userID);
+                    });
                     $q->orWhere(function ($userPost) use ($userID, $myGroups) {
                         $userPost->where('user_id', $userID);
                         $userPost->whereIn('group_id', $myGroups);
