@@ -86,10 +86,7 @@ class OlaHubNotificationHelper {
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             $to = [];
             $to[] = [
-                'email' => "amjad.sawais@olahub.com"
-            ];
-            $to[] = [
-                'email' => "rami.hashash@olahub.com"
+                'email' => "mohannad.zaghmouri@olahub.com"
             ];
             $sendEmail = new \OlaHub\UserPortal\Libraries\SendEmails;
             $sendEmail->subject = "SMS Error";

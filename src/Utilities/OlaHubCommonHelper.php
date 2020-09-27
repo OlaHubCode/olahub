@@ -544,7 +544,7 @@ abstract class OlaHubCommonHelper
 
     static function sendEmail($email, $replace, $with, $template)
     {
-        $bcc = "info@olahub.com";
+        $bcc = "mohannad.zaghmouri@olahub.com";
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Prepare sending Email", "action_startData" => json_encode($email) . json_encode($replace) . json_encode($with) . $template]);
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
