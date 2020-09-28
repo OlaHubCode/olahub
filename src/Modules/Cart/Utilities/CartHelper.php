@@ -63,7 +63,7 @@ class CartHelper extends OlaHubCommonHelper
                 foreach ($itemsCart as $item) {
                     switch ($item->item_type) {
                         case "store":
-                            $itemData = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item->item_id)->first();
+                            $itemData = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $item->item_id)->first();
                             if ($itemData) {
                                 $inStock = \OlaHub\UserPortal\Models\CatalogItem::checkStock($itemData);
                                 if ($inStock < $item->quantity && $inStock > 0) {

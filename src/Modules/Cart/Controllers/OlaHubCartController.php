@@ -404,7 +404,7 @@ class OlaHubCartController extends BaseController
         $shippingFeesCelebration = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
         $this->cart->shipment_fees = $shippingFees['total'];
         $this->cart->shipment_details = serialize($shippingFeesCelebration['saving']);
-        $this->cart->country_id = $countryData->id;
+        $this->cart->country_id = $countryTo;
         $this->cart->save();
 
         if ($this->celebration) {
@@ -417,6 +417,7 @@ class OlaHubCartController extends BaseController
             } else {
                 $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
+                // var_dump($return);
             }
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
