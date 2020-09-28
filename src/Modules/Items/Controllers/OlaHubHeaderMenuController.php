@@ -27,7 +27,7 @@ class OlaHubHeaderMenuController extends BaseController {
         $categorisModel->whereHas('countryRelation', function($q) {
             $q->where('country_id', app('session')->get('def_country')->id);
         });
-        $categorisModel->has('itemsMainData')->whereNull('parent_id')->orWhere('parent_id', '0');
+        $categorisModel->has('itemsMainData')->where('parent_id', '0');
         $categorisModel->orWhereHas('childsData', function($childQ) {
             $childQ->has('itemsMainData');
             $childQ->whereHas('countryRelation', function($q) {
