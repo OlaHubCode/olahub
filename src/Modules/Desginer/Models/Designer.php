@@ -9,7 +9,7 @@ class Designer extends Model
 
     protected $table = 'designers';
 
-    public function mainData()
+    public function itemsMainData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\DesignerItems', 'designer_id');
     }

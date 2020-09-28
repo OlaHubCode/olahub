@@ -880,9 +880,5 @@ class OlaHubPaymentsMainController extends BaseController
 
         return true;
 
-//        4242424242424242
-//1111
-//123
-
     }
 }

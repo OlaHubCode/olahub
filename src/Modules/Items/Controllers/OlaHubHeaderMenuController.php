@@ -64,11 +64,11 @@ class OlaHubHeaderMenuController extends BaseController {
         return response($return, 200);
     }
 
-    public function getBrandsData() {
+    public function getBrandsData($type) {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getBrandsData"]);
        
-        $brandsModel = (new \OlaHub\UserPortal\Models\Brand)->newQuery();
+        $brandsModel =($type == "brands") ?(new \OlaHub\UserPortal\Models\Brand)->newQuery() : (new \OlaHub\UserPortal\Models\Designer())->newQuery() ;
         $brandsModel->whereHas('itemsMainData', function($query) {
             $query->where('is_published', '1');
         });
@@ -76,7 +76,13 @@ class OlaHubHeaderMenuController extends BaseController {
         if ($brands->count() < 1) {
             throw new NotAcceptableHttpException(404);
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandsResponseHandler');
+        if($type == "brands") {
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandsResponseHandler');
+        }else{
+           
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\HomePageDesignersHandler');
+
+        }
         unset($brands);
         $return['status'] = true;
         $return['code'] = 200;
@@ -85,6 +91,7 @@ class OlaHubHeaderMenuController extends BaseController {
         return response($return, 200);
     }
 
+    // getDesignersData
     /*
      * Helper functions
      */
