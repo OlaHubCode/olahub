@@ -269,6 +269,7 @@ class OlaHubCartController extends BaseController
         } else {
             $data = false;
             $data = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
+            
             if ($data) {
                 if ($this->celebration) {
                     if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {

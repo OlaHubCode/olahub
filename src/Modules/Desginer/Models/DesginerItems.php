@@ -166,7 +166,7 @@ class DesignerItems extends Model
 
     public function interestSync()
     {
-        return $this->belongsToMany('OlaHub\UserPortal\Models\Interest', 'designer_item_interests', 'item_id', 'interest_id');
+        return $this->belongsToMany('OlaHub\UserPortal\Models\Interests', 'designer_item_interests', 'item_id', 'interest_id');
     }
 
     public function occasions()

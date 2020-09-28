@@ -79,6 +79,12 @@ class CatalogItem extends Model
             'relation' => 'brand',
             'validation' => 'numeric'
         ],
+        'desginerSlug' => [
+            'column' => 'designer_slug',
+            'type' => 'number',
+            'relation' => 'designer',
+            'validation' => 'numeric'
+        ],
         'occasionSlug' => [
             'column' => 'occasion_slug',
             'type' => 'number',

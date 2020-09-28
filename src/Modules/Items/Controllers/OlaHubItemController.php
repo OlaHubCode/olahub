@@ -4,7 +4,9 @@ namespace OlaHub\UserPortal\Controllers;
 
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Unique;
 use OlaHub\UserPortal\Models\CatalogItem;
+use OlaHub\UserPortal\Models\DesignerItems;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
 class OlaHubItemController extends BaseController
@@ -18,6 +20,8 @@ class OlaHubItemController extends BaseController
     private $first = false;
     private $force = false;
     protected $userAgent;
+    protected $allItemsModel; // to set catalog and designers modals
+    protected $allItemsCategories = []; // to set catalog and designers categories
 
     public function __construct(Request $request)
     {
@@ -31,12 +35,50 @@ class OlaHubItemController extends BaseController
 
     public function getItemsData()
     {
+        $target = NULL;
+        $catalogItems = [];
+        $designerItems = [];
+        $allItems = [];
+        $meta = NULL;
+
+        if (!empty($this->requestFilter['brandSlug']))
+            $target = "brands";
+        if (!empty($this->requestFilter['designerSlug']))
+            $target = "designers";
+
+        if (!$target || $target == 'brands')
+            $catalogItems = $this->fetchAllItemsData();
+        if (!$target || $target == 'designers')
+            $designerItems = $this->fetchAllItemsData("designer_items");
+
+        $meta = (count($catalogItems) ? $catalogItems["meta"] : $designerItems["meta"]);
+        if (count($catalogItems))
+            $catalogItems = $catalogItems["data"];
+        if (count($designerItems)) {
+            if ($designerItems["meta"]["pagination"]["total_pages"] > $meta["pagination"]["total_pages"])
+                $meta = $designerItems["meta"];
+            $designerItems = $designerItems["data"];
+        }
+
+        $allItems = array_merge($catalogItems, $designerItems);
+        // shuffle($allItems);
+
+        $return['status'] = true;
+        $return['meta'] = $meta;
+        $return['data'] = $allItems;
+        $return['code'] = 200;
+        $return['categories'] = $this->mergeCategories();
+        return response($return, 200);
+    }
+    public function fetchAllItemsData($tableName = "catalog_items")
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "ItemsCriatria"]);
 
-        $itemsQuery = (new CatalogItem)->newQuery();
+        $this->allItemsModel = $tableName == "catalog_items" ?
+            (new CatalogItem)->newQuery() : (new DesignerItems)->newQuery();
         if (isset($this->requestFilter['priceFrom']) && strlen($this->requestFilter['priceFrom']) > 0) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->where(function ($q) {
                     $q->Where('discounted_price_end_date', '<', date('Y-m-d') . " 23:59:59");
                     $q->where('price', ">=", (float) $this->requestFilter['priceFrom']);
@@ -54,7 +96,7 @@ class OlaHubItemController extends BaseController
         }
 
         if (isset($this->requestFilter['priceTo']) && strlen($this->requestFilter['priceTo']) > 0) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->where(function ($q) {
                     $q->where(function ($qWhere) {
                         $qWhere->Where('discounted_price_end_date', '<', date('Y-m-d') . " 23:59:59");
@@ -72,7 +114,7 @@ class OlaHubItemController extends BaseController
         }
 
         if (isset($this->requestFilter['offerOnly']) && $this->requestFilter['offerOnly']) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->whereNotNull('discounted_price_start_date');
                 $query->whereNotNull('discounted_price_end_date');
                 $query->where('discounted_price_start_date', '<=', date('Y-m-d') . " 00:00:01");
@@ -81,71 +123,59 @@ class OlaHubItemController extends BaseController
         }
 
         if (count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
-            unset($this->requestFilter['all']);
-
+            // unset($this->requestFilter['all']);
             if (isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0) {
 
-                $attributes = [];
-                foreach ($this->requestFilter['attributes'] as $one) {
-                    $attrData = \OlaHub\UserPortal\Models\AttrValue::find($one);
-                    if ($attrData) {
-                        $attributes[$attrData->product_attribute_id][] = $one;
-                    }
-                }
-                foreach ($attributes as $key => $values) {
-                    $itemsQuery->join("catalog_item_attribute_values as ciav$key", "ciav$key.item_id", "=", "catalog_items.id");
-                    $itemsQuery->whereIn("ciav$key.item_attribute_value_id", $values);
-                    $itemsQuery->where(function ($query) {
-                        $query->whereNull('catalog_items.parent_item_id');
-                        $query->orWhere('catalog_items.parent_item_id', '0');
+                $this->allItemsModel->whereHas('valuesData', function ($query) {
+                    $query->whereHas('valueMainData', function ($query1) {
+                        $query1->whereIn('id', $this->requestFilter['attributes']);
                     });
-
-                }
-
-                $itemsQuery->select("catalog_items.*");
+                });
             }
-
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
 
             foreach ($filters['main'] as $input => $value) {
                 if (is_array($value) && count($value)) {
-                    $itemsQuery->whereIn($input, $value);
+                    $this->allItemsModel->whereIn($input, $value);
                 } elseif (is_string($value) && strlen($value) > 0) {
-                    $itemsQuery->where($input, $value);
+                    $this->allItemsModel->where($input, $value);
                 }
             }
-
             foreach ($filters['relations'] as $model => $data) {
                 if ($model == 'brand') {
-                    $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
+                    $this->allItemsModel->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
                         ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
-                    $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    $this->allItemsModel->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
                     foreach ($data as $input => $value) {
-                        $itemsQuery->where("merchant_stors." . $input, $value);
+                        $this->allItemsModel->where("merchant_stors." . $input, $value);
+                    }
+                } elseif ($model == "designer") {
+                    $this->allItemsModel->selectRaw("designer_items.*, designers.name as brand_name")
+                        ->leftJoin("designers", "designers.id", "=", "designer_items.designer_id");
+                    foreach ($data as $input => $value) {
+                        $this->allItemsModel->where("designers." . $input, $value);
                     }
                 } else {
-                    $same = true;
-                    $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
+                    $this->allItemsModel->whereHas($model, function ($q) use ($data) {
                         foreach ($data as $input => $value) {
                             if (is_array($value) && count($value)) {
-                                $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
+                                $q->whereIn($input, $value);
                             } elseif (is_string($value) && strlen($value) > 0) {
-                                // var_dump($input);
-                                $same ? $q->where($input, $value) : $q->where($input, '!=', $value);
+                                $q->where($input, $value);
                             }
                         }
                     });
                 }
             }
         }
-        $itemsQuery->groupBy('catalog_items.id');
-        if (!(isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0)) {
-            $itemsQuery->where(function ($query) {
-                $query->whereNull('catalog_items.parent_item_id');
-                $query->orWhere('catalog_items.parent_item_id', '0');
-            });
-            $this->first = true;
-        }
+        $this->allItemsModel->groupBy($tableName . '.id');
+        // if (!(isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0)) {
+        $this->allItemsModel->where(function ($query) use ($tableName) {
+            $query->whereNull($tableName . '.parent_item_id');
+            $query->orWhere($tableName . '.parent_item_id', '0');
+        });
+        $this->first = true;
+        // }
         $column = 'created_at';
         $type = 'DESC';
         if ($this->requestSort) {
@@ -174,41 +204,68 @@ class OlaHubItemController extends BaseController
                 }
             }
         }
+
         // Categories
-        $q1 = $itemsQuery;
-        $itemsIDs = $q1->pluck('id');
+        $target = ($tableName == "catalog_items" ? "itemsMainData" : "itemsDesignerData");
+        $itemsIDs = $this->allItemsModel->pluck('id');
         $categoryModel = (new \OlaHub\UserPortal\Models\ItemCategory)->newQuery();
-        $categoryModel->where(function ($wherQ) use ($itemsIDs) {
+
+        $categoryModel->where(function ($wherQ) use ($itemsIDs, $target) {
             $wherQ->where(function ($ww) {
                 $ww->whereNull('parent_id')
                     ->orWhere('parent_id', '0');
             });
-            $wherQ->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+            $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
                 $q->whereIn('id', $itemsIDs);
             });
         });
-        $categoryModel->orWhere(function ($wherQ) use ($itemsIDs) {
-            $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs) {
-                $childQ->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+
+        $categoryModel->orWhere(function ($wherQ) use ($itemsIDs, $target) {
+            if ($target == "itemsMainData") {
+                $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
+                    $childQ->whereHas($target, function ($q) use ($itemsIDs) {
+                        $q->whereIn('id', $itemsIDs);
+                    });
+                });
+            } else {
+                $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
                     $q->whereIn('id', $itemsIDs);
                 });
-            });
+            }
         });
+
         $categoryModel->groupBy('id');
         $categories = $categoryModel->get();
+        $categories = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs)["data"];
+        $this->allItemsCategories = array_merge($this->allItemsCategories, $categories);
 
         // Items
-        $itemsQuery->orderBy($column, $type);
-        $items = $itemsQuery->paginate(20);
+        $this->allItemsModel->orderBy($column, $type);
+        $items = $this->allItemsModel->paginate(20);
 
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
-        $return['categories'] = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs);
-        $return['status'] = true;
-        $return['code'] = 200;
-        return response($return, 200);
-        return response($items, 200);
+        return $tableName == "catalog_items" ?
+            \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler') :
+            \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\DesginerItemsHandler');
     }
-
+    private function mergeCategories()
+    {
+        $cats = [];
+        $cc = [];
+        $tempCats = [];
+        foreach ($this->allItemsCategories as $c) {
+            if (!in_array($c['classID'], $tempCats)) {
+                $tempCats[] = $c['classID'];
+                $cc[$c['classID']] = $c;
+            } else {
+                if (!count($cc[$c['classID']]['childsData'])) {
+                    $cc[$c['classID']]['childsData'] = $c['classID']['childsData'];
+                }
+            }
+        }
+        foreach ($cc as $c)
+            $cats[] = $c;
+        return $cats;
+    }
     public function getCatsData($all = false)
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -216,9 +273,9 @@ class OlaHubItemController extends BaseController
 
         ////////////////////////////////////////////////
 
-        $itemsQuery = (new CatalogItem)->newQuery();
+        $this->allItemsModel = (new CatalogItem)->newQuery();
         if (isset($this->requestFilter['priceFrom']) && strlen($this->requestFilter['priceFrom']) > 0) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->where(function ($q) {
                     $q->Where('discounted_price_end_date', '<', date('Y-m-d') . " 23:59:59");
                     $q->where('price', ">=", (float) $this->requestFilter['priceFrom']);
@@ -236,7 +293,7 @@ class OlaHubItemController extends BaseController
         }
 
         if (isset($this->requestFilter['priceTo']) && strlen($this->requestFilter['priceTo']) > 0) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->where(function ($q) {
                     $q->where(function ($qWhere) {
                         $qWhere->Where('discounted_price_end_date', '<', date('Y-m-d') . " 23:59:59");
@@ -254,7 +311,7 @@ class OlaHubItemController extends BaseController
         }
 
         if (isset($this->requestFilter['offerOnly']) && $this->requestFilter['offerOnly']) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->whereNotNull('discounted_price_start_date');
                 $query->whereNotNull('discounted_price_end_date');
                 $query->where('discounted_price_start_date', '<=', date('Y-m-d') . " 00:00:01");
@@ -273,40 +330,40 @@ class OlaHubItemController extends BaseController
                     }
                 }
                 foreach ($attributes as $key => $values) {
-                    $itemsQuery->join("catalog_item_attribute_values as ciav$key", "ciav$key.item_id", "=", "catalog_items.id");
-                    $itemsQuery->whereIn("ciav$key.item_attribute_value_id", $values);
+                    $this->allItemsModel->join("catalog_item_attribute_values as ciav$key", "ciav$key.item_id", "=", "catalog_items.id");
+                    $this->allItemsModel->whereIn("ciav$key.item_attribute_value_id", $values);
                 }
 
-                $itemsQuery->select("catalog_items.*");
+                $this->allItemsModel->select("catalog_items.*");
             }
 
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
             foreach ($filters['main'] as $input => $value) {
                 if (is_array($value) && count($value)) {
-                    $itemsQuery->whereIn($input, $value);
+                    $this->allItemsModel->whereIn($input, $value);
                 } elseif (is_string($value) && strlen($value) > 0) {
-                    $itemsQuery->where($input, $value);
+                    $this->allItemsModel->where($input, $value);
                 }
             }
             foreach ($filters['relations'] as $model => $data) {
                 // if ($model == "interests" && isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0 && isset($data["interest_slug"])) {
                 //     $interest = \OlaHub\UserPortal\Models\Interests::where("interest_slug", $data["interest_slug"])->first();
                 //     if ($interest && count($interest->items) > 0) {
-                //         $itemsQuery->whereIn("catalog_items.id", $interest->items);
+                //         $this->allItemsModel->whereIn("catalog_items.id", $interest->items);
                 //     } else {
-                //         $itemsQuery->where("catalog_items.id", 0);
+                //         $this->allItemsModel->where("catalog_items.id", 0);
                 //     }
                 // } else {
                 if ($model == 'brand') {
-                    $itemsQuery->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
+                    $this->allItemsModel->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
                         ->leftJoin("catalog_item_stors", "catalog_item_stors.item_id", "=", "catalog_items.id");
-                    $itemsQuery->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
+                    $this->allItemsModel->leftJoin("merchant_stors", "merchant_stors.id", "=", "catalog_items.store_id");
                     foreach ($data as $input => $value) {
-                        $itemsQuery->where("merchant_stors." . $input, $value);
+                        $this->allItemsModel->where("merchant_stors." . $input, $value);
                     }
                 } else {
                     $same = true;
-                    $itemsQuery->whereHas($model, function ($q) use ($data, $same) {
+                    $this->allItemsModel->whereHas($model, function ($q) use ($data, $same) {
                         foreach ($data as $input => $value) {
                             if (is_array($value) && count($value)) {
                                 $same ? $q->whereIn($input, $value) : $q->whereNotIn($input, $value);
@@ -319,16 +376,16 @@ class OlaHubItemController extends BaseController
                 // }
             }
         }
-        $itemsQuery->groupBy('catalog_items.id');
+        $this->allItemsModel->groupBy('catalog_items.id');
         if (!(isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0)) {
-            $itemsQuery->where(function ($query) {
+            $this->allItemsModel->where(function ($query) {
                 $query->whereNull('catalog_items.parent_item_id');
                 $query->orWhere('catalog_items.parent_item_id', '0');
             });
             $this->first = true;
         }
         /////////////////////////////////////////
-        $itemsIDs = $itemsQuery->pluck('id');
+        $itemsIDs = $this->allItemsModel->pluck('id');
         $categoryModel = (new \OlaHub\UserPortal\Models\ItemCategory)->newQuery();
         $categoryModel->where(function ($wherQ) use ($itemsIDs) {
             $wherQ->where(function ($ww) {
@@ -536,7 +593,7 @@ class OlaHubItemController extends BaseController
 
     public function getOneItemRelatedItems($slug)
     {
-        
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItemRelatedItems"]);
 
@@ -563,7 +620,7 @@ class OlaHubItemController extends BaseController
                 $query->orWhere('catalog_items.parent_item_id', '0');
             })
             ->groupBy('id')->orderByRaw("RAND()")->take(5)->get();
-        
+
         $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
         $return['status'] = true;
         $return['code'] = 200;
@@ -589,7 +646,7 @@ class OlaHubItemController extends BaseController
             $itemID = $item->parent_item_id;
         }
 
-        if(app('session')->get('tempID') != null) {
+        if (app('session')->get('tempID') != null) {
             $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
             if (count($user->catalogItemViews) > 0) {
                 $ids = $user->catalogItemViews->pluck('item_id')->toArray();
@@ -600,7 +657,7 @@ class OlaHubItemController extends BaseController
                 })->where(function ($query) {
                     $query->whereNull('parent_item_id');
                     $query->orWhere('parent_item_id', '0');
-                })->where('is_published','=',1)
+                })->where('is_published', '=', 1)
                     ->whereIn('id', $ids);
                 $itemModel->orderBy('updated_at', 'DESC');
                 $itemModel->take(5);
@@ -615,7 +672,7 @@ class OlaHubItemController extends BaseController
                     })->where(function ($query) {
                         $query->whereNull('parent_item_id');
                         $query->orWhere('parent_item_id', '0');
-                    })->where('is_published','=',1);
+                    })->where('is_published', '=', 1);
                     $itemModel->orderBy('total_views', 'DESC');
                     $itemModel->orderBy('name', 'ASC');
                     $itemModel->take($need);
@@ -623,11 +680,11 @@ class OlaHubItemController extends BaseController
                     if ($items2->count() < 1) {
                         throw new NotAcceptableHttpException(404);
                     }
-                    foreach ($items2 as $item){
-                        $items[]=$item;
+                    foreach ($items2 as $item) {
+                        $items[] = $item;
                     }
                 }
-            }else{
+            } else {
                 $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
                 $itemModel->where('id', '!=', $itemID);
                 $itemModel->whereHas('quantityData', function ($q) {
@@ -636,7 +693,7 @@ class OlaHubItemController extends BaseController
                     $query->whereNull('parent_item_id');
                     $query->orWhere('parent_item_id', '0');
                 });
-                $itemModel->where('is_published','=',1);
+                $itemModel->where('is_published', '=', 1);
                 $itemModel->orderBy('total_views', 'DESC');
                 $itemModel->orderBy('name', 'ASC');
                 $itemModel->take(5);
@@ -645,7 +702,7 @@ class OlaHubItemController extends BaseController
                     throw new NotAcceptableHttpException(404);
                 }
             }
-        }else{
+        } else {
             $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
             $itemModel->where('id', '!=', $itemID);
             $itemModel->whereHas('quantityData', function ($q) {
@@ -654,7 +711,7 @@ class OlaHubItemController extends BaseController
                 $query->whereNull('parent_item_id');
                 $query->orWhere('parent_item_id', '0');
             });
-            $itemModel->where('is_published','=',1);
+            $itemModel->where('is_published', '=', 1);
             $itemModel->orderBy('total_views', 'DESC');
             $itemModel->orderBy('name', 'ASC');
             $itemModel->take(5);
