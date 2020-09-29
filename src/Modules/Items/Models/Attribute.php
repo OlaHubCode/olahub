@@ -5,16 +5,19 @@ namespace OlaHub\UserPortal\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Attribute extends Model {
+class Attribute extends Model
+{
 
     use SoftDeletes;
     protected $table = 'catalog_item_attributes';
 
-    public function valuesData() {
+    public function valuesData()
+    {
         return $this->hasMany('OlaHub\UserPortal\Models\AttrValue', 'product_attribute_id');
     }
 
-    static function setReturnResponse($attributes, $itemsIDs = false, $first = false) {
+    static function setReturnResponse($attributes, $itemsIDs = false, $first = false)
+    {
         $return['data'] = [];
         foreach ($attributes as $attribute) {
             $attrData = [
@@ -26,13 +29,13 @@ class Attribute extends Model {
 
             $attrData['childsData'] = [];
             if ($itemsIDs) {
-                $childs = $attribute->valuesData()->whereHas('valueItemsData', function($q) use($itemsIDs, $first) {
-                            if ($first) {
-                                $q->whereIn('parent_item_id', $itemsIDs);
-                            } else {
-                                $q->whereIn('item_id', $itemsIDs);
-                            }
-                        })->groupBy('id')->get();
+                $childs = $attribute->valuesData()->whereHas('valueItemsData', function ($q) use ($itemsIDs, $first) {
+                    if ($first) {
+                        $q->whereIn('parent_item_id', $itemsIDs);
+                    } else {
+                        $q->whereIn('item_id', $itemsIDs);
+                    }
+                })->groupBy('id')->get();
             } else {
                 $childs = $attribute->childsData()->has('itemsMainData')->groupBy('id')->get();
             }
@@ -48,7 +51,8 @@ class Attribute extends Model {
         return (array) $return;
     }
 
-    static function setOneProductReturnResponse($attributes, $itemsIDs = false, $first = false) {
+    static function setOneProductReturnResponse($attributes, $itemsIDs = false, $first = false, $itemTarget = "valueItemsData")
+    {
         $return['data'] = [];
         foreach ($attributes as $attribute) {
             $attrData = [
@@ -60,13 +64,13 @@ class Attribute extends Model {
 
             $attrData['childsData'] = [];
             if ($itemsIDs) {
-                $childs = $attribute->valuesData()->whereHas('valueItemsData', function($q) use($itemsIDs, $first) {
-                            if ($first) {
-                                $q->whereIn('parent_item_id', $itemsIDs);
-                            } else {
-                                $q->whereIn('item_id', $itemsIDs);
-                            }
-                        })->groupBy('id')->get();
+                $childs = $attribute->valuesData()->whereHas($itemTarget, function ($q) use ($itemsIDs, $first) {
+                    if ($first) {
+                        $q->whereIn('parent_item_id', $itemsIDs);
+                    } else {
+                        $q->whereIn('item_id', $itemsIDs);
+                    }
+                })->groupBy('id')->get();
             } else {
                 $childs = $attribute->childsData()->has('itemsMainData')->groupBy('id')->get();
             }
@@ -81,5 +85,4 @@ class Attribute extends Model {
         }
         return (array) $return;
     }
-
 }

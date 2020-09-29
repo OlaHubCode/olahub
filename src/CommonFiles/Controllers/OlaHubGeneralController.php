@@ -1554,7 +1554,7 @@ class OlaHubGeneralController extends BaseController
             $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
         }
         // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("mainData")
+        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("itemsMainData")
             ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {
