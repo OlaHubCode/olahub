@@ -16,7 +16,7 @@ class Attribute extends Model
         return $this->hasMany('OlaHub\UserPortal\Models\AttrValue', 'product_attribute_id');
     }
 
-    static function setReturnResponse($attributes, $itemsIDs = false, $first = false)
+    static function setReturnResponse($attributes, $itemsIDs = false, $first = false, $itemTarget = "valueItemsData", $otherAttrs = [])
     {
         $return['data'] = [];
         foreach ($attributes as $attribute) {
@@ -29,13 +29,14 @@ class Attribute extends Model
 
             $attrData['childsData'] = [];
             if ($itemsIDs) {
-                $childs = $attribute->valuesData()->whereHas('valueItemsData', function ($q) use ($itemsIDs, $first) {
-                    if ($first) {
+                $childs = $attribute->valuesData()->whereHas($itemTarget, function ($q) use ($itemsIDs, $first) {
+                    if (!$first) {
                         $q->whereIn('parent_item_id', $itemsIDs);
                     } else {
                         $q->whereIn('item_id', $itemsIDs);
                     }
-                })->groupBy('id')->get();
+                })->whereNotIn('id', $otherAttrs)
+                ->groupBy('id')->get();
             } else {
                 $childs = $attribute->childsData()->has('itemsMainData')->groupBy('id')->get();
             }
