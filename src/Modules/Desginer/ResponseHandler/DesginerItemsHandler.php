@@ -17,8 +17,15 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
     {
         $this->request = Request::capture();
         $this->data = $data;
+        if ($data->parent_item_id > 0) {
+            $this->parentData = $data->templateItem;
+        } else {
+            $this->parentData = $data;
+        }
         $this->setDefaultData();
         $this->setCartData();
+        // $this->setBrandData();
+
         return $this->return;
     }
 
@@ -43,6 +50,7 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         $this->setRateData();
         $this->setShippingDatesData();
         $this->setFollowStatus();
+        // $this->setItemSelectedAttrData();
     }
 
     private function setDesignerData()
@@ -138,5 +146,35 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         $d = \OlaHub\UserPortal\Models\Following::where("target_id", $this->data->designer_id)->where("type", 2)
             ->where('user_id', app('session')->get('tempID'))->first();
         $this->return['followed'] = $d ? true : false;
+    }
+    
+    private function setItemSelectedAttrData()
+    {
+        $this->return['productselectedAttributes'] = [];
+        $values = $this->data->valuesData;
+        if ($values->count() > 0) {
+            foreach ($values as $itemValue) {
+                $value = $itemValue->valueMainData;
+                $this->return['productselectedAttributes'][$value->product_attribute_id] = (string) $value->id;
+            }
+        }
+    }
+    private function setBrandData()
+    {
+        $brandData = $this->parentData->designer;
+        
+        $this->return["productBrand"] = 0;
+        $this->return["productBrandName"] = null;
+        $this->return["productBrandSlug"] = null;
+        $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
+        $this->return["productOwnerFollowed"] = 0;
+        $this->return["productOwnerFollowers"] = 0;
+        if ($brandData) {
+            $this->return["productBrand"] = isset($brandData->id) ? $brandData->id : NULL;
+            $this->return["productBrandName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brandData, 'name');
+            $this->return["productBrandSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brandData, 'designer_slug', $this->return["productBrandName"]);
+            $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brandData->image_ref);
+            $this->setFollowStatus($brandData);
+        }
     }
 }
