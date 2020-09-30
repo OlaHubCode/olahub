@@ -31,7 +31,7 @@ class OlaHubGeneralController extends BaseController
     public function contactUs()
     {
 
-        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
+        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail((Array) $this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200], 200);
     }
 
