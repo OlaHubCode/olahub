@@ -8,6 +8,7 @@ use Illuminate\Validation\Rules\Unique;
 use OlaHub\UserPortal\Helpers\DesginerItemsHelper;
 use OlaHub\UserPortal\Models\CatalogItem;
 use OlaHub\UserPortal\Models\DesignerItems;
+use OlaHub\UserPortal\Models\ItemAttrValue;
 use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 
 class OlaHubItemController extends BaseController
@@ -44,9 +45,9 @@ class OlaHubItemController extends BaseController
         $allItems = [];
         $meta = NULL;
 
-        if (!empty($this->requestFilter['brandSlug']))
+        if (!empty($this->requestFilter['brandSlug']) || count($this->requestFilter['brands']) > 0)
             $target = "brands";
-        if (!empty($this->requestFilter['designerSlug']))
+        if (!empty($this->requestFilter['designerSlug']) || count($this->requestFilter['designers']) > 0)
             $target = "designers";
 
         if (!$target || $target == 'brands')
@@ -283,7 +284,9 @@ class OlaHubItemController extends BaseController
             }
         }
         foreach ($aa as $a)
-            $attr[] = $a;
+            if (count($a['childsData'])) {
+                $attr[] = $a;
+            }
         return $attr;
     }
     public function getCatsData($all = false)
@@ -439,7 +442,6 @@ class OlaHubItemController extends BaseController
         $log->saveLogSessionData();
         return response($return, 200);
     }
-
     public function getItems()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -458,7 +460,6 @@ class OlaHubItemController extends BaseController
         $log->saveLogSessionData();
         return response($return, 200);
     }
-
     public function getVoucherItems()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -475,7 +476,6 @@ class OlaHubItemController extends BaseController
         $log->saveLogSessionData();
         return response($return, 200);
     }
-
     public function getAlsoLikeItems()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -498,32 +498,33 @@ class OlaHubItemController extends BaseController
         $log->saveLogSessionData();
         return response($return, 200);
     }
-
     public function getOneItem($slug)
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItem"]);
-
         $this->force = true;
-        $this->ItemsCriatria(false);
-        $model =  (new CatalogItem); //for child data
+
+        $model =  (new CatalogItem);
+        $this->itemsModel = (new CatalogItem)->newQuery();
+        $item_type = "catalog";
         $tableName = "catalog_items";
-        $item_type = "store";
 
         if ($this->requestFilter['type'] == "designer") {
             $model = (new DesignerItems);
-            $tableName = "designer_items";
+            $this->itemsModel = (new DesignerItems)->newQuery();
             $item_type = "designer";
+            $tableName = "designer_items";
         }
-
+        $this->oneItemsCriatria($item_type);
         if (isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) < 1) {
             $this->itemsModel->where('item_slug', $slug);
         } else {
             $parent = $model->where('item_slug', $slug)->first();
+            $pID = $parent->parent_item_id ?? $parent->id;
             if ($parent->parent_item_id > 0) {
-                $this->itemsModel->where(function ($q) use ($parent, $tableName) {
-                    $q->where($tableName . '.parent_item_id', $parent->parent_item_id);
-                    $q->orWhere($tableName . '.id', $parent->parent_item_id);
+                $this->itemsModel->where(function ($q) use ($pID, $tableName) {
+                    $q->where($tableName . '.parent_item_id', $pID);
+                    $q->orWhere($tableName . '.id', $pID);
                 });
             } else {
                 $childs = $model->where($tableName . '.parent_item_id', $parent->id)->pluck('id')->toArray();
@@ -531,22 +532,18 @@ class OlaHubItemController extends BaseController
                 $this->itemsModel->whereIn($tableName . '.id', $childs);
             }
         }
-
         $item = $this->itemsModel->first();
+
         if (!$item) {
             throw new NotAcceptableHttpException(404);
         }
-        $handlerType = 'ItemResponseHandler';
-        if ($item_type == 'store') {
+        if ($item_type == 'catalog') {
             \OlaHub\UserPortal\Models\CatalogItemViews::setItemView($item);
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, "\OlaHub\UserPortal\ResponseHandlers\ItemResponseHandler");
         } else {
             $return['data'] = (new DesginerItemsHelper)->getOneItemData($item, $slug, $this->requestFilter);
-            $handlerType = 'DesginerItemsHandler';
         }
 
-
-        // $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, "\OlaHub\UserPortal\ResponseHandlers\\$handlerType");
         if (isset($this->requestFilter['celebrationId']) && $this->requestFilter['celebrationId']) {
             $existInCelebration = FALSE;
             $existCelebration = TRUE;
@@ -605,23 +602,22 @@ class OlaHubItemController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItemAttrsData"]);
 
-        $model =  (new CatalogItem)->newQuery();
+        $model =  (new CatalogItem);
         $itemsTarget = "valueItemsData";
         $itemsData = "itemsMainData";
 
         if ($this->itemsType == "designer") {
-            $model = (new DesignerItems)->newQuery();
+            $model = (new DesignerItems);
             $itemsTarget = "valueDesignerData";
             $itemsData = "itemsMainData";
         }
 
-        $item = $model->where('item_slug', $slug)->first();
+        $item = $model->newQuery()->where('item_slug', $slug)->first();
         if ($item->parent_item_id > 0) {
             $itemsIDs = [$item->parent_item_id];
         } else {
             $itemsIDs = [$item->id];
         }
-
         $attributes = NULL;
 
         $attributes = \OlaHub\UserPortal\Models\Attribute::whereHas('valuesData', function ($values) use ($itemsIDs, $itemsTarget, $itemsData) {
@@ -837,23 +833,44 @@ class OlaHubItemController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getItemFiltersBrandData"]);
 
-        $this->ItemsCriatria();
-        $itemsIDs = $this->itemsModel->pluck('id');
-        $brandModel = (new \OlaHub\UserPortal\Models\Brand)->newQuery();
-        $brandModel->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
-            $q->whereIn('id', $itemsIDs);
-        });
-        if ($all) {
-            $brands = $brandModel->get();
-        } else {
-            $brands = $brandModel->paginate(5);
+        $brands = [];
+        $designers = [];
+
+        if (empty($this->requestFilter['brandSlug']) && empty($this->requestFilter['designers'])) {
+            // for stores
+            $this->itemsType = "store";
+            $this->ItemsCriatria();
+
+            $itemsIDs = $this->itemsModel->pluck('id');
+            $brandModel = (new \OlaHub\UserPortal\Models\Brand)->newQuery();
+            $brandModel->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                $q->whereIn('id', $itemsIDs);
+            });
+            if ($all) {
+                $brands = $brandModel->get();
+            } else {
+                $brands = $brandModel->paginate(5);
+            }
+        }
+        if (empty($this->requestFilter['designerSlug']) && empty($this->requestFilter['brands'])) {
+            // for designers
+            $this->itemsType = "designer";
+            $this->ItemsCriatria();
+
+            $itemsIDs = $this->itemsModel->pluck('id');
+            $designersModel = (new \OlaHub\UserPortal\Models\Designer())->newQuery();
+            $designersModel->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                $q->whereIn('id', $itemsIDs);
+            });
+            if ($all) {
+                $designers = $designersModel->get();
+            } else {
+                $designers = $designersModel->paginate(5);
+            }
         }
 
-
-        if ($brands->count() < 1) {
-            throw new NotAcceptableHttpException(404);
-        }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandsResponseHandler');
+        $return["brands"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($brands, '\OlaHub\UserPortal\ResponseHandlers\BrandsResponseHandler')["data"];
+        $return["designers"] = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($designers, '\OlaHub\UserPortal\ResponseHandlers\DesignerResponseHandler')["data"];
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
@@ -943,9 +960,9 @@ class OlaHubItemController extends BaseController
         $otherAttrs = [];
         ///////
 
-        if (!empty($this->requestFilter['brandSlug']))
+        if (!empty($this->requestFilter['brandSlug']) || count($this->requestFilter['brands']) > 0)
             $target = "brands";
-        if (!empty($this->requestFilter['designerSlug']))
+        if (!empty($this->requestFilter['designerSlug']) || count($this->requestFilter['designers']) > 0)
             $target = "designers";
 
         if (!$target || $target == 'brands') {
@@ -1043,13 +1060,43 @@ class OlaHubItemController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOfferItemsPage"]);
 
-        $this->offerItemsCriatria();
-        $this->sortItems();
-        $items = $this->itemsModel->paginate(20);
-        if ($items->count() < 1) {
-            throw new NotAcceptableHttpException(404);
+        $target = NULL;
+        $catalogItems = [];
+        $designerItems = [];
+        $allItems = [];
+        $meta = NULL;
+
+        if (count($this->requestFilter['brands']) > 0)
+            $target = "brands";
+        if (count($this->requestFilter['designers']) > 0)
+            $target = "designers";
+
+        if (!$target || $target == 'brands') {
+            $this->offerItemsCriatria();
+            $catalogItems = $this->itemsModel->paginate(20);
+            $catalogItems = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($catalogItems, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
         }
-        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
+        if (!$target || $target == 'designers') {
+            $this->offerItemsCriatria(true, true, "designer");
+            $designerItems = $this->itemsModel->paginate(20);
+            $designerItems = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($designerItems, '\OlaHub\UserPortal\ResponseHandlers\DesginerItemsHandler');
+        }
+
+        $meta = (count($catalogItems) ? $catalogItems["meta"] : $designerItems["meta"]);
+        if (count($catalogItems))
+            $catalogItems = $catalogItems["data"];
+        if (count($designerItems)) {
+            if ($designerItems["meta"]["pagination"]["total_pages"] > $meta["pagination"]["total_pages"])
+                $meta = $designerItems["meta"];
+            $designerItems = $designerItems["data"];
+        }
+
+        $allItems = array_merge($catalogItems, $designerItems);
+        // if ($items->count() < 1) {
+        //     throw new NotAcceptableHttpException(404);
+        // }
+        $return['meta'] = $meta;
+        $return['data'] = $allItems;
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
@@ -1125,13 +1172,15 @@ class OlaHubItemController extends BaseController
         return response($return, 200);
     }
 
-    private function offerItemsCriatria($any = true, $same = true)
+    private function offerItemsCriatria($any = true, $same = true, $type = "catalog")
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "offerItemsCriatria"]);
 
         $this->itemsModel = (new CatalogItem)->newQuery();
-        $this->itemsModel->selectRaw('catalog_items.*, ((discounted_price / price) * 100) as discount_perc');
+        if ($type == "designer")
+            $this->itemsModel = (new DesignerItems)->newQuery();
+        $this->itemsModel->selectRaw($type . '_items.*, ((discounted_price / price) * 100) as discount_perc');
         if (isset($this->requestFilter['priceFrom']) && strlen($this->requestFilter['priceFrom']) > 0) {
             $this->itemsModel->where(function ($query) {
                 $query->Where(function ($q) {
@@ -1163,7 +1212,6 @@ class OlaHubItemController extends BaseController
         });
 
         if (count($this->requestFilter) > 0) {
-
             unset($this->requestFilter['all']);
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
             $this->setFilterMainData($filters, $same);
@@ -1177,19 +1225,20 @@ class OlaHubItemController extends BaseController
                 }
 
                 foreach ($attributes as $key => $values) {
-                    $this->itemsModel->join("catalog_item_attribute_values as ciav$key", "ciav$key.item_id", "=", "catalog_items.id");
-                    $this->itemsModel->whereIn("ciav$key.item_attribute_value_id", $values);
+                    $this->itemsModel->join($type . "_item_attribute_values as ciav$key", "ciav$key.item_id", "=", $type . "_items.id");
+                    $this->itemsModel->whereIn("ciav$key." . ($type == "catalog" ?  "item_attribute_value_id" :  "value_id"), $values);
                 }
             }
             $this->setFilterRelationData($filters, $same);
         }
-        $this->itemsModel->groupBy('catalog_items.id');
+        $this->itemsModel->groupBy($type . '_items.id');
         if ($any) {
-            $this->itemsModel->where(function ($query) {
-                $query->whereNull('catalog_items.parent_item_id');
-                $query->orWhere('catalog_items.parent_item_id', '0');
+            $this->itemsModel->where(function ($query) use ($type) {
+                $query->whereNull($type . '_items.parent_item_id');
+                $query->orWhere($type . '_items.parent_item_id', '0');
             });
         }
+        $this->sortItems();
     }
 
     /*
@@ -1261,7 +1310,7 @@ class OlaHubItemController extends BaseController
                 });
             }
             $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
-
+            // var_dump($filters);
             foreach ($filters['main'] as $input => $value) {
                 if (is_array($value) && count($value)) {
                     $this->itemsModel->whereIn($input, $value);
@@ -1269,6 +1318,7 @@ class OlaHubItemController extends BaseController
                     $this->itemsModel->where($input, $value);
                 }
             }
+
             foreach ($filters['relations'] as $model => $data) {
                 if ($model == 'brand') {
                     $this->itemsModel->selectRaw("catalog_items.*, merchant_stors.name as brand_name, SUM(catalog_item_stors.quantity) as qu")
@@ -1305,6 +1355,33 @@ class OlaHubItemController extends BaseController
             });
             $this->first = true;
         }
+    }
+
+    private function oneItemsCriatria($type = "catalog")
+    {
+        if (@count($this->requestFilter) > 0 && ($this->force == true || (isset($this->requestFilter['all']) && (string) $this->requestFilter['all'] == "0"))) {
+            unset($this->requestFilter['all']);
+            $filters = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::handlingRequestFilter($this->requestFilter, CatalogItem::$columnsMaping);
+            $this->setFilterMainData($filters, true);
+            if (isset($this->requestFilter['attributes']) && count($this->requestFilter['attributes']) > 0) {
+                $attributes = [];
+                foreach ($this->requestFilter['attributes'] as $one) {
+                    $attrData = \OlaHub\UserPortal\Models\AttrValue::find($one);
+                    if ($attrData) {
+                        $attributes[$attrData->product_attribute_id][] = $one;
+                    }
+                }
+
+                foreach ($attributes as $key => $values) {
+                    $this->itemsModel->join($type . "_item_attribute_values as ciav$key", "ciav$key.item_id", "=", $type . "_items.id");
+                    $this->itemsModel->whereIn("ciav$key." . ($type == "catalog" ?  "item_attribute_value_id" :  "value_id"), $values);
+                }
+
+                $this->itemsModel->select($type . "_items.*");
+            }
+            $this->setFilterRelationData($filters, true);
+        }
+        $this->itemsModel->groupBy($type . '_items.id');
     }
 
     private function sortItems($column = 'created_at', $type = 'DESC')

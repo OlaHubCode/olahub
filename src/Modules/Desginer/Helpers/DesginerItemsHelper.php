@@ -164,7 +164,7 @@ class DesginerItemsHelper extends CommonHelper
             $id = $product->id;
             $itemsId = [];
             foreach ($cartCookie as $item) {
-                array_push($itemsId, $item->id);
+                array_push($itemsId, $item->productId);
             }
             if (in_array($id, $itemsId)) {
                 $this->return['productInCart'] = 1;
@@ -277,7 +277,9 @@ class DesginerItemsHelper extends CommonHelper
         if ($values->count() > 0) {
             foreach ($values as $itemValue) {
                 $value = $itemValue->valueMainData;
-                $this->return['productselectedAttributes'][$value->product_attribute_id] = (string) $value->id;
+                if($value){
+                    $this->return['productselectedAttributes'][$value->product_attribute_id] = (string) $value->id;
+                }
             }
         }
     }
