@@ -1671,7 +1671,7 @@ class OlaHubGeneralController extends BaseController
             $return['upcoming'] = $upcoming;
         }
         // dd($return)
-        return response(array $return, 200);
+        return response($return, 200);
     }
 
     private function handlePostTimeline($data, $type, $fInfo = null)

@@ -1045,6 +1045,7 @@ class OlaHubPostController extends BaseController
                             'canDelete' => $canDelete,
                             'canEditReply' => $canEditReply,
                             'canDeleteReply' => $canDeleteReply,
+                            'canReply' => $canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
