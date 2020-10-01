@@ -17,6 +17,7 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         $this->setDefaultData();
         $this->setPriceData();
         $this->setWishlistData();
+        $this->setItemSelectedAttrData();
         // $this->setMerchantData();
         //         $this->setAddData();
         // $this->setDefImageData();
@@ -110,6 +111,19 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
             ->where('user_id', app('session')->get('tempID'))->first();
         if ($wishlist) {
             $this->return['productWishlist'] = true;
+        }
+    }
+
+    private function setItemSelectedAttrData()
+    {
+        $this->return['productAttributes'] = [];
+        $values = $this->data->valuesData;
+        if ($values->count() > 0) {
+            foreach ($values as $itemValue) {
+                $value = $itemValue->valueMainData;
+                if($value->attribute_value && !$value->color_hex_code) $this->return['productAttributes']["size"] = $value->attribute_value;
+                if($value->color_hex_code) $this->return['productAttributes']["color"] = $value->color_hex_code;
+            }
         }
     }
 }
