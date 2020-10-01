@@ -25,6 +25,7 @@ $router->group([], function () use ($router) {
         return '2.1';
     });
     $router->get('sideBarAds', 'OlaHubGeneralController@sideBarAds');
+    $router->get('popup', 'OlaHubGeneralController@getPopup');
 
     $router->post('countries', 'OlaHubGeneralController@getAllCountries');
     $router->post('list_countries', 'OlaHubGeneralController@getAllListedCountries');

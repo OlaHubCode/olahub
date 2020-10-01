@@ -45,9 +45,9 @@ class OlaHubItemController extends BaseController
         $allItems = [];
         $meta = NULL;
 
-        if (!empty($this->requestFilter['brandSlug']) || count($this->requestFilter['brands']) > 0)
+        if (!empty($this->requestFilter['brandSlug']) || !empty($this->requestFilter['brands']))
             $target = "brands";
-        if (!empty($this->requestFilter['designerSlug']) || count($this->requestFilter['designers']) > 0)
+        if (!empty($this->requestFilter['designerSlug']) || !empty($this->requestFilter['designers']))
             $target = "designers";
 
         if (!$target || $target == 'brands')
@@ -836,7 +836,7 @@ class OlaHubItemController extends BaseController
         $brands = [];
         $designers = [];
 
-        if (empty($this->requestFilter['brandSlug']) && empty($this->requestFilter['designers'])) {
+        if (empty($this->requestFilter['brandSlug']) && empty($this->requestFilter['designers']) ) {
             // for stores
             $this->itemsType = "store";
             $this->ItemsCriatria();
@@ -960,9 +960,9 @@ class OlaHubItemController extends BaseController
         $otherAttrs = [];
         ///////
 
-        if (!empty($this->requestFilter['brandSlug']) || count($this->requestFilter['brands']) > 0)
+        if (!empty($this->requestFilter['brandSlug']) || !empty($this->requestFilter['brands']))
             $target = "brands";
-        if (!empty($this->requestFilter['designerSlug']) || count($this->requestFilter['designers']) > 0)
+        if (!empty($this->requestFilter['designerSlug']) || !empty($this->requestFilter['designers']))
             $target = "designers";
 
         if (!$target || $target == 'brands') {
@@ -971,12 +971,16 @@ class OlaHubItemController extends BaseController
             $storeItemsIDs = $this->itemsModel->pluck('id');
 
             $attributeModel = (new \OlaHub\UserPortal\Models\Attribute)->newQuery();
-            $attributeModel->whereHas('valuesData', function ($values) use ($storeItemsIDs) {
-                $values->whereHas('valueItemsData', function ($q) use ($storeItemsIDs) {
-                    $q->whereIn('item_id', $storeItemsIDs);
-                    $q->orWhereIn('parent_item_id', $storeItemsIDs);
-                })->whereNotIn('product_attribute_id', $this->requestFilter['attributesParent']);
-            });
+            if(!empty($this->requestFilter['attributesParent'])){
+                $attributeModel->whereHas('valuesData', function ($values) use ($storeItemsIDs) {
+                    $values->whereHas('valueItemsData', function ($q) use ($storeItemsIDs) {
+                        $q->whereIn('item_id', $storeItemsIDs);
+                        $q->orWhereIn('parent_item_id', $storeItemsIDs);
+                    })->whereNotIn('product_attribute_id', $this->requestFilter['attributesParent']);
+                });
+            }
+           
+
             $attributes = $attributeModel->groupBy('id')->get();
             if ($storeItemsIDs) {
                 foreach ($attributes as $attribute) {
@@ -1066,9 +1070,9 @@ class OlaHubItemController extends BaseController
         $allItems = [];
         $meta = NULL;
 
-        if (count($this->requestFilter['brands']) > 0)
+        if (!empty($this->requestFilter['brands']))
             $target = "brands";
-        if (count($this->requestFilter['designers']) > 0)
+        if (!empty($this->requestFilter['designers']))
             $target = "designers";
 
         if (!$target || $target == 'brands') {

@@ -31,7 +31,7 @@ class ItemSearchResponseHandler extends Fractal\TransformerAbstract {
             "itemImage" => $itemImage,
             "itemSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($this->data, 'item_slug', $itemName),
             "itemType" => 'item',
-            "brand" => $storeData->name,
+            "brand" => $storeData != null ? $storeData->name  : '',
         ];
 
 //        $this->return = [
