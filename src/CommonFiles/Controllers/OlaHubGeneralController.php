@@ -76,6 +76,20 @@ class OlaHubGeneralController extends BaseController
         return ($sponsers_arr);
     }
 
+    public function getPopup()
+    {
+        $response = [];
+        $popup = DB::table('popup')->first();
+            if($popup){
+                $response = [
+                    'id' => isset($popup->id) ? $popup->id : 0,
+                    "link" => isset($popup->link) ? $popup->link : 0,
+                    "image" => isset($popup->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($popup->image) : NULL,
+                ];
+            }
+        return ($response);
+    }
+
 
 
     public function setAdsStatisticsData($getFrom)

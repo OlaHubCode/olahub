@@ -251,28 +251,31 @@ class CatalogItem extends Model
         $find = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
-        })->where(function ($q) use ($whereQuery) {
+        })->where(function ($qe1) use ($whereQuery,$itemQuery) {
+            $qe1->where(function ($q) use ($whereQuery) {
             //occasions
-            $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-            });
-            // interests
-            $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-            });
-            //categories
-            $q->orWhereHas("category", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-                $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
-                    $q2->whereRaw($whereQuery);
+                $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                });
+                // interests
+                $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                });
+                //categories
+                $q->orWhereHas("category", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                    $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                });
+                //classification
+                $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
                 });
             });
-            //classification
-            $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
+            $qe1->orWhere(function ($q1) use ($itemQuery) {
+                $q1->whereRaw($itemQuery);
             });
-        })->orWhere(function ($q1) use ($itemQuery) {
-            $q1->whereRaw($itemQuery);
         });
         $related = false;
         $newWords = $words;
