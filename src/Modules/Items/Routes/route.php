@@ -21,7 +21,6 @@ $router->group([
     $router->post('ads', 'OlaHubAdvertisesController@getAdsData');
     $router->post('classifications', 'OlaHubHeaderMenuController@getClassificationsData');
     $router->post('categories', 'OlaHubHeaderMenuController@getCategoriesData');
-    $router->post('brands', 'OlaHubHeaderMenuController@getBrandsData');
     $router->post('trending', 'OlaHubLandingPageController@getTrendingData');
     $router->post('offers', 'OlaHubLandingPageController@getMostOfferData');
     $router->post('recommended', 'OlaHubLandingPageController@getRecommendedData');
@@ -32,6 +31,7 @@ $router->group([
     $router->post('offerItemsPage/attribute', 'OlaHubItemController@getOfferItemsPageAttribute');
     $router->post('offerItemsPage/categories', 'OlaHubItemController@getOfferItemsPageCategories');
     $router->post('offerItemsPage/categories/{all:\ball\b}', 'OlaHubItemController@getOfferItemsPageCategories');
+    $router->post('/{type}', 'OlaHubHeaderMenuController@getBrandsData');
 
     /*
      * Filters (Left side filters)

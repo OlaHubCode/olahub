@@ -17,4 +17,8 @@ class AttrValue extends Model {
     public function valueItemsData() {
         return $this->hasMany('OlaHub\UserPortal\Models\ItemAttrValue', 'item_attribute_value_id');
     }
+
+    public function valueDesignerData() {
+        return $this->hasMany('OlaHub\UserPortal\Models\DesignerItemAttrValue', 'value_id');
+    }
 }

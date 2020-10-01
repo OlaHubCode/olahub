@@ -612,18 +612,18 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $post->post_id;
                     $notification->save();
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                        $friend,
-                        $notiContent,
-                        array(
-                            "type" => $notiContent,
-                            "postId" => $post->post_id,
-                            "subject" => $post->content,
-                            "username" => "$userData->first_name $userData->last_name",
-                        ),
-                        @$owner->lang || "en",
-                        "$userData->first_name $userData->last_name"
-                    );
+                    // \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    //     $friend,
+                    //     $notiContent,
+                    //     array(
+                    //         "type" => $notiContent,
+                    //         "postId" => $post->post_id,
+                    //         "subject" => $post->content,
+                    //         "username" => "$userData->first_name $userData->last_name",
+                    //     ),
+                    //     @$owner->lang || "en",
+                    //     "$userData->first_name $userData->last_name"
+                    // );
                 }
             }
 
@@ -1045,6 +1045,7 @@ class OlaHubPostController extends BaseController
                             'canDelete' => $canDelete,
                             'canEditReply' => $canEditReply,
                             'canDeleteReply' => $canDeleteReply,
+                            'canReply' => $canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [

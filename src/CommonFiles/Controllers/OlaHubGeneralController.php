@@ -31,7 +31,7 @@ class OlaHubGeneralController extends BaseController
     public function contactUs()
     {
 
-        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
+        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail((Array) $this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200], 200);
     }
 
@@ -1554,7 +1554,7 @@ class OlaHubGeneralController extends BaseController
             $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
         }
         // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("mainData")
+        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("itemsMainData")
             ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {

@@ -15,6 +15,6 @@ class DesignerItemInterests extends Model
 
     public function interestMainData()
     {
-        return $this->belongsTo('OlaHub\UserPortal\Models\Interest', 'interest_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\Interests', 'interest_id');
     }
 }

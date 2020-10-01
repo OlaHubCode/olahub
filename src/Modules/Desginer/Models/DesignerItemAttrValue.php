@@ -14,7 +14,7 @@ class DesignerItemAttrValue extends Model {
     }
 
     public function valueMainData() {
-        return $this->belongsTo('OlaHub\UserPortal\Models\AttrValue','item_attribute_value_id');
+        return $this->belongsTo('OlaHub\UserPortal\Models\AttrValue','value_id');
     }
     
 }

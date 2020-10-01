@@ -101,11 +101,12 @@ class WishList extends Model
                     }
                     break;
             }
+            if($this->item){
             $this->setItemMainData($item->item_type);
             $this->setItemImageData();
             $this->setAddData($this->item->id, $item->item_type);
         }
-
+    }
         return $this->return;
     }
 

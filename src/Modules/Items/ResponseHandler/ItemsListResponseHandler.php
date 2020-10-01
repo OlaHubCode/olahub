@@ -18,7 +18,7 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         $this->setPriceData();
         $this->setWishlistData();
         // $this->setMerchantData();
-//         $this->setAddData();
+        //         $this->setAddData();
         // $this->setDefImageData();
         return $this->return;
     }
@@ -29,7 +29,7 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         $itemDescription = isset($this->data->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data, 'description') : NULL;
         $images = $this->data->images;
         $this->return = [
-            "type"=>"store",
+            "type" => "store",
             "productID" => isset($this->data->id) ? $this->data->id : 0,
             "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($this->data, 'item_slug', $itemName),
             "productSKU" => isset($this->data->sku) ? $this->data->sku : NULL,
@@ -38,7 +38,7 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
             "productInStock" => ($this->data->qu ? $this->data->qu : CatalogItem::checkStock($this->data)),
             // "productInStock" => CatalogItem::checkStock($this->data),
             "productIsNew" => CatalogItem::checkIsNew($this->data),
-            "productImage" => isset($images[0])?\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref):\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+            "productImage" => isset($images[0]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
             "productOwnerName" => ($this->data->brand_name ? $this->data->brand_name : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data->brand, 'name')),
         ];
     }
@@ -111,6 +111,5 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         if ($wishlist) {
             $this->return['productWishlist'] = true;
         }
-        
     }
 }

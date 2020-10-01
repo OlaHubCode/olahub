@@ -52,11 +52,12 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
             $shippingFeesTotal = 0;
 
             foreach ($shoppingItems as $item) {
+                // var_dump($item->item_type);
                 if ($item->item_type == 'designer')
                     $brand = \OlaHub\UserPortal\Models\Designer::find($item->merchant_id);
                 else
-                    $brand = \OlaHub\UserPortal\Models\Merchant::find($item->merchant_id);
-
+                    $brand = \OlaHub\UserPortal\Models\Merchant::withoutGlobalScope('country')->find($item->merchant_id);
+                // var_dump($brand);
                 $shipping = CountriesShipping::join('countries', 'countries_shipping_fees.country_from', 'countries.id')
                     ->where("country_from", $brand->country_id)
                     ->where("country_to", $countryID)

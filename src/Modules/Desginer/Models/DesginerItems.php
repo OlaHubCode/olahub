@@ -16,6 +16,10 @@ class DesignerItems extends Model
         });
     }
 
+    public function exchangePolicy()
+    {
+        return $this->belongsTo('OlaHub\UserPortal\Models\ExchangeAndRefund', 'exchange_refund_policy');
+    }
     static $columnsMapping = [
         'categories' => [
             'column' => 'category_id',
@@ -73,13 +77,25 @@ class DesignerItems extends Model
         ],
     ];
 
+    static function checkIsNew($data)
+    {
+        if ($data && $data instanceof DesignerItems) {
+            $createTime = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($data->created_at, "Y-m-d");
+            $maxDays = date("Y-m-d", strtotime("-2 Days"));
+            if ($createTime >= $maxDays) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static function checkPrice($item, $final = false, $withCurr = true)
     {
         $return["productPrice"] = isset($item->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price, $withCurr) : 0;
         $return["productDiscountedPrice"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price, $withCurr);
         $return["productHasDiscount"] = false;
         if (isset($item->discounted_price) && $item->discounted_price && strtotime($item->discounted_price_start_date) <= time() && strtotime($item->discounted_price_end_date) >= time()) {
-            $return["productPrice"] = isset($item->discounted_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->discounted_price, $withCurr) : 0;
+            $return["productDiscountedPrice"] = isset($item->discounted_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->discounted_price, $withCurr) : 0;
             $return["productHasDiscount"] = true;
         }
 
@@ -166,7 +182,7 @@ class DesignerItems extends Model
 
     public function interestSync()
     {
-        return $this->belongsToMany('OlaHub\UserPortal\Models\Interest', 'designer_item_interests', 'item_id', 'interest_id');
+        return $this->belongsToMany('OlaHub\UserPortal\Models\Interests', 'designer_item_interests', 'item_id', 'interest_id');
     }
 
     public function occasions()
@@ -196,5 +212,9 @@ class DesignerItems extends Model
     public function valuesData()
     {
         return $this->hasMany('OlaHub\UserPortal\Models\DesignerItemAttrValue', 'item_id');
+    }
+    public function templateItem()
+    {
+        return $this->belongsTo('OlaHub\UserPortal\Models\DesignerItems', 'parent_item_id');
     }
 }

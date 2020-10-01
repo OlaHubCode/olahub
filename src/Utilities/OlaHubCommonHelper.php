@@ -480,7 +480,7 @@ abstract class OlaHubCommonHelper
             $return['requestCart'] = $request->json('cart');
             $return['requestSort'] = $request->json('order');
         }
-
+        // print_r($request->header());
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['request_data' => json_encode($return)]);
 
@@ -544,7 +544,7 @@ abstract class OlaHubCommonHelper
 
     static function sendEmail($email, $replace, $with, $template)
     {
-        $bcc = "info@olahub.com";
+        $bcc = "mohannad.zaghmouri@olahub.com";
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Prepare sending Email", "action_startData" => json_encode($email) . json_encode($replace) . json_encode($with) . $template]);
         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
         if ($sendMail) {
