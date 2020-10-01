@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CatalogItem extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
     protected $connection = 'mysql';
 
     public function __construct(array $attributes = array())
@@ -77,6 +77,12 @@ class CatalogItem extends Model
             'column' => 'store_slug',
             'type' => 'number',
             'relation' => 'brand',
+            'validation' => 'numeric'
+        ],
+        'designerSlug' => [
+            'column' => 'designer_slug',
+            'type' => 'number',
+            'relation' => 'designer',
             'validation' => 'numeric'
         ],
         'occasionSlug' => [
@@ -234,29 +240,41 @@ class CatalogItem extends Model
             // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
             array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '$word'");
 
+        // each items
+        $itemQuery = [];
+        foreach ($words as $word)
+            array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+        $itemQuery = join(' and ', $itemQuery);
+        // end each 
+
         $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
-        })->where(function ($q) use ($whereQuery) {
+        })->where(function ($qe1) use ($whereQuery,$itemQuery) {
+            $qe1->where(function ($q) use ($whereQuery) {
             //occasions
-            $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-            });
-            // interests
-            $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-            });
-            //categories
-            $q->orWhereHas("category", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
-                $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
-                    $q2->whereRaw($whereQuery);
+                $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                });
+                // interests
+                $q->orWhereHas("interestSync", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                });
+                //categories
+                $q->orWhereHas("category", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
+                    $q1->orWhereHas("parentCategory", function ($q2) use ($whereQuery) {
+                        $q2->whereRaw($whereQuery);
+                    });
+                });
+                //classification
+                $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
+                    $q1->whereRaw($whereQuery);
                 });
             });
-            //classification
-            $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
-                $q1->whereRaw($whereQuery);
+            $qe1->orWhere(function ($q1) use ($itemQuery) {
+                $q1->whereRaw($itemQuery);
             });
         });
         $related = false;
@@ -351,17 +369,17 @@ class CatalogItem extends Model
 
         // check the item name
         if ($find->count() == 0) {
-            $itemQuery = [];
-            foreach ($words as $word)
-                array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
-            $itemQuery = join(' and ', $itemQuery);
+            // $itemQuery = [];
+            // foreach ($words as $word)
+            //     array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            // $itemQuery = join(' and ', $itemQuery);
 
-            $find->orWhere(function ($q1) use ($itemQuery) {
+            $find->orWhere(function ($q1) use ($text) {
                 $q1->where(function ($query) {
                     $query->whereNull('parent_item_id');
                     $query->orWhere('parent_item_id', '0');
                 });
-                $q1->whereRaw($itemQuery);
+                $q1->whereRaw("LOWER(name) LIKE '%" . strtolower($text) . "%'");
             });
         }
 

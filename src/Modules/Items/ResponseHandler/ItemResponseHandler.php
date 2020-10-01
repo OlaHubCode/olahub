@@ -45,6 +45,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
         $itemDescription = isset($this->parentData->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->parentData, 'description') : NULL;
         $customizeData = isset($this->data->customize_type) ? unserialize($this->data->customize_type) : 0;
         $this->return = [
+            "productType" => "store",
             "productID" => isset($this->data->id) ? $this->data->id : 0,
             "productShowLabel" => isset($this->data->show_discount_label) ? $this->data->show_discount_label : 1,
             "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($this->parentData, 'item_slug', $itemName),
@@ -137,7 +138,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
         $this->return['productInCart'] = 0;
 
         //wishlist
-        if (\OlaHub\UserPortal\Models\WishList::where('item_id', $this->data->id)->count() > 0) {
+        if (\OlaHub\UserPortal\Models\WishList::where('item_id', $this->data->id)->where('item_type', 'store')->count() > 0) {
             $this->return['productWishlisted'] = '1';
         }
 

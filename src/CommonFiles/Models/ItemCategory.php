@@ -54,6 +54,11 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model
         return $this->hasMany('OlaHub\UserPortal\Models\CatalogItem', 'category_id');
     }
 
+    public function itemsDesignerData()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\DesignerItems', 'category_id');
+    }
+
     static function setReturnResponse($categories, $itemsIDs = false)
     {
         $return['data'] = [];

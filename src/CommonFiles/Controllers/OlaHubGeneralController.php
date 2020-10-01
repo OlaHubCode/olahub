@@ -31,7 +31,7 @@ class OlaHubGeneralController extends BaseController
     public function contactUs()
     {
 
-        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail($this->requestData);
+        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail((Array) $this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200], 200);
     }
 
@@ -74,6 +74,20 @@ class OlaHubGeneralController extends BaseController
             }
         }
         return ($sponsers_arr);
+    }
+
+    public function getPopup()
+    {
+        $response = [];
+        $popup = DB::table('popup')->first();
+            if($popup){
+                $response = [
+                    'id' => isset($popup->id) ? $popup->id : 0,
+                    "link" => isset($popup->link) ? $popup->link : 0,
+                    "image" => isset($popup->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($popup->image) : NULL,
+                ];
+            }
+        return ($response);
     }
 
 
@@ -841,6 +855,7 @@ class OlaHubGeneralController extends BaseController
                 case "items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items filter"]);
                     $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count, true);
+                    
                     if ($items["data"]->count()) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
                     }
@@ -1554,7 +1569,7 @@ class OlaHubGeneralController extends BaseController
             $timeline[] = $this->handlePostTimeline($merchant, 'merchant');
         }
         // designers
-        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("mainData")
+        $designers = \OlaHub\UserPortal\Models\Designer::whereHas("itemsMainData")
             ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {

@@ -238,18 +238,20 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedPosts as $litem) {
 
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                        $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                        $item = $item['data'];
-                        $item['type'] = 'post_shared';
-                        $item['sharedUser_info'] = [
-                            'user_id' => $litem->author->id,
-                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
-                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
-                            'username' => $litem->user_name,
-                        ];
+                        if($item){
+                            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                            $item = $item['data'];
+                            $item['type'] = 'post_shared';
+                            $item['sharedUser_info'] = [
+                                'user_id' => $litem->author->id,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                                'username' => $litem->user_name,
+                            ];
 
-                        $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
-                        $return['data'][] = $item;
+                            $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                            $return['data'][] = $item;
+                        }
                     }
                 }
             }
@@ -602,18 +604,18 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $post->post_id;
                     $notification->save();
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                        $friend,
-                        $notiContent,
-                        array(
-                            "type" => $notiContent,
-                            "postId" => $post->post_id,
-                            "subject" => $post->content,
-                            "username" => "$userData->first_name $userData->last_name",
-                        ),
-                        @$owner->lang || "en",
-                        "$userData->first_name $userData->last_name"
-                    );
+                    // \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                    //     $friend,
+                    //     $notiContent,
+                    //     array(
+                    //         "type" => $notiContent,
+                    //         "postId" => $post->post_id,
+                    //         "subject" => $post->content,
+                    //         "username" => "$userData->first_name $userData->last_name",
+                    //     ),
+                    //     @$owner->lang || "en",
+                    //     "$userData->first_name $userData->last_name"
+                    // );
                 }
             }
 
@@ -1035,6 +1037,7 @@ class OlaHubPostController extends BaseController
                             'canDelete' => $canDelete,
                             'canEditReply' => $canEditReply,
                             'canDeleteReply' => $canDeleteReply,
+                            'canReply' => $canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
