@@ -146,17 +146,18 @@ class OlaHubPaymentsMainController extends BaseController
     protected function checkCrossCountries()
     {
         $getIPInfo = new \OlaHub\UserPortal\Helpers\getIPInfo();
-        $countryCode = $getIPInfo->ipData('countrycode');
-        $countryID = 0;
-        if ($countryCode && strlen($countryCode) == 2) {
-            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $countryCode)->where('is_supported', '1')->where('is_published', '1')->first();
-            if ($country) {
-                $countryID = $country->id;
-            }
-        }
-        if ($countryID != $this->cart->country_id) {
-            $this->crossCountry = true;
-        }
+        // $countryCode = "IQ";
+        // var_dump($countryCode);
+        $countryID = $this->cart->country_id;
+        // if ($countryCode && strlen($countryCode) == 2) {
+        //     $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $countryCode)->where('is_supported', '1')->where('is_published', '1')->first();
+        //     if ($country) {
+        //         $countryID = $country->id;
+        //     }
+        // }
+        // if ($countryID != $this->cart->country_id) {
+        //     $this->crossCountry = true;
+        // }
     }
 
     protected function getCartDetails()
@@ -219,6 +220,7 @@ class OlaHubPaymentsMainController extends BaseController
     protected function getPaymentMethodsDetails($country, $shipped_to = NULL, $ifHasVoucher = NULL)
     {
         $typeID = $this->typeID;
+        // var_dump($this->crossCountry);
         if ($this->crossCountry) {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
                 ->whereHas('PaymentData', function ($q) use ($typeID, $shipped_to, $ifHasVoucher) {
@@ -236,7 +238,7 @@ class OlaHubPaymentsMainController extends BaseController
                     $q->whereHas('typeDataSync', function ($query) use ($typeID) {
                         $query->where('lkp_payment_method_types.id', $typeID);
                     });
-                })->groupBy("payment_method_id")->get();
+                })->groupBy("payment_method_id")->where('is_published',1)->get();
         }
 
         if (!$this->paymentMethodCountryData->count()) {

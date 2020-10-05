@@ -424,8 +424,7 @@ class OlaHubPostController extends BaseController
                 })
                 ->get();
         } else {
-            $topHashTags = Post::Where('content', 'like', '%#%')
-                ->where('privacy', 1)->get();
+            $topHashTags = Post::Where('content', 'like', '%#%')->get();
         }
         foreach ($topHashTags as $hash) {
             $onePostHash = [];

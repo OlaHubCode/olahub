@@ -70,6 +70,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                         ->where("is_shipping", 1)
                         ->first();
                 }
+                // var_dump($shipping);
                 $countryName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($shipping, 'name');
                 $key = array_search($countryName, array_column($shippingFees, 'country'));
                 if ($key == false && gettype($key) == 'boolean') {
