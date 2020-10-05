@@ -248,18 +248,20 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedPosts as $litem) {
 
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                        $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                        $item = $item['data'];
-                        $item['type'] = 'post_shared';
-                        $item['sharedUser_info'] = [
-                            'user_id' => $litem->author->id,
-                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
-                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
-                            'username' => $litem->user_name,
-                        ];
+                        if($item){
+                            $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                            $item = $item['data'];
+                            $item['type'] = 'post_shared';
+                            $item['sharedUser_info'] = [
+                                'user_id' => $litem->author->id,
+                                'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                                'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                                'username' => $litem->user_name,
+                            ];
 
-                        $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
-                        $return['data'][] = $item;
+                            $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                            $return['data'][] = $item;
+                        }
                     }
                 }
             }

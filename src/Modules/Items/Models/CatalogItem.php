@@ -377,6 +377,7 @@ class CatalogItem extends Model
                     $query->orWhere('parent_item_id', '0');
                 });
                 $q1->whereRaw("LOWER(name) LIKE '%" . strtolower($text) . "%'");
+                $q1->whereNull('parent_item_id');
             });
         }
 

@@ -24,6 +24,7 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         }
         $this->setDefaultData();
         $this->setCartData();
+        $this->setItemSelectedAttrData();
         // $this->setBrandData();
 
         return $this->return;
@@ -150,14 +151,15 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
     
     private function setItemSelectedAttrData()
     {
-        $this->return['productselectedAttributes'] = [];
-        $values = $this->data->valuesData;
-        if ($values->count() > 0) {
-            foreach ($values as $itemValue) {
-                $value = $itemValue->valueMainData;
-                $this->return['productselectedAttributes'][$value->product_attribute_id] = (string) $value->id;
-            }
-        }
+        // $this->return['productAttributes'] = [];
+        // $values = $this->data->valuesData;
+        // if ($values->count() > 0) {
+        //     foreach ($values as $itemValue) {
+        //         $value = $itemValue->valueMainData;
+        //         if($value->attribute_value && !$value->color_hex_code) $this->return['productAttributes']["size"] = $value->attribute_value;
+        //         if($value->color_hex_code) $this->return['productAttributes']["color"] = $value->color_hex_code;
+        //     }
+        // }
     }
     private function setBrandData()
     {

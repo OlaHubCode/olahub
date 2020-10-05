@@ -76,6 +76,20 @@ class OlaHubGeneralController extends BaseController
         return ($sponsers_arr);
     }
 
+    public function getPopup()
+    {
+        $response = [];
+        $popup = DB::table('popup')->first();
+            if($popup){
+                $response = [
+                    'id' => isset($popup->id) ? $popup->id : 0,
+                    "link" => isset($popup->link) ? $popup->link : 0,
+                    "image" => isset($popup->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($popup->image) : NULL,
+                ];
+            }
+        return ($response);
+    }
+
 
 
     public function setAdsStatisticsData($getFrom)
@@ -841,6 +855,7 @@ class OlaHubGeneralController extends BaseController
                 case "items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items filter"]);
                     $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count, true);
+                    
                     if ($items["data"]->count()) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
                     }
