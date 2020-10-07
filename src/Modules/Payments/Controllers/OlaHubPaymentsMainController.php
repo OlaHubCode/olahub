@@ -882,6 +882,7 @@ class OlaHubPaymentsMainController extends BaseController
                 ->setItemCategory($item->item_type)
                 ->setItemPrice($item->item_price)
                 ->setItemQuantity($item->quantity)
+                ->setCurrencyCode($this->billing->billing_currency)
                 ->sendItem();
         }
 

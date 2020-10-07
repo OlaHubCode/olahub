@@ -35,10 +35,10 @@ class CalendarController extends BaseController
 
     public function getAllOccassionByCountry($target = NULL)
     {
-
+        $countryId = !empty($this->requestData['id']) ? $this->requestData['id'] : app('session')->get('def_country')->id;
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Calendar", 'function_name' => "Get all occassion by country"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetching occassion by countries"]);
-        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)
+        $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', (int) $countryId)
             ->where(function ($q) use ($target) {
                 if ($target == 'registry') {
                     $q->where('for_registry', 1);

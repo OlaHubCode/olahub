@@ -42,6 +42,7 @@ class RegistryResponseHandler extends Fractal\TransformerAbstract
             "registryCountry" => isset($this->data->country_id) ? $this->data->country_id : 0,
             "registryOccassionName" => isset($occassion) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occassion, 'name') : NULL,
             "registryCountryName" => isset($this->data->country) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data->country, 'name') : NULL,
+            "registryCountryCode" => isset($this->data->country) ? $this->data->country->two_letter_iso_code : NULL,
             "registryOwner" => isset($this->data->user_id) ? $this->data->user_id : 0,
             "registryOwnerName" => isset($owner) ? $owner->first_name . ' ' . $owner->last_name : NULL,
             "registryOwnerSlug" => isset($owner) ? $owner->profile_url : NULL,
