@@ -86,6 +86,7 @@ class Cart extends Model
                         }
                         if ($mainItem) {
                             $itemPrice = CatalogItem::checkPrice($mainItem, TRUE, FALSE);
+                            $itemPrice = str_replace(",", "", $itemPrice);
                             if ($itemPrice != $item->unit_price) {
                                 $item->unit_price = $itemPrice;
                                 $item->total_price = $itemPrice * $item->quantity;
@@ -109,6 +110,7 @@ class Cart extends Model
                                 $itemDes = $mainItem;
                             }
                             $itemPrice = DesignerItems::checkPrice($itemDes, TRUE, FALSE);
+                            $itemPrice = str_replace(",", "", $itemPrice);
                             if ($itemPrice != $item->unit_price) {
                                 $item->unit_price = $itemPrice;
                                 $item->total_price = $itemPrice * $item->quantity;

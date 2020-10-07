@@ -326,7 +326,7 @@ abstract class OlaHubCommonHelper
         } else {
             $currency = app('session')->get('def_currency');
         }
-        $returnPrice = number_format($price, 2, '.', '');
+        $returnPrice = number_format($price, 2, '.', ',');
         // $returnPrice = number_format($price, 2,'.',',');
         if ($withCurr) {
             $returnCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
@@ -343,10 +343,10 @@ abstract class OlaHubCommonHelper
         if ($exchangeRate) {
             $newPrice = $price * $exchangeRate->exchange_rate;
             // $returnPrice = number_format($newPrice, 2);
-            $returnPrice = number_format($newPrice, 2, '.', '');
+            $returnPrice = number_format($newPrice, 2, '.', ',');
         } else {
             // $returnPrice = number_format($price, 2);
-            $returnPrice = number_format($price, 2, '.', '');
+            $returnPrice = number_format($price, 2, '.', ',');
         }
 
         if ($withCurr) {

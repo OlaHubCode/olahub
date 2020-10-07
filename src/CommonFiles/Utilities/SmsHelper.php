@@ -6,6 +6,10 @@ class SmsHelper extends OlaHubCommonHelper
 {
 
     public $countryCode = "";
+    private function handleNumbers($number){
+        $number = str_replace(",", "", $number);
+        return number_format($number, 2, ".", ",");
+    }
     private function getCountryCode($country_id)
     {
         $country = \OlaHub\UserPortal\Models\ShippingCountries::where('olahub_country_id', $country_id)->first();
@@ -145,7 +149,7 @@ class SmsHelper extends OlaHubCommonHelper
         $template = 'USR013';
         $userName = "$userData->first_name $userData->last_name";
         $billingNumber = $billing->billing_number;
-        $totalAmount = number_format(($billing->billing_total + $billing->billing_fees - $billing->voucher_used), 2) . " " . $billing->billing_currency;
+        $totalAmount = $this->handleNumbers(($billing->billing_total + $billing->billing_fees - $billing->voucher_used)) . " " . $billing->billing_currency;
         $replace = ['[userName]', '[orderNumber]', '[orderAmmount]'];
         $with = [$userName, $billingNumber, $totalAmount];
         $to = $this->countryCode . (int) $userData->mobile_no;
@@ -233,17 +237,17 @@ class SmsHelper extends OlaHubCommonHelper
         $amountCollection = "Paid by: " . $payData["paidBy"];
         if (isset($payData["orderPayVoucher"])) {
             $amountCollection .= "
-                    Paid using voucher: " . number_format($payData["orderPayVoucher"], 2) . " " . $billing->billing_currency;
+                    Paid using voucher: " . $this->handleNumbers($payData["orderPayVoucher"]) . " " . $billing->billing_currency;
             $amountCollection .= "
-                    Voucher after paid: " . number_format($payData["orderVoucherAfterPay"], 2) . " " . $billing->billing_currency;
+                    Voucher after paid: " . $this->handleNumbers($payData["orderVoucherAfterPay"]) . " " . $billing->billing_currency;
         }
 
         if (isset($payData["orderPayByGate"])) {
             $amountCollection .= "
-                    Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . $billing->billing_currency;
+                    Paid using (" . $payData["orderPayByGate"] . "): </b>" . $this->handleNumbers(($payData["orderPayByGateAmount"])) . " " . $billing->billing_currency;
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $amountCollection];
         $to = $this->countryCode . (int) $userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }
@@ -258,17 +262,17 @@ class SmsHelper extends OlaHubCommonHelper
         $amountCollection = "Paid by: " . $payData["paidBy"];
         if (isset($payData["orderPayVoucher"])) {
             $amountCollection .= "
-                    Paid using voucher: " . number_format($payData["orderPayVoucher"], 2) . " " . $billing->billing_currency;
+                    Paid using voucher: " . $this->handleNumbers($payData["orderPayVoucher"]) . " " . $billing->billing_currency;
             $amountCollection .= "
-                    Voucher after paid: " . number_format($payData["orderVoucherAfterPay"], 2) . " " . $billing->billing_currency;
+                    Voucher after paid: " . $this->handleNumbers($payData["orderVoucherAfterPay"]) . " " . $billing->billing_currency;
         }
 
         if (isset($payData["orderPayByGate"])) {
             $amountCollection .= "
-                    Paid using (" . $payData["orderPayByGate"] . "): </b>" . number_format(($payData["orderPayByGateAmount"]), 2) . " " . $billing->billing_currency;
+                    Paid using (" . $payData["orderPayByGate"] . "): </b>" . $this->handleNumbers(($payData["orderPayByGateAmount"])) . " " . $billing->billing_currency;
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $amountCollection];
         $to = $this->countryCode . (int) $userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }
@@ -368,7 +372,7 @@ class SmsHelper extends OlaHubCommonHelper
         $template = 'USR030';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', "[failReason]"];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $reason];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $reason];
         $to = $this->countryCode . (int) $userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }

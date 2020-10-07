@@ -1302,7 +1302,9 @@ class OlaHubGeneralController extends BaseController
                             }
                             $fInfo['username'] = $uNames;
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_store', $fInfo);
+                            if (is_object($item)) {
+                                $timeline[] = $this->handlePostTimeline($item, 'item_liked_store', $fInfo);
+                            }
                         }
                     }
                     if (count($filteredDesignerItems)) {
@@ -1330,7 +1332,9 @@ class OlaHubGeneralController extends BaseController
                             }
                             $fInfo['username'] = $uNames;
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_liked_designer', $fInfo);
+                            if (is_object($item)) {
+                                $timeline[] = $this->handlePostTimeline($item, 'item_liked_designer', $fInfo);
+                            }
                         }
                     }
                 }
@@ -1395,7 +1399,9 @@ class OlaHubGeneralController extends BaseController
                             }
                             $fInfo['username'] = $uNames;
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_store', $fInfo);
+                            if (is_object($item)) {
+                                $timeline[] = $this->handlePostTimeline($item, 'item_shared_store', $fInfo);
+                            }
                         }
                     }
                     if (count($filteredDesignerItems)) {
@@ -1423,7 +1429,9 @@ class OlaHubGeneralController extends BaseController
                             }
                             $fInfo['username'] = $uNames;
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item_id)->first();
-                            $timeline[] = $this->handlePostTimeline($item, 'item_shared_designer', $fInfo);
+                            if (is_object($item)) {
+                                $timeline[] = $this->handlePostTimeline($item, 'item_shared_designer', $fInfo);
+                            }
                         }
                     }
                 }
