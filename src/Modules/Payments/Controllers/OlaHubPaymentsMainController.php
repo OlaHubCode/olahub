@@ -146,17 +146,18 @@ class OlaHubPaymentsMainController extends BaseController
     protected function checkCrossCountries()
     {
         $getIPInfo = new \OlaHub\UserPortal\Helpers\getIPInfo();
-        $countryCode = $getIPInfo->ipData('countrycode');
-        $countryID = 0;
-        if ($countryCode && strlen($countryCode) == 2) {
-            $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $countryCode)->where('is_supported', '1')->where('is_published', '1')->first();
-            if ($country) {
-                $countryID = $country->id;
-            }
-        }
-        if ($countryID != $this->cart->country_id) {
-            $this->crossCountry = true;
-        }
+        // $countryCode = "IQ";
+        // var_dump($countryCode);
+        $countryID = $this->cart->country_id;
+        // if ($countryCode && strlen($countryCode) == 2) {
+        //     $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $countryCode)->where('is_supported', '1')->where('is_published', '1')->first();
+        //     if ($country) {
+        //         $countryID = $country->id;
+        //     }
+        // }
+        // if ($countryID != $this->cart->country_id) {
+        //     $this->crossCountry = true;
+        // }
     }
 
     protected function getCartDetails()
@@ -187,7 +188,8 @@ class OlaHubPaymentsMainController extends BaseController
 
     protected function setCartTotal($withExtra = true)
     {
-        $this->cartTotal = (float) \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
+        $this->cartTotal = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
+        $this->cartTotal = str_replace(",", "", $this->cartTotal);
         $this->checkPromoCode($this->cartTotal);
         if ($this->promoCodeName == 'June2020') {
             $this->shippingFees = 0;
@@ -199,8 +201,8 @@ class OlaHubPaymentsMainController extends BaseController
                 }
             }
         }
-
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
+        
         if ($this->celebration) {
             if ($this->promoCodeName == 'June2020') {
                 $this->shippingFees = 0;
@@ -219,6 +221,7 @@ class OlaHubPaymentsMainController extends BaseController
     protected function getPaymentMethodsDetails($country, $shipped_to = NULL, $ifHasVoucher = NULL)
     {
         $typeID = $this->typeID;
+        // var_dump($this->crossCountry);
         if ($this->crossCountry) {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
                 ->whereHas('PaymentData', function ($q) use ($typeID, $shipped_to, $ifHasVoucher) {
@@ -236,7 +239,7 @@ class OlaHubPaymentsMainController extends BaseController
                     $q->whereHas('typeDataSync', function ($query) use ($typeID) {
                         $query->where('lkp_payment_method_types.id', $typeID);
                     });
-                })->groupBy("payment_method_id")->get();
+                })->groupBy("payment_method_id")->where('is_published', 1)->get();
         }
 
         if (!$this->paymentMethodCountryData->count()) {
@@ -337,6 +340,8 @@ class OlaHubPaymentsMainController extends BaseController
                         $originalPrice = $oneItem->price;
                         $exchangedPrice = $oneItem->price;
                     }
+
+                    $exchangedPrice = str_replace(",", "", $exchangedPrice);
                     $billingDetails->billing_id = $this->billing->id;
                     $billingDetails->item_name = $oneItem->name;
                     $image = \OlaHub\UserPortal\Models\ItemImages::where('item_id', $oneItem->id)->first();
@@ -372,6 +377,7 @@ class OlaHubPaymentsMainController extends BaseController
                         $originalPrice = $oneItem->price;
                     }
                     $exchangedPrice = $itemPrice['productPrice'];
+                    $exchangedPrice = str_replace(",", "", $exchangedPrice);
 
                     $billingDetails->billing_id = $this->billing->id;
                     $billingDetails->item_name = $oneItem->name;
@@ -852,7 +858,8 @@ class OlaHubPaymentsMainController extends BaseController
         }
     }
 
-    protected function googleAnalytics(){
+    protected function googleAnalytics()
+    {
 
         $analytics = new Analytics(true);
         $analytics->setProtocolVersion('1')
@@ -866,7 +873,7 @@ class OlaHubPaymentsMainController extends BaseController
             ->setTax("0")
             ->sendTransaction();
 
-        
+
         foreach ($this->billingDetails as $item) {
 
             $response = $analytics->setTransactionId($this->billing->billing_number) // transaction id. required, same value as above
@@ -875,10 +882,10 @@ class OlaHubPaymentsMainController extends BaseController
                 ->setItemCategory($item->item_type)
                 ->setItemPrice($item->item_price)
                 ->setItemQuantity($item->quantity)
+                ->setCurrencyCode($this->billing->billing_currency)
                 ->sendItem();
         }
 
         return true;
-
     }
 }

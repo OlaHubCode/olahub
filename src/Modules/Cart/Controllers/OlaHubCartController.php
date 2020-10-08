@@ -423,8 +423,8 @@ class OlaHubCartController extends BaseController
                 ->where('user_id', app('session')->get('tempID'))->first();
             $pp = $this->celebration->celebrationParticipants->count();
             $total = $this->cart->total_price + $shippingFees['total'];
-            $debt = number_format($total / $pp, 2);
-            $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2);
+            $debt = $total / $pp;
+            $debt = $debt - fmod($debt, MOD_CELEBRATION);
             if ($participant->is_creator)
                 $total = ($total == ($debt * $pp) ? $debt : ($total - ($debt * $pp)) + $debt);
             else
@@ -600,6 +600,7 @@ class OlaHubCartController extends BaseController
 
     private function handleRemoveItemFromCelebration($totalPrice)
     {
+        $totalPrice = str_replace(",", "", $totalPrice);
         if ($this->celebration && $totalPrice >= 0) {
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)->get();
             $price = $totalPrice / $participants->count();
@@ -632,6 +633,7 @@ class OlaHubCartController extends BaseController
 
     private function handleAddItemToCelebration($totalPrice)
     {
+        $totalPrice = str_replace(",", "", $totalPrice);
         if ($this->celebration && $totalPrice >= 0) {
             $participants = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)->get();
             $price = $totalPrice / $participants->count();

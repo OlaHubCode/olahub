@@ -572,6 +572,9 @@ class OlaHubItemController extends BaseController
             $existInRegistry = FALSE;
             $existRegistry = TRUE;
             $acceptParticipant = FALSE;
+            if($item_type == 'catalog'){
+                $item_type = 'store';
+            }
             $registry = \OlaHub\UserPortal\Models\RegistryModel::where('id', $this->requestFilter['registryId'])->first();
             if ($registry) {
                 $registryItem = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)

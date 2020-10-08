@@ -4,6 +4,11 @@ namespace OlaHub\UserPortal\Helpers;
 
 class EmailHelper extends OlaHubCommonHelper
 {
+    private function handleNumbers($number)
+    {
+        $number = str_replace(",", "", $number);
+        return number_format($number, 2, ".", ",");
+    }
     protected $style = [
         'thr' => '<hr style="margin: 5px 0;border:0.4px solid #f5f5f5;width:100%" />',
         'fhr' => '<hr style="margin: 0;border:1px solid #eee;width:100%" />',
@@ -127,16 +132,16 @@ class EmailHelper extends OlaHubCommonHelper
         }
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($billing->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($billing->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($billing->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($billing->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($billing->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -144,10 +149,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -249,16 +254,16 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($billing->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($billing->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($billing->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($billing->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($billing->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -266,10 +271,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -314,16 +319,16 @@ class EmailHelper extends OlaHubCommonHelper
         }
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($bill->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($bill->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($bill->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($bill->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($bill->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($bill->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($bill->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -331,10 +336,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -377,7 +382,7 @@ class EmailHelper extends OlaHubCommonHelper
 
             ############## Total ####################
             $orderDetails .= "<table style='margin-top:20px;padding-top:10px;width:100%;border-top:1px solid #eee;'>
-                <tr><td><b>Total</b> </td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+                <tr><td><b>Total</b> </td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
             $orderDetails .= "</table>";
 
             ############## Footer ####################
@@ -418,16 +423,16 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($billing->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($billing->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($billing->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($billing->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($billing->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -435,10 +440,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -460,7 +465,7 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR030';
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', "[failReason]"];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $reason];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $reason];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -491,7 +496,7 @@ class EmailHelper extends OlaHubCommonHelper
         //     }
         // }
         $orderDetails .= '</td>
-            <td width="80" align="right"><b>' . number_format($item->item_price, 2) . ' ' . $currency . '</b></td></tr></table>';
+            <td width="80" align="right"><b>' . $this->handleNumbers($item->item_price) . ' ' . $currency . '</b></td></tr></table>';
 
         ############## Footer ####################
         $orderDetails .= '<div style="background:#dedede;padding:10px;margin-top:20px;text-align:center;display: block;">
@@ -531,7 +536,7 @@ class EmailHelper extends OlaHubCommonHelper
         //     }
         // }
         $orderDetails .= '</td>
-            <td width="80" align="right"><b>' . number_format($item->item_price, 2) . ' ' . $currency . '</b></td></tr></table>';
+            <td width="80" align="right"><b>' . $this->handleNumbers($item->item_price) . ' ' . $currency . '</b></td></tr></table>';
 
         ############## Footer ####################
         $orderDetails .= '<div style="background:#dedede;padding:10px;margin-top:20px;text-align:center;display: block;">
@@ -588,16 +593,16 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($bill->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($bill->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($bill->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($bill->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($bill->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($bill->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($bill->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -605,10 +610,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -657,7 +662,7 @@ class EmailHelper extends OlaHubCommonHelper
 
             ############## Total ####################
             $orderDetails .= "<table style='margin-top:20px;padding-top:10px;width:100%;border-top:1px solid #eee;'>
-                <tr><td><b>Total</b> </td><td width='80' align='right'><b>" . number_format($subTotal, 2) . " $currency</b></td></tr>";
+                <tr><td><b>Total</b> </td><td width='80' align='right'><b>" . $this->handleNumbers($subTotal) . " $currency</b></td></tr>";
             $orderDetails .= "</table>";
 
             ############## Footer ####################
@@ -706,16 +711,16 @@ class EmailHelper extends OlaHubCommonHelper
 
         ############## Total ####################
         $orderDetails .= "<table style='margin-top:20px;width:100%'>
-        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . number_format($subTotal, 2) . " $currency</td></tr>";
+        <tr><td><b>Subtotal</b></td><td width='80' align='right'>" . $this->handleNumbers($subTotal) . " $currency</td></tr>";
         // <td><b>Expected Delivery Date</b> </div><div>#############</div></li>";
         if ($billing->promo_code_saved) {
             $orderDetails .= "<tr><td>
-            <b>Promocode discount</b> </td><td width='80' align='right'>" . number_format($billing->promo_code_saved, 2) . " $currency</td></tr>";
+            <b>Promocode discount</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->promo_code_saved) . " $currency</td></tr>";
         }
         $orderDetails .= "<tr><td>
-        <b>Shipping fees</b> </td><td width='80' align='right'>" . number_format($billing->shipping_fees, 2) . " $currency</td></tr>";
+        <b>Shipping fees</b> </td><td width='80' align='right'>" . $this->handleNumbers($billing->shipping_fees) . " $currency</td></tr>";
         $orderDetails .= "<tr><td colspan='2'>" . $this->style['thr'] . "</td></tr><tr><td>
-        <h2>Total</h2> </td><td width='80' align='right'><b>" . number_format($billing->billing_total, 2) . " $currency</b></td></tr>";
+        <h2>Total</h2> </td><td width='80' align='right'><b>" . $this->handleNumbers($billing->billing_total) . " $currency</b></td></tr>";
         $orderDetails .= "</table>";
 
         ############## Payments ####################
@@ -723,10 +728,10 @@ class EmailHelper extends OlaHubCommonHelper
         $orderDetails .= "<table style='margin-top:20px;width:100%'>";
         $orderDetails .= "<td colspan='2'><p style='" . $this->style['merch'] . "'>Paid through</p></td>";
         if (isset($payData["orderPayVoucher"])) {
-            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . number_format($payData["orderPayVoucher"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>OlaHub balance</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayVoucher"]) . " $currency</td></tr>";
         }
         if (isset($payData["orderPayByGate"])) {
-            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . number_format($payData["orderPayByGateAmount"], 2) . " $currency</td></tr>";
+            $orderDetails .= "<tr><td><b>" . $payData["orderPayByGate"] . "</b></td><td width='80' align='right'>" . $this->handleNumbers($payData["orderPayByGateAmount"]) . " $currency</td></tr>";
         }
         $orderDetails .= "</table>";
 
@@ -832,15 +837,15 @@ class EmailHelper extends OlaHubCommonHelper
         $username = "$userData->first_name $userData->last_name";
         $amountCollection = "<div><b>Paid by: </b>$paid_by</div>";
         if ($billing->voucher_used > 0) {
-            $amountCollection .= "<div><b>Paid using voucher: </b>" . number_format($billing->voucher_used, 2) . " " . $billing->billing_currency . "</div>";
-            $amountCollection .= "<div><b>Voucher after paid: </b>" . number_format($billing->voucher_after_pay, 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Paid using voucher: </b>" . $this->handleNumbers($billing->voucher_used) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Voucher after paid: </b>" . $this->handleNumbers($billing->voucher_after_pay) . " " . $billing->billing_currency . "</div>";
         }
 
         if ($billing->voucher_used > 0 && $billing->billing_total > $billing->voucher_used) {
-            $amountCollection .= "<div><b>Paid using ($paid_by): </b>" . number_format(($billing->billing_total - $billing->voucher_used), 2) . " " . $billing->billing_currency . "</div>";
+            $amountCollection .= "<div><b>Paid using ($paid_by): </b>" . $this->handleNumbers(($billing->billing_total - $billing->voucher_used)) . " " . $billing->billing_currency . "</div>";
         }
         $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', '[ammountCollectDetails]'];
-        $with = [$username, $billing->billing_number, number_format($billing->billing_total, 2) . " " . $billing->billing_currency, $amountCollection];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $amountCollection];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1097,9 +1102,10 @@ class EmailHelper extends OlaHubCommonHelper
     {
         $total = 0;
         foreach ($items as $item) {
+            $item['itemPrice'] = str_replace(",", "", $item['itemPrice']);
             $total += (float) $item['itemPrice'] * $item['itemQuantity'];
         }
-        return number_format($total, 2);
+        return $total;
     }
 
     private function handleMerchantOrderItemsHtml($items = [], $billing = [], $currency = "")
@@ -1269,7 +1275,6 @@ class EmailHelper extends OlaHubCommonHelper
 
         $to = [["info@olahub.com", "olahub"]];
         parent::sendEmail($to, $replace, $with, $template);
-        
     }
 
 
@@ -1297,13 +1302,11 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user registry invition Email", "action_startData" => json_encode($email) . $registryOwner . $registryID . $registryName]);
         $template = 'USR034';
-//        $username = "$userData->first_name $userData->last_name";
+        //        $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
         $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
         $to = [[$email]];
-//        $to = [[$email, $username]];
+        //        $to = [[$email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
-
-
 }

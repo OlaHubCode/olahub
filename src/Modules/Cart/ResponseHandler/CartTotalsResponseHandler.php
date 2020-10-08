@@ -22,6 +22,7 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $cartSubTotal = Cart::getCartSubTotal($this->data, FALSE);
+        $cartSubTotal = str_replace(",", "", $cartSubTotal);
         $this->checkPromoCode($cartSubTotal);
         $userVoucherAccount = \OlaHub\UserPortal\Models\UserVouchers::where('user_id', app('session')->get('tempID'))->first();
         if ($userVoucherAccount) {

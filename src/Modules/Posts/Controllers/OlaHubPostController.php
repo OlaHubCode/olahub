@@ -125,10 +125,12 @@ class OlaHubPostController extends BaseController
                         ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $all[] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
+                            if (is_object($item))
+                                $all[] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
+                            if (is_object($item))
+                                $all[] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
                         }
                     }
                 }
@@ -229,10 +231,12 @@ class OlaHubPostController extends BaseController
                         ];
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
+                            if (is_object($item))
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $usInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
+                            if (is_object($item))
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $usInfo);
                         }
                     }
                 }
@@ -248,7 +252,7 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedPosts as $litem) {
 
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                        if($item){
+                        if ($item) {
                             $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                             $item = $item['data'];
                             $item['type'] = 'post_shared';
@@ -424,8 +428,7 @@ class OlaHubPostController extends BaseController
                 })
                 ->get();
         } else {
-            $topHashTags = Post::Where('content', 'like', '%#%')
-                ->where('privacy', 1)->get();
+            $topHashTags = Post::Where('content', 'like', '%#%')->get();
         }
         foreach ($topHashTags as $hash) {
             $onePostHash = [];
@@ -1173,7 +1176,7 @@ class OlaHubPostController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
     public function updatePost()
-    {   
+    {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "updatePost"]);
 

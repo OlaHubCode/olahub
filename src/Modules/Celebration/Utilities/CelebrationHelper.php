@@ -11,6 +11,7 @@ class CelebrationHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Save celebration in cart", "action_startData" => $celebration . $requestData]);
         $cart = (new \OlaHub\UserPortal\Helpers\CartHelper)->setCelebrationCartData($celebration, $requestData);
         $totalPrice = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($cart, false);
+        $totalPrice = str_replace(",", "", $totalPrice);
         
         if ($totalPrice >= 0) {
             $celebrationCart = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $cart->celebration_id)->first();
@@ -19,10 +20,10 @@ class CelebrationHelper extends OlaHubCommonHelper
             $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($cart->country_id, $cart->country_id, $cart);
 
             $pp = count($participants);
-            $totalPrice = number_format($totalPrice + $shippingFees['total'], 2);
+            $totalPrice = $totalPrice + $shippingFees['total'];
             $price = ($totalPrice / $pp);
-            $price = number_format($price - fmod($price, MOD_CELEBRATION), 2);
-            $creatorAmount = ($totalPrice == ($price * $pp) ? $price : number_format(($totalPrice - ($price * $pp)) + $price, 2));
+            $price = $price - fmod($price, MOD_CELEBRATION);
+            $creatorAmount = ($totalPrice == ($price * $pp) ? $price : ($totalPrice - ($price * $pp)) + $price);
 
             $celebrationCart->participant_count = count($participants);
             $celebrationCart->save();

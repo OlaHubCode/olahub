@@ -22,6 +22,7 @@ class CelebrationParticipantResponseHandler extends Fractal\TransformerAbstract 
     private function setDefaultData() {
         $celebration = \OlaHub\UserPortal\Models\CelebrationModel::where('id', $this->data->celebration_id)->first();
         $celebrationOwner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $celebration->user_id)->first();
+        
         $this->return = [
             "participant" => isset($this->data->id) ? $this->data->id : 0,
             "participantId" => isset($this->data->user_id) ? $this->data->user_id : 0,
