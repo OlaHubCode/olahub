@@ -22,8 +22,8 @@ $router->group([
     $router->delete('/deleteCalendar/{id}', 'CalendarController@deleteUserCalendar');
     $router->post('/updateCalendar/{id}', 'CalendarController@updateUserCalendar');
     $router->post('/one', 'CalendarController@getOneCalendar');
-    $router->get('/PrerequestOccassion', 'CalendarController@getAllOccassionByCountry');
-    $router->get('/PrerequestOccassion/{target}', 'CalendarController@getAllOccassionByCountry');
+    $router->post('/PrerequestOccassion', 'CalendarController@getAllOccassionByCountry');
+    $router->post('/PrerequestOccassion/{target}', 'CalendarController@getAllOccassionByCountry');
     
     });
     

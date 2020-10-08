@@ -22,7 +22,7 @@ class CelebrationResponseHandler extends Fractal\TransformerAbstract {
     private function setDefaultData() {
         $country = \OlaHub\UserPortal\Models\Country::where('id',$this->data->country_id)->first();
         $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('user_id', app('session')->get('tempID'))->where('celebration_id',$this->data->id)->first();
-        $occassion = \OlaHub\UserPortal\Models\Occasion::where('id',$this->data->occassion_id)->first();
+        $occassion = \OlaHub\UserPortal\Models\Occasion::withoutGlobalScope('country')->where('id',$this->data->occassion_id)->first();
         $owner = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id',$this->data->user_id)->first();
         $creator = $this->data->creatorUser;
         $paiedParticipant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id',$this->data->id)->where('payment_status',3)->first();

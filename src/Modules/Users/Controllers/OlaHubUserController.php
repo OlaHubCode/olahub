@@ -374,7 +374,7 @@ class OlaHubUserController extends BaseController
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
-            // $user = app('session')->get('tempData');
+            $user = app('session')->get('tempData');
             $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($userData, 'profile_picture', $this->requestData['userProfilePicture']);
             $userData->profile_picture = $imagePath;
             $saved = $userData->save();
@@ -382,7 +382,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->post_id = uniqid(app('session')->get('tempID'))."-profile-Changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;
@@ -414,6 +414,7 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
+        $user = app('session')->get('tempData');
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userCoverPhoto']) {
@@ -426,7 +427,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->post_id = uniqid(app('session')->get('tempID'))."cover-changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;

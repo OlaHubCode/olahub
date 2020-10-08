@@ -238,7 +238,7 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedPosts as $litem) {
 
                         $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                        if($item){
+                        if ($item) {
                             $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                             $item = $item['data'];
                             $item['type'] = 'post_shared';

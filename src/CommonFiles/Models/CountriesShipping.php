@@ -80,8 +80,8 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                         $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)
                             ->where('user_id', app('session')->get('tempID'))->first();
                         $pp = $celebration->celebrationParticipants->count();
-                        $debt = number_format($amount / $pp, 2);
-                        $debt = number_format($debt - fmod($debt, MOD_CELEBRATION), 2);
+                        $debt = $amount / $pp;
+                        $debt = $debt - fmod($debt, MOD_CELEBRATION);
                         if ($participant->is_creator)
                             $amount = ($amount == ($debt * $pp) ? $debt : ($amount - ($debt * $pp)) + $debt);
                         else
