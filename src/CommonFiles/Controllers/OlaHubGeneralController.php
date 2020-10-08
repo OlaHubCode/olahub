@@ -727,7 +727,7 @@ class OlaHubGeneralController extends BaseController
             if (app('session')->get('tempID')) {
                 // users
                 $searchQuery[] = "select count(id) as search from users
-                where( (LOWER(`email`) like '%" . $q . "%' 
+                where( (LOWER(`email`) like '%" . $q . "%'
                 or mobile_no like '%" . $q . "%'
                 or concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like '" . $q . "'
                 or LOWER(`first_name`) sounds like '" . $q . "'
@@ -855,7 +855,7 @@ class OlaHubGeneralController extends BaseController
                 case "items":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search items filter"]);
                     $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, $count, true);
-                    
+
                     if ($items["data"]->count()) {
                         $searchData = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($items["data"], '\OlaHub\UserPortal\ResponseHandlers\ItemSearchResponseHandler');
                     }
@@ -2001,6 +2001,7 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
+      var_dump('$type, $id');
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
@@ -2144,19 +2145,19 @@ class OlaHubGeneralController extends BaseController
                 ->get();
             foreach ($friendsOfFrinends as $id) {
                 if (
-                    in_array($id->user_id, $suggestedBefore) 
-                    || 
+                    in_array($id->user_id, $suggestedBefore)
+                    ||
                     in_array($id->friend_id, $suggestedBefore)
                     ||
-                    in_array($id->user_id, $requestedFriends) 
-                    || 
+                    in_array($id->user_id, $requestedFriends)
+                    ||
                     in_array($id->friend_id, $requestedFriends)
                     ||
                     (in_array($id->user_id, $friends) &&in_array($id->friend_id, $friends))
                     || $id->friend_id == app('session')->get('tempID') || $id->user_id == app('session')->get('tempID')
                 ) {
                 } else {
-                 
+
                     if (in_array($id->user_id, $friends)) {
                         $suggesstFriends = (\OlaHub\UserPortal\Models\Friends::getFriendsList($id->friend_id));
                         $mutualFriends = count(array_intersect($suggesstFriends, $friends));

@@ -73,7 +73,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                 $countryName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($shipping, 'name');
                 $key = array_search($countryName, array_column($shippingFees, 'country'));
                 if ($key == false && gettype($key) == 'boolean') {
-                    $amount = CurrnciesExchange::getCurrncy("USD", $currency->code, $shipping->total_shipping);
+                    $amount = CurrnciesExchange::getCurrncy("USD", $currency->code, @$shipping->total_shipping);
 
                     if ($celebration) {
                         $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $celebration->id)
@@ -92,7 +92,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                     $shippingSavings[] = array(
                         'amount' => number_format($amount, 2),
                         'currency' => $currency->toArray(),
-                        'country' => json_decode($shipping->name)
+                        'country' => json_decode(@$shipping->name)
                     );
                 }
             }
