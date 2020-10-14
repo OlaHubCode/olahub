@@ -31,7 +31,7 @@ class OlaHubGeneralController extends BaseController
     public function contactUs()
     {
 
-        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail((Array) $this->requestData);
+        (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendContactUsEmail((array) $this->requestData);
         return response(['status' => true, 'msg' => 'Data send successfully', 'code' => 200], 200);
     }
 
@@ -80,13 +80,13 @@ class OlaHubGeneralController extends BaseController
     {
         $response = [];
         $popup = DB::table('popup')->first();
-            if($popup){
-                $response = [
-                    'id' => isset($popup->id) ? $popup->id : 0,
-                    "link" => isset($popup->link) ? $popup->link : 0,
-                    "image" => isset($popup->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($popup->image) : NULL,
-                ];
-            }
+        if ($popup) {
+            $response = [
+                'id' => isset($popup->id) ? $popup->id : 0,
+                "link" => isset($popup->link) ? $popup->link : 0,
+                "image" => isset($popup->image) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($popup->image) : NULL,
+            ];
+        }
         return ($response);
     }
 
@@ -346,25 +346,45 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response($return, 200);
     }
-    public function getFAQ(){
+    public function getFAQ()
+    {
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "FAQ"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch FAQ", "action_startData" => 'FAQ']);
         // $faq = \OlaHub\UserPortal\Models\FAQ::with('cateData')->get();
-        $faq = \OlaHub\UserPortal\Models\FaqCategory::with('faq')->get();
-        if (!$faq) {
+        $faqs = \OlaHub\UserPortal\Models\FaqCategory::all();
+        if (!$faqs) {
             throw new NotAcceptableHttpException(404);
         }
+        foreach ($faqs as $faq) {
+            // echo $faq->faq[0]->question;
+            $faqsReturn[] = [
+                "category" => isset($faq) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($faq, "category_name") : NULL,
+                // "question" => isset($faq) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($faq->faq[0], "question") : NULL,
+                "data" => $this->handleFaqs($faq),
 
-        $return['data'] = $faq;
-        $return['status'] = true;
-        $return['code'] = 200;
-        (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
+            ];
+        }
+
+        // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $faqsReturn]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End fetch static pages"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-        return response($return, 200);
+        return response(['data' => $faqsReturn, 'code' => 200, 'status' => true]);
+    }
 
+    private function handleFaqs($faq)
+    {
+        $qa = $faq->catFaqs;
+        $data = [];
+        foreach ($qa as $s) {
+            $data[] = [
+                'id' => $s->id,
+                'question' => isset($s) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($s, "question") : NULL,
+                'answer' => isset($s) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($s, "answer") : NULL,
+            ];
+        }
+        return $data;
     }
 
     public function getUserNotification()
@@ -2009,7 +2029,7 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-      var_dump('$type, $id');
+        var_dump('$type, $id');
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
@@ -2161,7 +2181,7 @@ class OlaHubGeneralController extends BaseController
                     ||
                     in_array($id->friend_id, $requestedFriends)
                     ||
-                    (in_array($id->user_id, $friends) &&in_array($id->friend_id, $friends))
+                    (in_array($id->user_id, $friends) && in_array($id->friend_id, $friends))
                     || $id->friend_id == app('session')->get('tempID') || $id->user_id == app('session')->get('tempID')
                 ) {
                 } else {

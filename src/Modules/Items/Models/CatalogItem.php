@@ -11,7 +11,8 @@ class CatalogItem extends Model
 
     public function __construct(array $attributes = array())
     {
-        parent::__construct($attributes);
+    //  $this->lang = $request->header('language');
+    parent::__construct($attributes);
 
         static::addGlobalScope('published', function (\Illuminate\Database\Eloquent\Builder $builder) {
             $builder->where('is_published', '1');
@@ -24,7 +25,10 @@ class CatalogItem extends Model
             });
         });
     }
-
+    static function lang(){
+    $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
+    return strtolower($languageArray[0]);
+    }
     protected $table = 'catalog_items';
     static $columnsMaping = [
         //Main table
@@ -235,16 +239,17 @@ class CatalogItem extends Model
             }
         });
         $occQuery = [];
+
         foreach ($words as $word)
-            // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");
-            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '$word'");
+            // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");\
+            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', ''), '\"', '') REGEXP '".json_encode($word , JSON_UNESCAPED_UNICODE)."'");
 
         // each items
         $itemQuery = [];
         foreach ($words as $word)
-            array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
+            array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . json_encode($word , JSON_UNESCAPED_UNICODE) . "[[:>:]]'");
         $itemQuery = join(' and ', $itemQuery);
-        // end each 
+        // end each
 
         $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
@@ -279,8 +284,9 @@ class CatalogItem extends Model
             if (strlen($word) < 2)
                 unset($newWords[$key]);
 
-        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
-        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
+
+        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
+        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
         if ($withRelated) {
             $related = [];
             $occasions = Occasion::whereRaw($whereQuery)->whereHas('occasionItemsData')->get();
