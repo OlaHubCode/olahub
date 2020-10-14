@@ -352,16 +352,13 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "FAQ"]);
 
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch FAQ", "action_startData" => 'FAQ']);
-        // $faq = \OlaHub\UserPortal\Models\FAQ::with('cateData')->get();
         $faqs = \OlaHub\UserPortal\Models\FaqCategory::all();
         if (!$faqs) {
             throw new NotAcceptableHttpException(404);
         }
         foreach ($faqs as $faq) {
-            // echo $faq->faq[0]->question;
             $faqsReturn[] = [
                 "category" => isset($faq) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($faq, "category_name") : NULL,
-                // "question" => isset($faq) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($faq->faq[0], "question") : NULL,
                 "data" => $this->handleFaqs($faq),
 
             ];
