@@ -31,7 +31,6 @@ class UserSearchResponseHandler extends Fractal\TransformerAbstract
             "itemSlug" => \OlaHub\UserPortal\Models\UserModel::getUserSlug($this->data),
             "mutualFriends" => $mutualFriends,
             "status" => $status,
-            "loading" => " ",
             "itemType" => 'user'
         ];
     }
