@@ -18,8 +18,8 @@ class FaqCategory extends Model {
    
     protected $table = 'faq_category';
 
-    public function faq() {
-        return $this->hasMany('OlaHub\UserPortal\Models\FAQ', 'category_id');
+    public function catFaqs() {
+        return $this->hasMany('OlaHub\UserPortal\Models\FAQ', 'category_id', 'id');
     }
 
 }
