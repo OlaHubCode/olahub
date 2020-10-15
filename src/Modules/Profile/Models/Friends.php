@@ -50,8 +50,8 @@ class Friends extends Model
     }
     static function getFriendsRequest($id)
     {
-        $myRequest = Friends::where('friend_id', $id)->where('status',2)->count();
-   
+        $myRequest = Friends::where('friend_id', $id)->where('status', 2)->count();
+
         return $myRequest;
     }
     static function getAllblocked($id)
@@ -67,5 +67,19 @@ class Friends extends Model
             }
         }
         return $filterd;
+    }
+    static function checkStatus($id, $userID)
+    {
+        $status = Friends::where('user_id', $id)->Where('friend_id', $userID)->first();
+        if (!$status)
+            $status = Friends::where('user_id', $userID)->Where('friend_id', $id)->first();
+        if (!$status)
+            return 0;
+        if ($status->status == 1)
+            return 1; //friends
+        if ($status->user_id == $id)
+            return 2; // $id sent request to $userID
+        else
+            return 3; // $userID sent request to $id
     }
 }
