@@ -2026,7 +2026,7 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-        var_dump('$type, $id');
+     
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
