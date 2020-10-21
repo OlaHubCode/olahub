@@ -93,7 +93,7 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract {
         if($this->data->id){
             $lastPost = Post::where('user_id',$this->data->id)->orderBy('id','desc')->first();
             if($lastPost){
-                $this->return['lastPrivacy'] = $lastPost->privacy;
+                $this->return['lastPrivacy'] = $lastPost->privacy || 1;
             }
         }
         

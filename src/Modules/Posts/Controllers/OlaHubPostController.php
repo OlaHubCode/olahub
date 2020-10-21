@@ -150,7 +150,7 @@ class OlaHubPostController extends BaseController
                     }
                 }
 
-                shuffle($all);
+                //shuffle($all);
                 $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             }
             $log->setLogSessionData(['response' => $return]);
@@ -257,7 +257,7 @@ class OlaHubPostController extends BaseController
             }
 
 
-            shuffle($return['data']);
+            //shuffle($return['data']);
 
 
             // $return['data'] = $posts;
