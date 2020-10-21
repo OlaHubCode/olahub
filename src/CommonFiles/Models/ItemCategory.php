@@ -110,7 +110,7 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model
         if ($category) {
             $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $category->id)
                 ->where('type', 3)->first();
-            $return['id'] = $category->id;
+            $return['id'] = $category->parent_id==0? $category->id:"";
             $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref, 'shop_banner')];
             $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name');
             $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->image_ref);

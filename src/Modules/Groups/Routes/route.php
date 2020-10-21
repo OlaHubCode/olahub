@@ -29,7 +29,6 @@ $router->group([
         $router->delete('/removeMember', 'MainController@removeGroupMember');
         $router->delete('/adminReject', 'MainController@rejectAdminGroupRequest');
         $router->delete('/userReject', 'MainController@rejectUserGroupRequest');
-        $router->post('/members', 'MainController@listGroupMembers');
         $router->post('/leave', 'MainController@leaveGroup');
         $router->post('/join', 'MainController@joinPublicGroup');
         $router->post('/requestJoin', 'MainController@joinClosedGroup');
@@ -43,6 +42,7 @@ $router->group([
         $router->post('/listPendingPost', 'MainController@listPendingGroupPost');
         
     });
+    $router->post('/members', 'MainController@listGroupMembers');
     $router->post('/one', 'MainController@getOneGroup');
     $router->post('/relatedMerchant', 'MainController@getBrandsRelatedGroupInterests');
     $router->post('/relatedDesigners', 'MainController@getDesignersRelatedGroupInterests');

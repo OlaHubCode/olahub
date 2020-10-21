@@ -59,7 +59,7 @@ class OlaHubUserController extends BaseController
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getProfileInfo"]);
 
         $user = app('session')->get('tempData');
-        
+
         if ($user) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\ProfileInfoResponseHandler');
             $return['status'] = true;
@@ -112,6 +112,11 @@ class OlaHubUserController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
+    public function countFriendsRequest()
+    {
+        $friends = \OlaHub\UserPortal\Models\Friends::getFriendsRequest(app('session')->get('tempID'));
+        return ($friends);
+    }
     public function getUserFriends()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
@@ -123,7 +128,7 @@ class OlaHubUserController extends BaseController
         if (isset($this->requestFilter['celebration'])) {
             $celebrationId = $this->requestFilter['celebration'];
         };
-        
+
         if (isset($this->requestFilter['registry'])) {
             $registryId = $this->requestFilter['registry'];
         };
@@ -207,9 +212,8 @@ class OlaHubUserController extends BaseController
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
-            if ($validatorUser['err']=='uniqueUserName'){
-            return response(['status' => false, 'msg' => 'uniqueUserName', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
-
+            if ($validatorUser['err'] == 'uniqueUserName') {
+                return response(['status' => false, 'msg' => 'uniqueUserName', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
             }
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorUser['data']], 200);
         }
@@ -299,11 +303,9 @@ class OlaHubUserController extends BaseController
             if ($e) {
                 return response(['status' => false, 'msg' => 'email_exist', 'code' => 406], 200);
             }
-       
+
             $userData->profile_url = $this->requestData['userProfileUrl'];
-                $userData->save();
-             
-            
+            $userData->save();
         }
 
         /********************/
@@ -372,7 +374,7 @@ class OlaHubUserController extends BaseController
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
-            // $user = app('session')->get('tempData');
+            $user = app('session')->get('tempData');
             $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImage($userData, 'profile_picture', $this->requestData['userProfilePicture']);
             $userData->profile_picture = $imagePath;
             $saved = $userData->save();
@@ -380,7 +382,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->post_id = uniqid(app('session')->get('tempID'))."-profile-Changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;
@@ -412,6 +414,7 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
+        $user = app('session')->get('tempData');
 
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userCoverPhoto']) {
@@ -424,7 +427,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'));
+                $post->post_id = uniqid(app('session')->get('tempID'))."cover-changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;

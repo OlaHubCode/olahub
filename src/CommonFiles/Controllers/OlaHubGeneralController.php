@@ -418,7 +418,6 @@ class OlaHubGeneralController extends BaseController
                             "content" => $one->content,
                             "user_name" => isset($brandData) ? $brandData["name"] : "NULL",
                             "avatar_url" => isset($brandData["image_ref"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brandData["image_ref"]) : null,
-                            "for_user" => $one->user_id,
                         ];
                         break;
                     case "new_multi_category_items":
@@ -430,7 +429,6 @@ class OlaHubGeneralController extends BaseController
                             "content" => $one->content,
                             "user_name" => isset($category) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, "name") : "NULL",
                             "avatar_url" => isset($category) ? ($category->category_slug) : "",
-                            "for_user" => $one->user_id,
                         ];
                         break;
                     case "new_multi_interest_items":
@@ -442,7 +440,6 @@ class OlaHubGeneralController extends BaseController
                             "content" => $one->content,
                             "user_name" => isset($interestData) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($interestData, "name") : "NULL",
                             "avatar_url" => isset($interestData["image_ref"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interestData["image_ref"]) : null,
-                            "for_user" => $one->user_id,
                         ];
                         break;
 
@@ -455,7 +452,6 @@ class OlaHubGeneralController extends BaseController
                             "content" => $one->content,
                             "user_name" => isset($occasionS) ?  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($occasionS, "name") : "NULL",
                             "avatar_url" => isset($occasionS->logo_ref) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasionS->logo_ref) : NULL,
-                            "for_user" => $one->user_id,
                         ];
                         break;
                 }
@@ -490,7 +486,6 @@ class OlaHubGeneralController extends BaseController
                     "profile_url" => $userData["profile_url"],
                     "avatar_url" => isset($userData["profile_picture"]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData["profile_picture"]) : null,
                     "read" => $one->read,
-                    "for_user" => $one->user_id,
                     "poster_name" => isset($posterName) ?  "$posterName->first_name $posterName->last_name" : ""
                 ];
             }
