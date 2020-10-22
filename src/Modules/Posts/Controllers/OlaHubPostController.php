@@ -1137,7 +1137,7 @@ class OlaHubPostController extends BaseController
         }
         $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
-            if ($post->user_id != app('session')->get('tempID')) {
+            if ($post->user_id != app('session')->get('tempID' ) && $post->friend_id != app('session')->get('tempID')) {
                 if (isset($post->group_id) && $post->group_id > 0) {
                     $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($post->group_id);
                     if (!$group) {
