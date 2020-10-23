@@ -2173,6 +2173,10 @@ class OlaHubGeneralController extends BaseController
                     ||
                     in_array($id->friend_id, $requestedFriends)
                     ||
+                    in_array($id->user_id, $friendsOfFrinendsIds)
+                    ||
+                    in_array($id->friend_id, $friendsOfFrinendsIds)
+                    ||
                     (in_array($id->user_id, $friends) && in_array($id->friend_id, $friends))
                     || $id->friend_id == app('session')->get('tempID') || $id->user_id == app('session')->get('tempID')
                 ) {

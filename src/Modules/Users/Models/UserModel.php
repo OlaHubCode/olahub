@@ -214,8 +214,8 @@ class UserModel extends Model
         $whereQuery = join(' and ', $userQuery);
         $relatedQuery = join(' or ', $userQuery);
         $userModel = (new UserModel)->newQuery();
-
-        $userModel->where(function ($query) use ($words,$q,$whereQuery) {
+        $blocked = \OlaHub\UserPortal\Models\Friends::getAllblocked(app('session')->get('tempID'));
+       $userModel->whereNotIn('id', $blocked)->where(function ($query) use ($words,$q,$whereQuery,$blocked) {
             $query->whereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) = ?",$q);
             $query->orWhereRaw($whereQuery);
             $query->orWhere('first_name',$q);

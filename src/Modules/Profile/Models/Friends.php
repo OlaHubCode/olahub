@@ -54,15 +54,29 @@ class Friends extends Model
 
         return $myRequest;
     }
+    static function getBlockedByUser($id) // users who blocked  by singed in user
+    {
+        $users = Friends::where('user_id', $id)->orWhere('friend_id', $id)->get();
+        $filterd = [];
+        if (count($users)) {
+            foreach ($users as $user) {
+                if ($user->user_id != $id && !in_array($user->user_id, $filterd) && ($user->status == 4))
+                    array_push($filterd, $user->user_id);
+                if ($user->friend_id != $id && !in_array($user->friend_id, $filterd) && ($user->status == 3))
+                    array_push($filterd, $user->friend_id);
+            }
+        }
+        return $filterd;
+    }
     static function getAllblocked($id)
     {
         $friends = Friends::where('user_id', $id)->orWhere('friend_id', $id)->get();
         $filterd = [];
         if (count($friends)) {
             foreach ($friends as $friend) {
-                if ($friend->user_id != $id && !in_array($friend->user_id, $filterd) && $friend->status == 3)
+                if ($friend->user_id != $id && !in_array($friend->user_id, $filterd) && ($friend->status == 4 || $friend->status == 3))
                     array_push($filterd, $friend->user_id);
-                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd) && $friend->status == 3)
+                if ($friend->friend_id != $id && !in_array($friend->friend_id, $filterd) && ($friend->status == 4 || $friend->status == 3))
                     array_push($filterd, $friend->friend_id);
             }
         }

@@ -29,7 +29,7 @@ $router->group([
     $router->post('authorizedLogins', 'OlaHubUserController@authorizedLogins');
     $router->post('authorizedRemove', 'OlaHubUserController@authorizedRemove');
     $router->post('countFriendsRequest', 'OlaHubUserController@countFriendsRequest');
-
+    $router->post('blockedUsers', 'OlaHubUserController@getUserBlocekdList');
 });
 
 $router->post('registration', 'OlaHubGuestController@registerUser');

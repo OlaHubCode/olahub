@@ -117,6 +117,33 @@ class OlaHubUserController extends BaseController
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsRequest(app('session')->get('tempID'));
         return ($friends);
     }
+    public function getUserBlocekdList()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getUserBlocekdList"]);
+
+        $blockedUsers = \OlaHub\UserPortal\Models\Friends::getBlockedByUser(app('session')->get('tempID'));
+
+        if ($blockedUsers) {
+            $blockedUsers = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $blockedUsers)->get();
+            foreach ($blockedUsers as $user) {
+                $return['data'][] = [
+                    "profile" => $user->id,
+                    "username" => $user->first_name . ' ' .  $user->last_name,
+                ];
+            }
+            
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            $log->setLogSessionData(['response' => $return]);
+            $log->saveLogSessionData();
+            return response($return, 200);
+        }
+
+        $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
+        $log->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
     public function getUserFriends()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
