@@ -22,6 +22,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->groupData();
         $this->likersData();
         $this->setVoteData();
+        $this->reportedBefore();
 
         return $this->return;
     }
@@ -43,7 +44,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'privacy' => $this->data->privacy,
-            'isApprove'=> $this->data->is_approve==1?true:false
+            'isApprove' => $this->data->is_approve == 1 ? true : false
 
 
         ];
@@ -70,8 +71,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
                     'content'       => $vote->option,
                     'total'         => count($vote->usersVote),
                     'isUserVoted'   => $isUserVoted,
-                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date)-3 : 0,
-                    'end_date'       => $vote->end_date 
+                    'endDate'       => $vote->end_date > \Carbon\Carbon::now() ?  \Carbon\Carbon::now()->diffInHours($vote->end_date) - 3 : 0,
+                    'end_date'       => $vote->end_date
                 );
                 $item = false;
                 if ($vote->type == 'store') {
@@ -128,7 +129,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function userData()
     {
         $author = $this->data->author;
-        $authorName = $author['first_name'].' '.$author['last_name'];
+        $authorName = $author['first_name'] . ' ' . $author['last_name'];
         $this->return['user_info'] = [
             'user_id' => $author['id'],
             'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author['profile_picture']),
@@ -176,5 +177,14 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->return['likers_count'] = isset($likes) ? count($likes) : 0;
         $this->return['liked'] = $liked;
         $this->return['likersData'] = $likerData;
+    }
+    private function reportedBefore()
+    {
+        $reportedBefore = false;
+        $reportID = \OlaHub\UserPortal\Models\PostReport::where("post_id", $this->data->post_id)->where('user_id', app('session')->get('tempID'))->first();
+        if ($reportID == true) {
+            $reportedBefore = true;
+        }
+        $this->return['reportedBefore'] = $reportedBefore;
     }
 }
