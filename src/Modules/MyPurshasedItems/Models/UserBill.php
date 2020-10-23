@@ -3,10 +3,10 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+// use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserBill extends Model {
-    use SoftDeletes;
+    // use SoftDeletes;
     public function __construct(array $attributes = array()) {
         parent::__construct($attributes);
 

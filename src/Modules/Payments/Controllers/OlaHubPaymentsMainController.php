@@ -871,6 +871,8 @@ class OlaHubPaymentsMainController extends BaseController
             ->setRevenue($this->billing->billing_total)
             ->setShipping($this->billing->shipping_fees)
             ->setTax("0")
+            ->setCampaignSource($this->requestData['source'])
+            ->setCampaignSource($this->requestData['campgain'])
             ->sendTransaction();
 
 
