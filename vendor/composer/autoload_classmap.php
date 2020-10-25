@@ -289,6 +289,7 @@ return array(
     'OlaHub\\UserPortal\\ResponseHandlers\\DesginerItemsHandler' => $baseDir . '/src/Modules/Desginer/ResponseHandler/DesginerItemsHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\DesignerItemsSearchResponseHandler' => $baseDir . '/src/CommonFiles/ResponseHandler/DesginerItemsSearchResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\DesignerMainResponseHandler' => $baseDir . '/src/Modules/Desginer/ResponseHandler/DesignerMainResponseHandler.php',
+    'OlaHub\\UserPortal\\ResponseHandlers\\DesignerResponseHandler' => $baseDir . '/src/Modules/Items/ResponseHandler/DesignerResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\DesignersSearchResponseHandler' => $baseDir . '/src/CommonFiles/ResponseHandler/DesignersSearchResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\FriendsResponseHandler' => $baseDir . '/src/Modules/Profile/ResponseHandler/FriendsResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\GroupBrandsResponseHandler' => $baseDir . '/src/Modules/Groups/ResponseHandler/GroupBrandsResponseHandler.php',

@@ -103,6 +103,14 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         }
     }
+    private function setPaymentImageData($image)
+    {
+        if ($image) {
+            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($image);
+        } else {
+            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
+        }
+    }
 
     private function setCelebration()
     {
@@ -163,6 +171,8 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
                 'itemQuantity' => $userBillDetail->quantity,
                 'itemPrice' => number_format($userBillDetail->country_paid, 2, ".", ",") . " " . $this->currency,
                 'itemImage' => $this->setItemImageData($userBillDetail->item_image),
+                'paymentImage' =>$userBillDetail->payment_image!= ""? $this->setPaymentImageData($userBillDetail->payment_image) : 
+                $userBillDetail->payment_image,
                 'itemAttribute' => isset($attr['attributes']) ? $attr['attributes'] : [],
                 'itemShippingStatus' => $this->setItemStatus($userBillDetail),
                 'itemEnableCancel' => $this->setItemCancelStatus($userBillDetail),

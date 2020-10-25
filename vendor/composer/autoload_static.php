@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262
+class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -743,6 +743,7 @@ class ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262
         'OlaHub\\UserPortal\\ResponseHandlers\\DesginerItemsHandler' => __DIR__ . '/../..' . '/src/Modules/Desginer/ResponseHandler/DesginerItemsHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\DesignerItemsSearchResponseHandler' => __DIR__ . '/../..' . '/src/CommonFiles/ResponseHandler/DesginerItemsSearchResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\DesignerMainResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Desginer/ResponseHandler/DesignerMainResponseHandler.php',
+        'OlaHub\\UserPortal\\ResponseHandlers\\DesignerResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Items/ResponseHandler/DesignerResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\DesignersSearchResponseHandler' => __DIR__ . '/../..' . '/src/CommonFiles/ResponseHandler/DesignersSearchResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\FriendsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Profile/ResponseHandler/FriendsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\GroupBrandsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Groups/ResponseHandler/GroupBrandsResponseHandler.php',
@@ -1325,11 +1326,11 @@ class ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit823f2b53b2bf5260124f5dd3de7f8262::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$classMap;
 
         }, null, ClassLoader::class);
     }
