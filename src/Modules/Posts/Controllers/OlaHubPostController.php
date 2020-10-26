@@ -118,9 +118,11 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            if($item)
                             $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            if($item)
                             $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
@@ -219,9 +221,12 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            if($item)
+
                             $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            if($item)
                             $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
