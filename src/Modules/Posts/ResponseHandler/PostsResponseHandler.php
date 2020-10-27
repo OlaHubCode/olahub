@@ -16,6 +16,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->data = $data;
         $this->setDefaultData();
         $this->setPostImg();
+        $this->setPostImgLinks();
         $this->setPostVideo();
         $this->userData();
         $this->friendData();
@@ -44,7 +45,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'privacy' => $this->data->privacy,
-            'isApprove' => $this->data->is_approve == 1 ? true : false
+            'isApprove' => $this->data->is_approve == 1 ? true : false,
+            'is_admin' => $this->data->is_admin == 1 ? true : false
 
 
         ];
@@ -109,6 +111,19 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             $finalPath = $path;
         }
         $this->return['post_img'] = $finalPath;
+    }
+    private function setPostImgLinks()
+    {
+        $Links = NULL;
+        if (!empty($this->data->images_link)) {
+            $Links = explode(",", $this->data->images_link);
+            $urls = [];
+            foreach ($Links as $link) {
+                array_push($urls, $link);
+            }
+           
+        }
+        $this->return['post_img_links'] = $urls;
     }
 
     private function setPostVideo()
