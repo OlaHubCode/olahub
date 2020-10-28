@@ -1094,6 +1094,13 @@ class OlaHubGeneralController extends BaseController
         $return = ['status' => true, 'code' => 200];
         // $user = \OlaHub\UserPortal\Models\UserModel::find(app('session')->get('tempID'));
         $user = app('session')->get('tempData');
+        if ($request->input('page') == 1) {
+            $adminPosts = Post::where('is_admin', 1)->get();
+            foreach ($adminPosts as $post) {
+                $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                $timeline[] = $d['data'];
+            }
+        }
         if ($user) {
             $this->userInfo = [
                 'user_id' => $user->id,
@@ -1582,6 +1589,8 @@ class OlaHubGeneralController extends BaseController
                 }
             }
         }
+        // admin post
+
 
         // merchants
         $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
@@ -1679,7 +1688,8 @@ class OlaHubGeneralController extends BaseController
         }
 
         if (count($timeline) > 0) {
-            shuffle($timeline);
+            // shuffle($timeline);
+
             $count_timeline = count($timeline);
             $breakSponsor = count($sponsors_arr) > 1 ? (int) @($count_timeline / count($sponsors_arr) / 2) : 0;
             $breakCommunity = count($communities_arr) > 1 ? (int) @($count_timeline / count($communities_arr) / 2) : 0;
@@ -1706,6 +1716,7 @@ class OlaHubGeneralController extends BaseController
             $return['upcoming'] = $upcoming;
         }
         // dd($return)
+
         return response($return, 200);
     }
 

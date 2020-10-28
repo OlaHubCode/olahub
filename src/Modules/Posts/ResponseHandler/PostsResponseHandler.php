@@ -115,9 +115,10 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function setPostImgLinks()
     {
         $Links = NULL;
+        $urls = [];
+
         if (!empty($this->data->images_link)) {
             $Links = explode(",", $this->data->images_link);
-            $urls = [];
             foreach ($Links as $link) {
                 array_push($urls, $link);
             }

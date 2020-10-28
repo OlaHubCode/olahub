@@ -917,6 +917,7 @@ class OlaHubItemController extends BaseController
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getItemFiltersCatsData"]);
 
         $this->ItemsCriatria();
+        // $this->itemsModel = (new CatalogItem)->newQuery();
         $itemsIDs = $this->itemsModel->pluck('id');
         $categoryModel = (new \OlaHub\UserPortal\Models\ItemCategory)->newQuery();
         $categoryModel->where(function ($wherQ) use ($itemsIDs) {
