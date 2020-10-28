@@ -1095,7 +1095,7 @@ class OlaHubGeneralController extends BaseController
         // $user = \OlaHub\UserPortal\Models\UserModel::find(app('session')->get('tempID'));
         $user = app('session')->get('tempData');
         if ($request->input('page') == 1) {
-            $adminPosts = Post::where('is_admin', 1)->get();
+            $adminPosts = Post::where('is_admin', 1)->where('delete', 0)->get();
             foreach ($adminPosts as $post) {
                 $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
                 $timeline[] = $d['data'];
