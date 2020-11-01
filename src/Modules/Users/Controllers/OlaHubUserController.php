@@ -230,12 +230,12 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
-            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
-        }
-        if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
-            return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
-        }
+        // if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
+        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
+        // }
+        // if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
+        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
+        // }
 
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
@@ -248,8 +248,6 @@ class OlaHubUserController extends BaseController
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
-
-        $userData = app('session')->get('tempData');
 
         /*** check changes ***/
         if (!empty($this->requestData["userNewPassword"]) && !empty($this->requestData["confirmPassword"])) {

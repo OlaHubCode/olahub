@@ -831,10 +831,7 @@ class OlaHubGeneralController extends BaseController
 
             $find1 = strpos($this->requestFilter->word, '@');
             $find2 = strpos($this->requestFilter->word, '.');
-            if (($find1 !== false && $find2 !== false) || $is_numeric) {
-                $type = "users";
-            }
-
+          
             switch ($type) {
                 case "users":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search users filter"]);
