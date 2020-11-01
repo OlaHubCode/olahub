@@ -60,7 +60,6 @@ class UserModel extends Model
             'column' => 'last_name',
             'type' => 'string',
             'relation' => false,
-            'validation' => 'required|max:50'
         ],
         'userPhoneNumber' => [
             'column' => 'mobile_no',
