@@ -413,6 +413,7 @@ abstract class OlaHubCommonHelper
 
     static function validateUpdateUserData($mapingColumns, $requestData)
     {
+        $user = app('session')->get('tempData');
         $requestValidationRules = [];
         $status = TRUE;
         $data = [];
@@ -429,30 +430,36 @@ abstract class OlaHubCommonHelper
             }
 
             if (!empty($requestData["userPhoneNumber"])) {
-                $checkPhone = \OlaHub\UserPortal\Models\UserModel::where("mobile_no", $requestData["userPhoneNumber"])
-                    ->where("country_id", $requestData["userCountry"])
-                    ->where("id", "!=", app("session")->get("tempID"))->first();
-                if ($checkPhone) {
-                    $status = FALSE;
-                    $data["userPhoneNumber"][] = "validation.uniquePhone";
+                if ($requestData["userPhoneNumber"] != $user->mobile_no) {
+                    $checkPhone = \OlaHub\UserPortal\Models\UserModel::where("mobile_no", $requestData["userPhoneNumber"])
+                        ->where("country_id", $requestData["userCountry"])
+                        ->where("id", "!=", app("session")->get("tempID"))->first();
+                    if ($checkPhone) {
+                        $status = FALSE;
+                        $data["userPhoneNumber"][] = "validation.uniquePhone";
+                    }
                 }
             }
 
             if (!empty($requestData["userEmail"])) {
-                $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("email", $requestData["userEmail"])
-                    ->where("id", "!=", app("session")->get("tempID"))->first();
-                if ($checkEmail) {
-                    $status = FALSE;
-                    $data["userEmail"][] = "validation.uniqueEmail";
+                if ($requestData["userEmail"] != $user->email) {
+                    $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("email", $requestData["userEmail"])
+                        ->where("id", "!=", app("session")->get("tempID"))->first();
+                    if (($checkEmail)) {
+                        $status = FALSE;
+                        $data["userEmail"][] = "validation.uniqueEmail";
+                    }
                 }
             }
             if (!empty($requestData["userProfileUrl"])) {
-                $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("profile_url", $requestData["userProfileUrl"])
-                    ->where("id", "!=", app("session")->get("tempID"))->first();
-                if ($checkEmail) {
-                    $status = FALSE;
-                    $data["userProfileUrl"][] = "validation.uniqueUserName";
-                    return ['err' => 'uniqueUserName', 'status' => $status, 'data' => $data];
+                if ($requestData["userProfileUrl"] != $user->profile_url) {
+                    $checkEmail = \OlaHub\UserPortal\Models\UserModel::where("profile_url", $requestData["userProfileUrl"])
+                        ->where("id", "!=", app("session")->get("tempID"))->first();
+                    if ($checkEmail) {
+                        $status = FALSE;
+                        $data["userProfileUrl"][] = "validation.uniqueUserName";
+                        return ['err' => 'uniqueUserName', 'status' => $status, 'data' => $data];
+                    }
                 }
             }
             return ['err' => 'errorData', 'status' => $status, 'data' => $data];
