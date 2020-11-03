@@ -14,7 +14,7 @@ class UserHelper extends OlaHubCommonHelper
 
     function fullPhone($phone)
     {
-        return $phone = "0" . (int) $phone;
+        return $phone = (int) $phone;
     }
 
     function getDeviceID()

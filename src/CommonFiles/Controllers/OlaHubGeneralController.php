@@ -1580,6 +1580,16 @@ class OlaHubGeneralController extends BaseController
             }
         }
 
+        if (!$user) {
+        $posts = Post::where('privacy', 1)->whereNull('group_id')->where('is_admin',0)->orderBy('created_at', 'desc')->paginate(20);
+        if ($posts->count()) {
+            foreach ($posts as $post) {
+                $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                $timeline[] = $d['data'];
+            }
+        }
+    }
+
         // merchants
         $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($merchants as $merchant) {
