@@ -118,9 +118,11 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            if($item)
                             $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            if($item)
                             $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
@@ -150,7 +152,7 @@ class OlaHubPostController extends BaseController
                     }
                 }
 
-                shuffle($all);
+                //shuffle($all);
                 $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             }
             $log->setLogSessionData(['response' => $return]);
@@ -219,9 +221,12 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                            if($item)
+
                             $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                            if($item)
                             $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
@@ -257,7 +262,7 @@ class OlaHubPostController extends BaseController
             }
 
 
-            shuffle($return['data']);
+            //shuffle($return['data']);
 
 
             // $return['data'] = $posts;
@@ -414,7 +419,7 @@ class OlaHubPostController extends BaseController
                 })
                 ->get();
         } else {
-            $topHashTags = Post::Where('content', 'like', '%#%')->get();
+            $topHashTags = Post::Where('content', 'like', '%#%')->Where('privacy', 1)->get();
         }
         foreach ($topHashTags as $hash) {
             $onePostHash = [];
@@ -1137,7 +1142,7 @@ class OlaHubPostController extends BaseController
         }
         $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
-            if ($post->user_id != app('session')->get('tempID')) {
+            if ($post->user_id != app('session')->get('tempID' ) && $post->friend_id != app('session')->get('tempID')) {
                 if (isset($post->group_id) && $post->group_id > 0) {
                     $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($post->group_id);
                     if (!$group) {

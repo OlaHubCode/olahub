@@ -38,6 +38,8 @@ class OlaHubSharesController extends BaseController
         $shared = SharedItems::where('item_id', $this->requestData['itemID'])
             ->where('item_type', $this->requestData['itemType'])
             ->where('group_id', $groupId)
+            ->where('is_published', 1)
+
             ->where('user_id', app('session')->get('tempID'))->first();
         if (!$shared) {
             $like = new SharedItems;

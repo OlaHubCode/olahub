@@ -831,10 +831,7 @@ class OlaHubGeneralController extends BaseController
 
             $find1 = strpos($this->requestFilter->word, '@');
             $find2 = strpos($this->requestFilter->word, '.');
-            if (($find1 !== false && $find2 !== false) || $is_numeric) {
-                $type = "users";
-            }
-
+          
             switch ($type) {
                 case "users":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search users filter"]);
@@ -1679,7 +1676,7 @@ class OlaHubGeneralController extends BaseController
         }
 
         if (count($timeline) > 0) {
-            shuffle($timeline);
+            // shuffle($timeline);
             $count_timeline = count($timeline);
             $breakSponsor = count($sponsors_arr) > 1 ? (int) @($count_timeline / count($sponsors_arr) / 2) : 0;
             $breakCommunity = count($communities_arr) > 1 ? (int) @($count_timeline / count($communities_arr) / 2) : 0;

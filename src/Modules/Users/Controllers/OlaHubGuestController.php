@@ -369,6 +369,7 @@ class OlaHubGuestController extends BaseController
                             $country = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', @$this->ipInfo->country_code)->first();
                             $userData->country_id = @$country->id;
                         }
+
                         $userData->is_active = 1;
                     }
                 }
@@ -392,11 +393,19 @@ class OlaHubGuestController extends BaseController
                 $userData->is_active = 1;
             }
         }
+      
 
         $userData->facebook_id = $this->requestData["userFacebook"];
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture'])) {
+                $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageFacebook($userData, 'profile_picture', $this->requestData['userPicture']);
+                $userData->profile_picture = $imagePath;
+                
+                $saved = $userData->save();
+            }
+            
             $returnUserToSecure = array(
                 'country_id' => $userData->country_id,
                 'username' => "$userData->first_name $userData->last_name",

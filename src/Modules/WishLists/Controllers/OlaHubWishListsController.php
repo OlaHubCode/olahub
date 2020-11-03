@@ -168,9 +168,10 @@ class OlaHubWishListsController extends BaseController
 
     public function deleteItemFromWishlistById($id)
     {
+        
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        $item = WishList::withoutGlobalScope("wishlistCountry")->where('user_id', app('session')->get('tempID'))->where('id', $id)->first();
+        $item = WishList::withoutGlobalScope("wishlistCountry")->where('user_id', app('session')->get('tempID'))->where('item_id', $id)->first();
         if ($item) {
             $item->delete();
             $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
