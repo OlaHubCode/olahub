@@ -118,12 +118,12 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            if($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                            if ($item)
+                                $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            if($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            if ($item)
+                                $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
                 }
@@ -221,13 +221,13 @@ class OlaHubPostController extends BaseController
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            if($item)
+                            if ($item)
 
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            if($item)
-                            $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            if ($item)
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                         }
                     }
                 }
@@ -1142,7 +1142,7 @@ class OlaHubPostController extends BaseController
         }
         $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
-            if ($post->user_id != app('session')->get('tempID' ) && $post->friend_id != app('session')->get('tempID')) {
+            if ($post->user_id != app('session')->get('tempID') && $post->friend_id != app('session')->get('tempID')) {
                 if (isset($post->group_id) && $post->group_id > 0) {
                     $group = \OlaHub\UserPortal\Models\groups::where('creator', app('session')->get('tempID'))->find($post->group_id);
                     if (!$group) {
@@ -1437,7 +1437,7 @@ class OlaHubPostController extends BaseController
         }
         $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
-            if ($post->user_id != app('session')->get('tempID')&&$post->friend_id!= app('session')->get('tempID')) {
+            if ($post->user_id != app('session')->get('tempID') && $post->friend_id != app('session')->get('tempID')) {
                 $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400]]);
                 $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
@@ -1458,6 +1458,66 @@ class OlaHubPostController extends BaseController
         }
         $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         $log->saveLogSessionData();
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function countUserClick()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "countUserClick"]);
+        $request = \Illuminate\Http\Request::capture();
+        $userIP = $request->ip();
+        $clicked = \OlaHub\UserPortal\Models\postsStatistics::where('post_id', $this->requestData['postId'])
+            ->where('user_ip', $userIP)
+            ->where('type', 'click')
+            ->first();
+        if (!$clicked) {
+            $newClick = new \OlaHub\UserPortal\Models\postsStatistics();
+            $newClick->user_ip = $userIP;
+            $newClick->type = 'click';
+            $newClick->post_id = $this->requestData['postId'];
+            $newClick->save();
+        }
+        $post = Post::where('post_id', $this->requestData['postId'])->first();
+        if ($post) {
+            $post->admin_post_click = $post->admin_post_click + 1;
+            $post->save();
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            $log->setLogSessionData(['response' => $return]);
+            $log->saveLogSessionData();
+            return response($return, 200);
+        }
+
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function addView() // when user view admin post
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "countUserClick"]);
+        $request = \Illuminate\Http\Request::capture();
+        $userIP = $request->ip();
+        $clicked = \OlaHub\UserPortal\Models\postsStatistics::where('post_id', $this->requestData['postId'])
+            ->where('user_ip', $userIP)
+            ->where('type', 'view')
+            ->first();
+        if (!$clicked) {
+            $newClick = new \OlaHub\UserPortal\Models\postsStatistics();
+            $newClick->user_ip = $userIP;
+            $newClick->type = 'view';
+            $newClick->post_id = $this->requestData['postId'];
+            $newClick->save();
+        }
+        $post = Post::where('post_id', $this->requestData['postId'])->where('is_admin', 1)->first();
+        if ($post) {
+            $post->admin_post_reached = $post->admin_post_reached + 1;
+            $post->save();
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            $log->setLogSessionData(['response' => $return]);
+            $log->saveLogSessionData();
+            return response($return, 200);
+        }
+
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 }

@@ -46,7 +46,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'privacy' => $this->data->privacy,
             'isApprove' => $this->data->is_approve == 1 ? true : false,
-            'is_admin' => $this->data->is_admin == 1 ? true : false
+            'is_admin' => $this->data->is_admin == 1 ? true : false,
+            'admin_post_reached' => $this->data->admin_post_reached 
 
 
         ];
