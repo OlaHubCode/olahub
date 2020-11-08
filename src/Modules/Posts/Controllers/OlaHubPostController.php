@@ -90,7 +90,7 @@ class OlaHubPostController extends BaseController
             } catch (Exception $ex) {
             }
 
-            if ($postsTemp->count() > 0) {
+            // if ($postsTemp->count() > 0) {
                 // shuffle($timeline);
                 $all = [];
                 $count_timeline = $postsTemp->count();
@@ -154,7 +154,7 @@ class OlaHubPostController extends BaseController
 
                 //shuffle($all);
                 $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
-            }
+            // }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
             return response($return, 200);
