@@ -14,7 +14,7 @@ class UserHelper extends OlaHubCommonHelper
 
     function fullPhone($phone)
     {
-        return $phone = "0" . (int) $phone;
+        return $phone = (int) $phone;
     }
 
     function getDeviceID()
@@ -329,5 +329,32 @@ class UserHelper extends OlaHubCommonHelper
         $output['last_name'] = !empty($user) ? $user->name->lastName : "";
         $output['email'] = $data['email'] ? $data['email'] : "";
         return $output;
+    }
+
+    function uploadUserImageFacebook($user, $columnName, $userPhoto = false)
+    {
+        if ($userPhoto) {
+            $mimes = ['image/bmp', 'image/gif', 'image/jpeg', 'image/x-citrix-jpeg', 'image/png', 'image/x-citrix-png', 'image/x-png'];
+            $mime = $userPhoto->getMimeType();
+            if (!in_array($mime, $mimes)) {
+                $log->setLogSessionData(['response' => ['status' => false, 'path' => false, 'msg' => 'Unsupported file type']]);
+                $log->saveLogSessionData();
+                return response(['status' => false, 'path' => false, 'msg' => 'Unsupported file type']);
+            }
+            $extension = $userPhoto->getClientOriginalExtension();
+            $fileNameStore = uniqid() . '.' . $extension;
+            $filePath = DEFAULT_IMAGES_PATH . 'users/' . $user->id;
+            if (!file_exists($filePath)) {
+                mkdir($filePath, 0777, true);
+            }
+            $path = $userPhoto->move($filePath, $fileNameStore);
+
+            if ($user->$columnName) {
+                $oldImage = $user->$columnName;
+                @unlink(DEFAULT_IMAGES_PATH . '/' . $oldImage);
+            }
+            return "users/" . $user->id . "/$fileNameStore";
+        }
+        return $userPhoto;
     }
 }

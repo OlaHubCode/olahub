@@ -132,7 +132,7 @@ class OlaHubUserController extends BaseController
                     "username" => $user->first_name . ' ' .  $user->last_name,
                 ];
             }
-            
+
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -272,25 +272,27 @@ class OlaHubUserController extends BaseController
             if ($u) {
                 return response(['status' => false, 'msg' => 'phone_exist', 'code' => 406], 200);
             }
-            if (!empty($this->requestData["active_code"])) {
-                $phone = $userData->mobile_no;
-                $country_id = $userData->country_id;
-                $code = $this->requestData["active_code"];
-                $uc = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $code, $country_id) {
-                    $q->where('mobile_no', $phone);
-                    $q->where('country_id', $country_id);
-                    $q->where('activation_code', $code);
-                })->first();
-                if (!$uc) {
-                    return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+            if ($country_id == 5) {
+                if (!empty($this->requestData["active_code"])) {
+                    $phone = $userData->mobile_no;
+                    $country_id = $userData->country_id;
+                    $code = $this->requestData["active_code"];
+                    $uc = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $code, $country_id) {
+                        $q->where('mobile_no', $phone);
+                        $q->where('country_id', $country_id);
+                        $q->where('activation_code', $code);
+                    })->first();
+                    if (!$uc) {
+                        return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+                    }
+                } else {
+                    $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+                    $userData->save();
+                    $userData->country_id = $country_id;
+                    $userData->mobile_no = $phone;
+                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                    return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
                 }
-            } else {
-                $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
-                $userData->save();
-                $userData->country_id = $country_id;
-                $userData->mobile_no = $phone;
-                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
-                return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
             }
         }
 
@@ -408,7 +410,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'))."-profile-Changed";
+                $post->post_id = uniqid(app('session')->get('tempID')) . "-profile-Changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;
@@ -453,7 +455,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'))."cover-changed";
+                $post->post_id = uniqid(app('session')->get('tempID')) . "cover-changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;

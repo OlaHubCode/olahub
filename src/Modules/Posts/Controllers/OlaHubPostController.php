@@ -931,6 +931,7 @@ class OlaHubPostController extends BaseController
                 $author = app('session')->get('tempData');
                 $authorName = "$author->first_name $author->last_name";
                 $commentData = [
+                    'replies'=>[],
                     'comment_id' => $comment->id,
                     'user_id' => app('session')->get('tempID'),
                     'comment' => $comment->comment,
