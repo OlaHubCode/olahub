@@ -132,7 +132,7 @@ class OlaHubUserController extends BaseController
                     "username" => $user->first_name . ' ' .  $user->last_name,
                 ];
             }
-            
+
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -236,7 +236,7 @@ class OlaHubUserController extends BaseController
         // if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
         //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
         // }
-
+        
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
             if ($validatorUser['err'] == 'uniqueUserName') {
@@ -246,6 +246,7 @@ class OlaHubUserController extends BaseController
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
+
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
 
@@ -353,7 +354,6 @@ class OlaHubUserController extends BaseController
         }
 
         $userData->save();
-
 
 
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
