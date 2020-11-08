@@ -54,8 +54,8 @@ class UsersResponseHandler extends Fractal\TransformerAbstract
 
     private function setShippingAddress()
     {
-        $shippingAddress =  $this->data->shippingAddress()->where('country_id', app('session')->get('def_country')->id)->first();
-
+        $shippingAddress =  $this->data->shippingAddress()->first();
+     
         $this->return["shippingAddress"] = isset($shippingAddress->id) ? $shippingAddress->id : 0;
         $this->return["shippingCountry"] = isset($shippingAddress->country_id) ? $shippingAddress->country_id : 0;
         $this->return["userState"] = isset($shippingAddress->shipping_address_state) ? $shippingAddress->shipping_address_state : NULL;
@@ -64,6 +64,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract
         $this->return["userAddressLine2"] = isset($shippingAddress->shipping_address_address_line2) ? $shippingAddress->shipping_address_address_line2 : NULL;
         $this->return["userZipCode"] = isset($shippingAddress->shipping_address_zip_code) ? $shippingAddress->shipping_address_zip_code : NULL;
         $this->return["userShippingFullName"] = isset($shippingAddress->shipping_address_full_name) ? $shippingAddress->shipping_address_full_name : NULL;
+        
     }
 
     private function setUserInterests()
