@@ -38,6 +38,7 @@ class UsersResponseHandler extends Fractal\TransformerAbstract
             "userCountry" => isset($this->data->country_id) ? $this->data->country_id : NULL,
             "userCountryName" => isset($country->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'name') : NULL,
             "userTwoStep" => $this->data->two_step,
+            "hasPassword" => empty($this->data->password) ? false : true,
         ];
     }
 
