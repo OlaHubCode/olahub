@@ -569,7 +569,7 @@ class OlaHubPostController extends BaseController
             $post->post_id = uniqid(app('session')->get('tempID'));
             if (isset($this->requestData['friend'])) {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
-                $notification->type = 'post';
+                $notification->type = 'add_post_friend';
                 $notification->content = "notifi_Friend_Post";
                 $notification->friend_id = $post->user_id;
                 $notification->user_id = $this->requestData['friend'];

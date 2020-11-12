@@ -710,6 +710,7 @@ class OlaHubGeneralController extends BaseController
 
     public function searchAll()
     {
+        // var_dump('xx',$this->requestFilter->word);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Search All"]);
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
@@ -752,27 +753,29 @@ class OlaHubGeneralController extends BaseController
                 or LOWER(`description`) sounds like '" . $q . "'";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
-            //            var_dump($handle);
+
+                    //    var_dump('handle',$handle);$q
+                       
             // brands
-            if ($handle[0]->search > 0) {
+            if ($handle[0]->search > 0 && !is_numeric($q)) {
                 $searchData[] = [
                     "type" => "brands",
                 ];
             }
             // designers
-            if ($handle[1]->search > 0) {
+            if ($handle[1]->search > 0 && !is_numeric($q)) {
                 $searchData[] = [
                     "type" => "designers",
                 ];
             }
             // items
-            if ($handle[2]->search > 0) {
+            if ($handle[2]->search > 0 && !is_numeric($q)) {
                 $searchData[] = [
                     "type" => "items",
                 ];
             }
             // designer items
-            if ($handle[3]->search > 0) {
+            if ($handle[3]->search > 0 && !is_numeric($q)) {
                 $searchData[] = [
                     "type" => "desginer_items",
                 ];
@@ -785,13 +788,12 @@ class OlaHubGeneralController extends BaseController
                     ];
                 }
                 // groups
-                if ($handle[5]->search > 0) {
+                if ($handle[5]->search > 0 && !is_numeric($q)) {
                     $searchData[] = [
                         "type" => "groups",
                     ];
                 }
             }
-
             $ditems = [];
             $items = \OlaHub\UserPortal\Models\CatalogItem::searchItem($q, 5);
             if ($items["data"]) {
