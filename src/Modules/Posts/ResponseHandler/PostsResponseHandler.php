@@ -60,8 +60,9 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $votes = $this->data->choices;
         $dataVotes = [];
         $userData = app('session')->get('tempID');
+        $isUserVoted = $this->data->author['id']== $userData ;
 
-        $isUserVoted = false;
+        // $isUserVoted = false;
         if ($votes) {
             foreach ($votes as $vote) {
                 foreach ($vote->usersVote as $voted) {

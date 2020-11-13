@@ -831,7 +831,7 @@ class OlaHubGeneralController extends BaseController
 
             $find1 = strpos($this->requestFilter->word, '@');
             $find2 = strpos($this->requestFilter->word, '.');
-          
+
             switch ($type) {
                 case "users":
                     (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Search users filter"]);
@@ -1582,14 +1582,14 @@ class OlaHubGeneralController extends BaseController
         }
 
         if (!$user) {
-        $posts = Post::where('privacy', 1)->whereNull('group_id')->where('is_admin',0)->orderBy('created_at', 'desc')->paginate(20);
-        if ($posts->count()) {
-            foreach ($posts as $post) {
-                $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                $timeline[] = $d['data'];
+            $posts = Post::where('privacy', 1)->whereNull('group_id')->where('is_admin', 0)->orderBy('created_at', 'desc')->paginate(20);
+            if ($posts->count()) {
+                foreach ($posts as $post) {
+                    $d = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                    $timeline[] = $d['data'];
+                }
             }
         }
-    }
 
         // merchants
         $merchants = \OlaHub\UserPortal\Models\Brand::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
@@ -2029,7 +2029,7 @@ class OlaHubGeneralController extends BaseController
 
     public function userFollow($type, $id)
     {
-     
+
         $following = (new \OlaHub\UserPortal\Models\Following);
         $following->target_id = $id;
         $following->user_id = app('session')->get('tempID');
@@ -2141,7 +2141,7 @@ class OlaHubGeneralController extends BaseController
     public function getSuggestFriends()
     {
 
-        $suggestedBefore = ($this->requestData->suggestedBefore);
+        $suggestedBefore = isset($this->requestData->suggestedBefore) ? $this->requestData->suggestedBefore : [];
         $friendsOfFrinendsIds = [];
         $mutualFriend = [];
         $suggestFriends = [];
@@ -2256,36 +2256,41 @@ class OlaHubGeneralController extends BaseController
         if (count($suggestFriends) < 30) {
 
             $user = \OlaHub\UserPortal\Models\UserModel::where('id', app('session')->get('tempID'))->first();
-            $userIntreast = explode(",", $user->interests);
-            $fq = [];
-            foreach ($userIntreast as $i)
-                $fq[] = "FIND_IN_SET($i, interests)";
+            $userIntreast = ($user->interests);
+            if ($userIntreast) {
 
 
-            $mathedIntreast = \OlaHub\UserPortal\Models\UserModel::whereNotIn('id', $suggestedBefore)
-                ->whereNotIn('id', $suggestedBefore)
-                ->whereNotIn('id', $friends)
-                ->inRandomOrder()
-                ->whereRaw($fq[0])
-                ->where('id', '!=', app('session')->get('tempID'))
-                ->groupBy('id')
-                ->limit(30 - count($suggestFriends))
-                ->get();
+                $userIntreast = explode(",", $user->interests);
+                $fq = [];
+                foreach ($userIntreast as $i)
+                    $fq[] = "FIND_IN_SET($i, interests)";
 
 
-            foreach ($mathedIntreast as $suggest) {
-                $suggestedFriendsIds[] = $suggest->id;
-                $suggestFriends[] = [
-                    'type' => 'byIntreasts',
-                    "status" => 1,
-                    "profile" => $suggest->id,
-                    "mutualFriend" => 0,
-                    "name" => ucwords($suggest->first_name)  . ' ' . ucwords($suggest->last_name),
-                    "profile_url" => $suggest->profile_url,
-                    "user_gender" => isset($suggest->user_gender) ? $suggest->user_gender : NULL,
-                    "avatar" => isset($suggest->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
-                    "cover_photo" => isset($suggest->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo),
-                ];
+                $mathedIntreast = \OlaHub\UserPortal\Models\UserModel::whereNotIn('id', $suggestedBefore)
+                    ->whereNotIn('id', $suggestedBefore)
+                    ->whereNotIn('id', $friends)
+                    ->inRandomOrder()
+                    ->whereRaw($fq[0])
+                    ->where('id', '!=', app('session')->get('tempID'))
+                    ->groupBy('id')
+                    ->limit(30 - count($suggestFriends))
+                    ->get();
+
+
+                foreach ($mathedIntreast as $suggest) {
+                    $suggestedFriendsIds[] = $suggest->id;
+                    $suggestFriends[] = [
+                        'type' => 'byIntreasts',
+                        "status" => 1,
+                        "profile" => $suggest->id,
+                        "mutualFriend" => 0,
+                        "name" => ucwords($suggest->first_name)  . ' ' . ucwords($suggest->last_name),
+                        "profile_url" => $suggest->profile_url,
+                        "user_gender" => isset($suggest->user_gender) ? $suggest->user_gender : NULL,
+                        "avatar" => isset($suggest->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->profile_picture),
+                        "cover_photo" => isset($suggest->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($suggest->cover_photo),
+                    ];
+                }
             }
         }
         if (count($suggestFriends) > 0) {
