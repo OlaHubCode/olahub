@@ -579,7 +579,7 @@ class OlaHubPostController extends BaseController
                 $userData = app('session')->get('tempData');
                 $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                 \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                    $post->user_id,
+                    $this->requestData['friend'],
                     "add_post_friend",
                     array(
                         "type" => "add_post_friend",
