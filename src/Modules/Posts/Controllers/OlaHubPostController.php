@@ -119,11 +119,11 @@ class OlaHubPostController extends BaseController
                     if ($litem->item_type == 'store') {
                         $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo,$litem->created_at);
+                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
                     } else {
                         $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo,$litem->created_at);
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo, $litem->created_at);
                     }
                 }
             }
@@ -174,10 +174,13 @@ class OlaHubPostController extends BaseController
                         $userPost->where('user_id', $userID);
                         $userPost->where('friend_id', NULL);
                     });
-                    $q->orWhere(function ($userPost) use ($userID) {
-                        // $userPost->where('user_id', app('session')->get('tempID'));
-                        $userPost->where('friend_id', $userID);
-                    });
+                    if ($userID) {
+
+                        $q->orWhere(function ($userPost) use ($userID) {
+                            // $userPost->where('user_id', app('session')->get('tempID'));
+                            $userPost->where('friend_id', $userID);
+                        });
+                    }
                     $q->orWhere(function ($userPost) use ($userID, $myGroups) {
                         $userPost->where('user_id', $userID);
                         $userPost->whereIn('group_id', $myGroups);
@@ -223,11 +226,11 @@ class OlaHubPostController extends BaseController
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             if ($item)
 
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo,$litem->created_at);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                             if ($item)
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo,$litem->created_at);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo, $litem->created_at);
                         }
                     }
                 }
@@ -276,14 +279,14 @@ class OlaHubPostController extends BaseController
     }
 
 
-    private function handlePostShared($data, $type, $userInfo,$createdAt)
+    private function handlePostShared($data, $type, $userInfo, $createdAt)
     {
 
         $return = [
             'user_info' => $userInfo,
             // 'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($data->created_at) : NULL,
             'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($createdAt) : NULL,
-            
+
 
         ];
         $images = $data->images;
