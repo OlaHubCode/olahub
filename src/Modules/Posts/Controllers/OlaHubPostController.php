@@ -29,6 +29,11 @@ class OlaHubPostController extends BaseController
         $this->userAgent = $request->header('uniquenum') ? $request->header('uniquenum') : $request->header('user-agent');
     }
 
+     function sortPosts($a, $b) {
+        $v1 = date("Y-m-d H:i:s", strtotime($a['time']));
+        $v2 = date("Y-m-d H:i:s", strtotime($b['time']));
+        return strcmp($v2, $v1);
+    }
     public function getPosts($type = false)
     {
 
@@ -90,24 +95,9 @@ class OlaHubPostController extends BaseController
             } catch (Exception $ex) {
             }
 
-            // if ($postsTemp->count() > 0) {
+            if ($postsTemp->count() > 0) {
                 // shuffle($timeline);
-                $all = [];
-                $count_timeline = $postsTemp->count();
-                $count_sponsers = count($sponsers_arr);
-                $break = $count_sponsers > 0 ? (int) ($count_timeline / $count_sponsers - 1) : 0;
-                $start_in = 0;
-                for ($i = 0; $i < $postsTemp->count(); $i++) {
-                    $all[] = $posts["data"][$i];
-                    if ($break - 1 == $i) {
-                        if (isset($sponsers_arr[$start_in])) {
-                            $all[] = $sponsers_arr[$start_in];
-                            $start_in++;
-                            $break = $break * 2;
-                        }
-                    }
-                }
-
+                $all = array_merge([], $posts["data"]);
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
                     ->where(function ($q) use ($group) {
                         $q->where(function ($query) use ($group) {
@@ -119,7 +109,7 @@ class OlaHubPostController extends BaseController
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             if ($item)
-                                $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                                $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo,$litem->created_at);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                             if ($item)
@@ -147,14 +137,30 @@ class OlaHubPostController extends BaseController
                             'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
                             'username' => $litem->user_name,
                         ];
-                        $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                        $item['time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
                         $all[] = $item;
                     }
                 }
-
+        
+                usort($all, array($this, "sortPosts"));
+                $final = [];
+                $count_posts = count($all);
+                $count_sponsers = count($sponsers_arr);
+                $break = $count_sponsers > 0 ? (int) ($count_posts / $count_sponsers - 1) : 0;
+                $start_in = 0;
+                for ($i = 0; $i < $count_posts; $i++) {
+                    $final[] = $all[$i];
+                    if ($break - 1 == $i) {
+                        if (isset($sponsers_arr[$start_in])) {
+                            $final[] = $sponsers_arr[$start_in];
+                            $start_in++;
+                            $break = $break * 2;
+                        }
+                    }
+                }
                 //shuffle($all);
-                $return = ['status' => true, 'data' => $all, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
-            // }
+                $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
+            }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
             return response($return, 200);
@@ -223,11 +229,11 @@ class OlaHubPostController extends BaseController
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             if ($item)
 
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
                         } else {
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                             if ($item)
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo, $litem->created_at);
                         }
                     }
                 }
@@ -254,7 +260,7 @@ class OlaHubPostController extends BaseController
                                 'username' => $litem->user_name,
                             ];
 
-                            $item['shared_time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                            $item['time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
                             $return['data'][] = $item;
                         }
                     }
@@ -265,6 +271,7 @@ class OlaHubPostController extends BaseController
             //shuffle($return['data']);
 
 
+            @usort($return['data'], array($this, "sortPosts"));
             // $return['data'] = $posts;
             $return['status'] = TRUE;
             $return['code'] = 200;
@@ -276,11 +283,11 @@ class OlaHubPostController extends BaseController
     }
 
 
-    private function handlePostShared($data, $type, $userInfo)
+    private function handlePostShared($data, $type, $userInfo,$time=null)
     {
         $return = [
             'user_info' => $userInfo,
-            'time' => isset($data->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($data->created_at) : NULL,
+            'time' =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($time),
         ];
         $images = $data->images;
         $return['type'] = 'item_shared';
@@ -565,7 +572,7 @@ class OlaHubPostController extends BaseController
             $post->post_id = uniqid(app('session')->get('tempID'));
             if (isset($this->requestData['friend'])) {
                 $notification = new \OlaHub\UserPortal\Models\Notifications();
-                $notification->type = 'add_post_friend';
+                $notification->type = 'post';
                 $notification->content = "notifi_Friend_Post";
                 $notification->friend_id = $post->user_id;
                 $notification->user_id = $this->requestData['friend'];
