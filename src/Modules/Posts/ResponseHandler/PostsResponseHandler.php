@@ -46,10 +46,11 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content' => isset($this->data->content) ? $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
+            'prev_link_data' => isset($this->data->prev_link_data) ? unserialize($this->data->prev_link_data) : NULL,
             'privacy' => $this->data->privacy,
             'isApprove' => $this->data->is_approve == 1 ? true : false,
             'is_admin' => $this->data->is_admin == 1 ? true : false,
-            'admin_post_reached' => $this->data->admin_post_reached 
+            'admin_post_reached' => $this->data->admin_post_reached
 
 
         ];
@@ -60,8 +61,9 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $votes = $this->data->choices;
         $dataVotes = [];
         $userData = app('session')->get('tempID');
+        $isUserVoted = $this->data->author['id'] == $userData;
 
-        $isUserVoted = false;
+        // $isUserVoted = false;
         if ($votes) {
             foreach ($votes as $vote) {
                 foreach ($vote->usersVote as $voted) {
@@ -103,9 +105,9 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
 
     private function countComment()
     {
-        $commentsArray=$this->data->comments->pluck('id');
-        $replies=PostReplies::whereIn('comment_id',$commentsArray)->count();
-        $this->return['comments_count'] = $commentsArray->count()+$replies;
+        $commentsArray = $this->data->comments->pluck('id');
+        $replies = PostReplies::whereIn('comment_id', $commentsArray)->count();
+        $this->return['comments_count'] = $commentsArray->count() + $replies;
 
         // $this->data->post_id;
         // $comments = \OlaHub\UserPortal\Models\PostReport::where("post_id", $this->data->post_id)->where('user_id', app('session')->get('tempID'))->first();
@@ -144,7 +146,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             foreach ($Links as $link) {
                 array_push($urls, $link);
             }
-           
         }
         $this->return['post_img_links'] = $urls;
     }

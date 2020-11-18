@@ -35,11 +35,11 @@ class Interests extends Model
     static function getBannerBySlug($slug)
     {
         $interest = Interests::where('interest_slug', $slug)->first();
-        //        if ($interest && $interest->image) {
-        //            return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest->image);
-        //        } else {
+               if ($interest && $interest->image_banner) {
+                   return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($interest->image_banner);
+               } else {
         return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
-        //        }
+               }
     }
 
     static function getStoreForAdsBySlug($slug)

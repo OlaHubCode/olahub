@@ -181,10 +181,13 @@ class OlaHubPostController extends BaseController
                         $userPost->where('user_id', $userID);
                         $userPost->where('friend_id', NULL);
                     });
-                    $q->orWhere(function ($userPost) use ($userID) {
-                        // $userPost->where('user_id', app('session')->get('tempID'));
-                        $userPost->where('friend_id', $userID);
-                    });
+                    if ($userID) {
+
+                        $q->orWhere(function ($userPost) use ($userID) {
+                            // $userPost->where('user_id', app('session')->get('tempID'));
+                            $userPost->where('friend_id', $userID);
+                        });
+                    }
                     $q->orWhere(function ($userPost) use ($userID, $myGroups) {
                         $userPost->where('user_id', $userID);
                         $userPost->whereIn('group_id', $myGroups);
@@ -286,6 +289,7 @@ class OlaHubPostController extends BaseController
 
     private function handlePostShared($data, $type, $userInfo,$time=null)
     {
+
         $return = [
             'user_info' => $userInfo,
             'time' =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($time),
@@ -477,6 +481,7 @@ class OlaHubPostController extends BaseController
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->privacy = isset($this->requestData['privacy']) ? json_encode($this->requestData['privacy']) : 2;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
+            $post->prev_link_data = isset($this->requestData['linkPrevData']) && $this->requestData['linkPrevData'] ? serialize($this->requestData['linkPrevData']) : NULL;
             $groupData = NULL;
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
@@ -583,7 +588,7 @@ class OlaHubPostController extends BaseController
                 $userData = app('session')->get('tempData');
                 $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                 \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                    $post->user_id,
+                    $this->requestData['friend'],
                     "add_post_friend",
                     array(
                         "type" => "add_post_friend",
@@ -939,7 +944,7 @@ class OlaHubPostController extends BaseController
                 $author = app('session')->get('tempData');
                 $authorName = "$author->first_name $author->last_name";
                 $commentData = [
-                    'replies'=>[],
+                    'replies' => [],
                     'comment_id' => $comment->id,
                     'user_id' => app('session')->get('tempID'),
                     'comment' => $comment->comment,
