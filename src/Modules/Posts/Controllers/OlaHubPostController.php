@@ -476,6 +476,7 @@ class OlaHubPostController extends BaseController
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->privacy = isset($this->requestData['privacy']) ? json_encode($this->requestData['privacy']) : 2;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
+            $post->prev_link_data = isset($this->requestData['linkPrevData']) && $this->requestData['linkPrevData'] ? serialize($this->requestData['linkPrevData']) : NULL;
             $groupData = NULL;
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
