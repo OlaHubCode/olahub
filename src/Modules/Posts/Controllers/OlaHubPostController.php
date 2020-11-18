@@ -175,6 +175,7 @@ class OlaHubPostController extends BaseController
             }
 
             if ($isFriend) {
+
                 $posts = Post::where(function ($q) use ($userID, $myGroups) {
                     $q->where(function ($userPost) use ($userID) {
                         $userPost->where('user_id', $userID);
