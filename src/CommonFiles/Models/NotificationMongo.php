@@ -37,6 +37,7 @@ class Notifications extends Model
         $username = "$user->first_name $user->last_name";
 
         $url = 'https://fcm.googleapis.com/fcm/send';
+        $data['body']=Notifications::translate($key, $lang, $word, $word2);
         $fields = array(
             'to' => '/topics/OlaHubFCM-' . $user_id,
             'priority' => "high",

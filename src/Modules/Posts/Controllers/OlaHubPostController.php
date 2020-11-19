@@ -586,7 +586,7 @@ class OlaHubPostController extends BaseController
                     $this->requestData['friend'],
                     "add_post_friend",
                     array(
-                        "type" => "add_post_friend",
+                        "type" => "add_post",
                         "postId" => $post->post_id,
                         "subject" => $post->content,
                         "username" => "$userData->first_name $userData->last_name",
@@ -595,7 +595,7 @@ class OlaHubPostController extends BaseController
                     "$userData->first_name $userData->last_name"
                 );
             }
-            if (!isset($this->requestData['friend']) && !isset($this->requestData['group'])) {
+            if (!isset($this->requestData['friend']) && !isset($this->requestData['group']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
                 $userData = app('session')->get('tempData');
                 $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
                 foreach ($friends as $friend) {
@@ -616,18 +616,18 @@ class OlaHubPostController extends BaseController
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $post->post_id;
                     $notification->save();
-                    // \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                    //     $friend,
-                    //     $notiContent,
-                    //     array(
-                    //         "type" => $notiContent,
-                    //         "postId" => $post->post_id,
-                    //         "subject" => $post->content,
-                    //         "username" => "$userData->first_name $userData->last_name",
-                    //     ),
-                    //     @$owner->lang || "en",
-                    //     "$userData->first_name $userData->last_name"
-                    // );
+                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                        $friend,
+                        $notiContent,
+                        array(
+                            "type" => "post_like",
+                            "postId" => $post->post_id,
+                            "subject" => $post->content,
+                            "username" => "$userData->first_name $userData->last_name",
+                        ),
+                        $owner->lang,
+                        "$userData->first_name $userData->last_name"
+                    );
                 }
             }
 
@@ -636,15 +636,16 @@ class OlaHubPostController extends BaseController
             $post->save();
 
 
-            if (isset($this->requestData['mentions'])) {
+            if (isset($this->requestData['mentions']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
+
+
                 $Mentions = $this->requestData['mentions'];
                 foreach ($Mentions as $mention) {
                     $MentionedUserId = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $mention['user'])->first();
+
                     $userId =  $MentionedUserId->id;
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
-
                     $notiContent = 'notifi_mention_post';
-
                     $notification->type = 'post';
                     $notification->content = $notiContent;
                     $notification->user_id = $userId;
@@ -655,12 +656,13 @@ class OlaHubPostController extends BaseController
                         $userId,
                         $notiContent,
                         array(
-                            "type" => $notiContent,
+                            "type" => "post_like",
                             "postId" => $post->post_id,
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
                         ),
-                        $owner->lang,
+                        $MentionedUserId->lang,
+
                         "$userData->first_name $userData->last_name"
                     );
                 }
@@ -750,7 +752,7 @@ class OlaHubPostController extends BaseController
                         $userId['user_id'],
                         "notifi_post_like_for_follower",
                         array(
-                            "type" => "notifi_post_like_for_follower",
+                            "type" => "post_like",
                             "postId" => $postId,
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
@@ -922,7 +924,7 @@ class OlaHubPostController extends BaseController
                             $userId['user_id'],
                             "notifi_post_comment_for_follower",
                             array(
-                                "type" => "notifi_post_comment_for_follower",
+                                "type" => "post_comment",
                                 "postId" => $postID,
                                 "subject" => $post->content,
                                 "username" => "$userData->first_name $userData->last_name",
@@ -1416,7 +1418,7 @@ class OlaHubPostController extends BaseController
                 $post->user_id,
                 "notifi_vote_on_post",
                 array(
-                    "type" => "notifi_vote_on_post",
+                    "type" => "post_like",
                     "postId" => $postId,
                     "subject" => $post->content,
                     "username" => "$userData->first_name $userData->last_name",
