@@ -586,7 +586,7 @@ class OlaHubPostController extends BaseController
                     $this->requestData['friend'],
                     "add_post_friend",
                     array(
-                        "type" => "add_post",
+                        "type" => "post_like",
                         "postId" => $post->post_id,
                         "subject" => $post->content,
                         "username" => "$userData->first_name $userData->last_name",
@@ -600,34 +600,37 @@ class OlaHubPostController extends BaseController
                 $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
                 foreach ($friends as $friend) {
                     $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $friend)->first();
+                    if ($owner) {
 
-                    $notification = new \OlaHub\UserPortal\Models\Notifications();
+                        $notification = new \OlaHub\UserPortal\Models\Notifications();
 
-                    if (isset($this->requestData['isVote']) && ($this->requestData['isVote'] == "true")) {
+                        if (isset($this->requestData['isVote']) && ($this->requestData['isVote'] == "true")) {
 
-                        $notiContent = 'notifi_user_vote_Post';
-                    } else {
+                            $notiContent = 'notifi_user_vote_Post';
+                        } else {
 
-                        $notiContent = 'notifi_user_new_Post';
+                            $notiContent = 'notifi_user_new_Post';
+                        }
+                        $notification->type = 'post';
+                        $notification->content = $notiContent;
+                        $notification->user_id = $friend;
+                        $notification->friend_id = app('session')->get('tempID');
+                        $notification->post_id = $post->post_id;
+                        $notification->save();
+
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                            $friend,
+                            $notiContent,
+                            array(
+                                "type" => "post_like",
+                                "postId" => $post->post_id,
+                                "subject" => $post->content,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $owner->lang,
+                            "$userData->first_name $userData->last_name"
+                        );
                     }
-                    $notification->type = 'post';
-                    $notification->content = $notiContent;
-                    $notification->user_id = $friend;
-                    $notification->friend_id = app('session')->get('tempID');
-                    $notification->post_id = $post->post_id;
-                    $notification->save();
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                        $friend,
-                        $notiContent,
-                        array(
-                            "type" => "post_like",
-                            "postId" => $post->post_id,
-                            "subject" => $post->content,
-                            "username" => "$userData->first_name $userData->last_name",
-                        ),
-                        $owner->lang,
-                        "$userData->first_name $userData->last_name"
-                    );
                 }
             }
 
@@ -642,29 +645,31 @@ class OlaHubPostController extends BaseController
                 $Mentions = $this->requestData['mentions'];
                 foreach ($Mentions as $mention) {
                     $MentionedUserId = \OlaHub\UserPortal\Models\UserModel::where('profile_url', $mention['user'])->first();
+                    if ($MentionedUserId) {
 
-                    $userId =  $MentionedUserId->id;
-                    $notification = new \OlaHub\UserPortal\Models\Notifications();
-                    $notiContent = 'notifi_mention_post';
-                    $notification->type = 'post';
-                    $notification->content = $notiContent;
-                    $notification->user_id = $userId;
-                    $notification->friend_id = app('session')->get('tempID');
-                    $notification->post_id = $post->post_id;
-                    $notification->save();
-                    \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                        $userId,
-                        $notiContent,
-                        array(
-                            "type" => "post_like",
-                            "postId" => $post->post_id,
-                            "subject" => $post->content,
-                            "username" => "$userData->first_name $userData->last_name",
-                        ),
-                        $MentionedUserId->lang,
+                        $userId =  $MentionedUserId->id;
+                        $notification = new \OlaHub\UserPortal\Models\Notifications();
+                        $notiContent = 'notifi_mention_post';
+                        $notification->type = 'post';
+                        $notification->content = $notiContent;
+                        $notification->user_id = $userId;
+                        $notification->friend_id = app('session')->get('tempID');
+                        $notification->post_id = $post->post_id;
+                        $notification->save();
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                            $userId,
+                            $notiContent,
+                            array(
+                                "type" => "post_like",
+                                "postId" => $post->post_id,
+                                "subject" => $post->content,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $MentionedUserId->lang,
 
-                        "$userData->first_name $userData->last_name"
-                    );
+                            "$userData->first_name $userData->last_name"
+                        );
+                    }
                 }
             }
             if (isset($this->requestData['isVote']) && $this->requestData['isVote'] == true) {
