@@ -887,11 +887,17 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
         if (!empty($this->requestData['email'])) {
-
-        $subscribe = new UserSubscribe();
-        $subscribe->email = $this->requestData['email'];
-        $subscribe->save();
-        return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
+            $isSub = UserSubscribe::where('email',$this->requestData['email'])->first();
+            if(!$isSub){
+                $subscribe = new UserSubscribe();
+                $subscribe->email = $this->requestData['email'];
+                $subscribe->save();
+                return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
+            }else{
+                return response(['status' => false, 'msg' => 'youAreSubscribe', 'code' => 204], 200);
+    
+            }
+        
 
         }else{
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
