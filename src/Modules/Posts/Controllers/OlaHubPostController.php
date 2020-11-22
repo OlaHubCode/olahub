@@ -639,7 +639,7 @@ class OlaHubPostController extends BaseController
             $post->save();
 
 
-            if (isset($this->requestData['mentions']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
+            if (isset($this->requestData['mentions'])&&isset($this->requestData['privacy']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
 
 
                 $Mentions = $this->requestData['mentions'];
