@@ -355,6 +355,21 @@ abstract class OlaHubCommonHelper
         }
         return $returnPrice;
     }
+    static function checkPriceDesinger($data, $final = false, $withCurr = true, $countryId = false)
+    {
+        $return["productPrice"] = isset($data->price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($data->price, $withCurr, $countryId) : 0;
+        $return["productDiscountedPrice"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($final ? $data->price : 0, $withCurr, $countryId);
+        $return["productHasDiscount"] = false;
+        if ($data->has_discount && strtotime($data->discounted_price_start_date) <= time() && strtotime($data->discounted_price_end_date) >= time()) {
+            $return["productDiscountedPrice"] = isset($data->discounted_price) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($data->discounted_price, $withCurr, $countryId) : 0;
+            $return["productHasDiscount"] = true;
+        }
+
+        if ($final) {
+            return $return["productDiscountedPrice"];
+        }
+        return $return;
+    }
 
     static function handlingResponseCollection($data, $responseHandler)
     {
