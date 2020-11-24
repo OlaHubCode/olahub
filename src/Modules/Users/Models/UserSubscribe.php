@@ -11,9 +11,9 @@ class UserSubscribe extends Model
     {
         parent::boot();
 
-        static::addGlobalScope('voucherCountry', function ($query) {
-            $query->where('country_id', app('session')->get('def_country')->id);
-        });
+        // static::addGlobalScope('voucherCountry', function ($query) {
+        //     $query->where('country_id', app('session')->get('def_country')->id);
+        // });
     }
 
     protected $table = 'subscribe';

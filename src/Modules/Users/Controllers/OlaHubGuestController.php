@@ -399,7 +399,7 @@ class OlaHubGuestController extends BaseController
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
-            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) && !$userData->is_first_login) {
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) &&!$userData->profile_picture) {
 
                 $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageFacebook($userData, 'profile_picture', $this->requestData['userPicture']);
 
@@ -890,12 +890,19 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
         if (!empty($this->requestData['email'])) {
+            $isSub = UserSubscribe::where('email',$this->requestData['email'])->first();
+            if(!$isSub){
+                $subscribe = new UserSubscribe();
+                $subscribe->email = $this->requestData['email'];
+                $subscribe->save();
+                return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
+            }else{
+                return response(['status' => false, 'msg' => 'youAreSubscribe', 'code' => 204], 200);
+    
+            }
+        
 
-            $subscribe = new UserSubscribe();
-            $subscribe->email = $this->requestData['email'];
-            $subscribe->save();
-            return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
-        } else {
+        }else{
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
     }
