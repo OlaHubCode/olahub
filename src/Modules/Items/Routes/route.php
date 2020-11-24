@@ -22,6 +22,8 @@ $router->group([
     $router->post('classifications', 'OlaHubHeaderMenuController@getClassificationsData');
     $router->post('categories', 'OlaHubHeaderMenuController@getCategoriesData');
     $router->post('homeItems', 'OlaHubLandingPageController@getHomeData');
+    $router->post('trending', 'OlaHubLandingPageController@getTrendingData');
+    $router->post('offers', 'OlaHubLandingPageController@getMostOfferData');
     $router->post('recommended', 'OlaHubLandingPageController@getRecommendedData');
     $router->post('homeOccasions', 'OlaHubLandingPageController@getOccasionsData');
     $router->post('homeInterests', 'OlaHubLandingPageController@getInterestsData');

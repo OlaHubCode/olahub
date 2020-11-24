@@ -182,13 +182,15 @@ class OlaHubLandingPageController extends BaseController
             $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
         }
 
-        // $data['status'] = true;
-        // $data['code'] = 200;
+        $data['status'] = true;
+        $data['code'] = 200;
         $log->setLogSessionData(['response' => $data]);
         $log->saveLogSessionData();
 
-        return $data['data'];
-        // return response($data, 200);
+        if (strpos($this->userAgent, "application-") === false)
+            return $data['data'];
+        else
+            return response($data, 200);
     }
     private function handleDesignerItem($data)
     {
@@ -248,12 +250,15 @@ class OlaHubLandingPageController extends BaseController
         }
         $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
 
-        // $return['status'] = true;
-        // $return['code'] = 200;
+        $return['status'] = true;
+        $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
-        // return response($return, 200);
-        return @$return['data'];
+
+        if (strpos($this->userAgent, "application-") === false)
+            return @$return['data'];
+        else
+            return response($return, 200);
     }
 
     public function getHomeData()
