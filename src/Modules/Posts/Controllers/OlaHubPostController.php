@@ -353,7 +353,6 @@ class OlaHubPostController extends BaseController
                             $query2->whereIn('group_id', $myGroups);
                         });
                         $q->orwhere(function ($query2) use ($myGroups) {
-                            $query2->Where('privacy', 3);
                             $query2->where('friend_id', app('session')->get('tempID'));
                         });
                         $q->orWhere('privacy', 1);
