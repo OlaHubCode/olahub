@@ -27,7 +27,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($this->data->country_id);
-        if ($this->data->shipped_to){
+        if ($this->data->shipped_to) {
             $country2 = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($this->data->shipped_to);
         }
         $change_country = \OlaHub\UserPortal\Models\CartItems::where("shopping_cart_id", $this->data->id)->where("item_type", "store")->count() > 0 ? false : true;
@@ -137,7 +137,6 @@ class CartResponseHandler extends Fractal\TransformerAbstract
                 $date = date("D d F, Y", strtotime("+$dateFrom Days"));
             }
             $this->return["shippingDateFrom"] = $date;
-            // $this->return["shippingDateFrom"] = date("D d F, Y", strtotime("+$dateFrom Days"));
             $this->return["dateFrom"] = date("Y-m-d", strtotime("+$dateFrom Days"));
         }
 
@@ -152,7 +151,6 @@ class CartResponseHandler extends Fractal\TransformerAbstract
                     $date = date("D d F, Y", strtotime("+$dateTo Days"));
                 }
                 $this->return["shippingDateTo"] = $date;
-                // $this->return["shippingDateTo"] = date("D d F, Y", strtotime("+$dateTo Days"));
                 $this->return["dateTo"] = date("Y-m-d", strtotime("+$dateTo Days"));
             }
         }

@@ -24,7 +24,6 @@ class NotLoginCartResponseHandler extends Fractal\TransformerAbstract {
         $itemImage = $this->setItemImageData($item);
         $itemOwner = $this->setItemOwnerData($item);
         $itemAttrs = $this->setItemSelectedAttrData($item);
-        //$productAttributes = $this->setAttrData($item);
         $itemFinal = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item,true,false);
         $country = \OlaHub\UserPortal\Models\Country::find($item->country_id);
         $currency = $country->currencyData;
@@ -45,7 +44,6 @@ class NotLoginCartResponseHandler extends Fractal\TransformerAbstract {
             "productOwnerName" => $itemOwner['productOwnerName'],
             "productOwnerSlug" => $itemOwner['productOwnerSlug'],
             "productselectedAttributes" => $itemAttrs,
-            //"productAttributes" => $productAttributes,
         ];
     }
 

@@ -27,7 +27,6 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract
     private function setDefaultData()
     {
         $userID = $this->data->id;
-        //$userBalance = \OlaHub\UserPortal\Models\UserVouchers::where('user_id',$userID)->first();
         $cartItems = \OlaHub\UserPortal\Models\CartItems::whereHas('cartMainData', function ($query) use ($userID) {
             $query->withoutGlobalScope('countryUser')
                 ->where('user_id', $userID)
@@ -41,7 +40,6 @@ class HeaderDataResponseHandler extends Fractal\TransformerAbstract
             "userLastName" => isset($this->data->last_name) ? $this->data->last_name : NULL,
             "userProfileUrl" => isset($this->data->profile_url) ? $this->data->profile_url : NULL,
             "userGender" => isset($this->data->user_gender) ? $this->data->user_gender : NULL,
-            //"balanceNumber" => $userBalance ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($userBalance->voucher_balance) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice(0),
             "cartNumber" => $cartItems > 0 ? $cartItems : 0,
             "notificationCount" => $notification > 0 ? $notification : 0,
             "userCountry" => app('session')->get('def_country')->id,

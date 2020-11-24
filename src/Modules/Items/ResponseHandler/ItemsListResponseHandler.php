@@ -17,10 +17,6 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         $this->setDefaultData();
         $this->setPriceData();
         $this->setWishlistData();
-        $this->setItemSelectedAttrData();
-        // $this->setMerchantData();
-        //         $this->setAddData();
-        // $this->setDefImageData();
         return $this->return;
     }
 
@@ -37,7 +33,6 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
             "productName" => $itemName,
             "productDescription" => $itemDescription,
             "productInStock" => ($this->data->qu ? $this->data->qu : CatalogItem::checkStock($this->data)),
-            // "productInStock" => CatalogItem::checkStock($this->data),
             "productIsNew" => CatalogItem::checkIsNew($this->data),
             "productImage" => isset($images[0]) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($images[0]->content_ref) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
             "productOwnerName" => ($this->data->brand_name ? $this->data->brand_name : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data->brand, 'name')),
@@ -112,18 +107,5 @@ class ItemsListResponseHandler extends Fractal\TransformerAbstract
         if ($wishlist) {
             $this->return['productWishlist'] = true;
         }
-    }
-
-    private function setItemSelectedAttrData()
-    {
-        // $this->return['productAttributes'] = [];
-        // $values = $this->data->valuesData;
-        // if ($values->count() > 0) {
-        //     foreach ($values as $itemValue) {
-        //         $value = $itemValue->valueMainData;
-        //         if($value->attribute_value && !$value->color_hex_code) $this->return['productAttributes']["size"] = $value->attribute_value;
-        //         if($value->color_hex_code) $this->return['productAttributes']["color"] = $value->color_hex_code;
-        //     }
-        // }
     }
 }

@@ -98,18 +98,6 @@ class WishListHelper extends OlaHubCommonHelper
         $this->return['productWishlisted'] = 0;
         $this->return['productLiked'] = 0;
         $this->return['productInCart'] = 0;
-
-        //wishlist
-        // if (\OlaHub\UserPortal\Models\WishList::where('item_id', $this->item->id)->count() > 0) {
-        //     $this->return['productWishlisted'] = 1;
-        // }
-
-        //like
-        // if (\OlaHub\UserPortal\Models\LikedItems::where('item_id', $this->item->id)->count() > 0) {
-        //     $this->return['productLiked'] = '1';
-        // }
-
-        //Cart
         $itemID = $this->item->id;
         if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID, $type) {
             $q->where('item_id', $itemID);

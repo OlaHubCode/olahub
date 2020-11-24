@@ -11,7 +11,6 @@ class UserShippingAddressModel extends Model {
         
         static::addGlobalScope('currentUser', function ($query) {
             $query->where('user_id', app('session')->get('tempID'));
-            // $query->where('country_id', app('session')->get('def_country')->id);
         });
         
         static::saving(function ($model){

@@ -82,48 +82,30 @@ class OlaHubDesginerController extends BaseController {
        
         $validation = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(\OlaHub\UserPortal\Models\DesignerInvites::$columnsMaping, (array) $this->requestData);
         if (isset($validation['status']) && !$validation['status']) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validation['data']]]);
-            // $l$log->setLogSessionData(['response' => ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validation['data']]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validation['data']], 200);
         }
         
-        
         if (!$this->checkUnique($this->requestData['desginerEmail'])) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['desginerEmail' => ['validation.unique.email']]]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['desginerEmail' => ['validation.unique.email']]], 200);
         }
 
         if (!$this->checkUnique($this->requestData['desginerPhoneNumber'])) {
-            // $log->setLogSessionData(['response' => $return]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['desginerPhoneNumber' => ['validation.unique.phone']]], 200);
         }
         
-        
-
         if (isset($this->requestData['desginerCategories']) && count($this->requestData['desginerCategories']) <= 0) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'validation.required', 'code' => 406, 'errorData' => ['desginerCategories' => ['validation.required']]]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'validation.required', 'code' => 406, 'errorData' => ['desginerCategories' => ['validation.required']]], 200);
         }
         
         if (isset($this->requestData['desginerCategories']) && count($this->requestData['desginerCategories']) > 3) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'validation.max.string', 'code' => 406, 'errorData' => ['desginerCategories' => ['validation.max.string']]]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'validation.max.string', 'code' => 406, 'errorData' => ['desginerCategories' => ['validation.max.string']]], 200);
         }
         
         if (isset($this->requestData['desginerClassifications']) && count($this->requestData['desginerClassifications']) <= 0) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'validation.required', 'code' => 406, 'errorData' => ['desginerClassifications' => ['validation.required']]]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'validation.required', 'code' => 406, 'errorData' => ['desginerClassifications' => ['validation.required']]], 200);
         }
         
         if (isset($this->requestData['desginerClassifications']) && count($this->requestData['desginerClassifications']) > 3) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'validation.max.string', 'code' => 406, 'errorData' => ['desginerClassifications' => ['validation.max.string']]]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'validation.max.string', 'code' => 406, 'errorData' => ['desginerClassifications' => ['validation.max.string']]], 200);
         }
         

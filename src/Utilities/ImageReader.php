@@ -18,9 +18,6 @@ class ImageReader {
         if (!$this->fileMimeType) {
             throw new NotAcceptableHttpException(404);
         }
-        //$this->fileContent = file_get_contents(base_path('temp_photos/' . $id));
-        //list($this->originalWidth, $this->originalHeight) = getimagesizefromstring($this->fileContent);
-        //$this->setImageFuncsFromMime();
     }
 
     public function displayImage($id) {

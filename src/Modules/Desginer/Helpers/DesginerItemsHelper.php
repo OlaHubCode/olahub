@@ -54,7 +54,6 @@ class DesginerItemsHelper extends CommonHelper
         $this->setShippingDatesData($product);
         $this->setCartData($product);
         $this->setItemSelectedAttrData($product);
-        // $item = false;
 
         //like
         $liked = LikedItems::where('item_id', $product->id)

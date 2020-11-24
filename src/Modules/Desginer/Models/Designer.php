@@ -61,9 +61,6 @@ class Designer extends Model
         });
 
         $items->orWhere('brand_name', '=', $text);
-
-        //        $designers = Designer::whereRaw('LOWER(`brand_name`) like ?', "%$q%");
-
         if ($count > 0) {
             return $items->paginate($count);
         } else {

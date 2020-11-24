@@ -5,7 +5,8 @@ namespace Laravel\Lumen\Console\Commands;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Input\InputOption;
 
-class createModuleCommand extends Command {
+class createModuleCommand extends Command
+{
 
     /**
      * The console command name.
@@ -26,19 +27,15 @@ class createModuleCommand extends Command {
      *
      * @return void
      */
-    public function handle() {
-
-        //$newModuleName single from module name
-        //$moduleName plural from the name
-        //$mTableName new module table
-
+    public function handle()
+    {
         $newModuleName = $this->input->getArgument('moduleName');
         if (!$newModuleName) {
             return $this->error(sprintf("\n\nYou should write new module name\n"));
         }
 
         $defaultName = "DTemplate";
-        $pluralDefaultName = $defaultName."s";
+        $pluralDefaultName = $defaultName . "s";
         $dTableName = 'dtemplate';
         $mode = 0775;
         $file = base_path('modules');
@@ -53,21 +50,21 @@ class createModuleCommand extends Command {
         }
         $old_umask = umask(0);
         mkdir($newModule, $mode);
-        
+
         mkdir("$newModule/Controllers", $mode);
         $controllerName = ucfirst($moduleName);
         $singularControllerName = ucfirst($newModuleName);
         $file = fopen("$newModule/Controllers/$controllerName" . "Controller.php", "w+");
         $controllerContent = file_get_contents(__DIR__ . "/templatesData/Controllers/$pluralDefaultName" . "Controller.php");
-        $controllerContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$controllerName,$singularControllerName,$mTableName], $controllerContent);
+        $controllerContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$controllerName, $singularControllerName, $mTableName], $controllerContent);
         fwrite($file, $controllerContent);
         fclose($file);
-        
+
         $trashControllerName = ucfirst($moduleName);
         $singularTrashControllerName = ucfirst($newModuleName);
         $file = fopen("$newModule/Controllers/$controllerName" . "TrashController.php", "w+");
-        $trashControllerContent = file_get_contents(__DIR__."/templatesData/Controllers/$pluralDefaultName" . "TrashController.php");
-        $trashControllerContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$controllerName,$singularControllerName,$mTableName], $trashControllerContent);
+        $trashControllerContent = file_get_contents(__DIR__ . "/templatesData/Controllers/$pluralDefaultName" . "TrashController.php");
+        $trashControllerContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$controllerName, $singularControllerName, $mTableName], $trashControllerContent);
         fwrite($file, $trashControllerContent);
         fclose($file);
 
@@ -75,54 +72,54 @@ class createModuleCommand extends Command {
         $modelName = ucfirst($moduleName);
         $singularModelName = ucfirst($newModuleName);
         $file = fopen("$newModule/Models/$singularModelName" . ".php", "w+");
-        $modelContent = file_get_contents(__DIR__."/templatesData/Models/$defaultName" . ".php");
-        $modelContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$modelName,$singularModelName,$mTableName], $modelContent);
+        $modelContent = file_get_contents(__DIR__ . "/templatesData/Models/$defaultName" . ".php");
+        $modelContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$modelName, $singularModelName, $mTableName], $modelContent);
         fwrite($file, $modelContent);
         fclose($file);
-        
+
         mkdir("$newModule/Repositories", $mode);
         $RepoName = ucfirst($moduleName);
         $singularRepoName = ucfirst($newModuleName);
         $file = fopen("$newModule/Repositories/$RepoName" . "Repository.php", "w+");
-        $repoContent = file_get_contents(__DIR__."/templatesData/Repositories/$pluralDefaultName" . "Repository.php");
-        $repoContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$RepoName,$singularRepoName,$mTableName], $repoContent);
+        $repoContent = file_get_contents(__DIR__ . "/templatesData/Repositories/$pluralDefaultName" . "Repository.php");
+        $repoContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$RepoName, $singularRepoName, $mTableName], $repoContent);
         fwrite($file, $repoContent);
         fclose($file);
-        
+
         mkdir("$newModule/ResponseHandler", $mode);
         $HandlerName = ucfirst($moduleName);
         $singularHandlerName = ucfirst($newModuleName);
         $file = fopen("$newModule/ResponseHandler/$HandlerName" . "ResponseHandler.php", "w+");
-        $HandlerContent = file_get_contents(__DIR__."/templatesData/ResponseHandler/$pluralDefaultName" . "ResponseHandler.php");
-        $HandlerContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$HandlerName,$singularHandlerName,$mTableName], $HandlerContent);
+        $HandlerContent = file_get_contents(__DIR__ . "/templatesData/ResponseHandler/$pluralDefaultName" . "ResponseHandler.php");
+        $HandlerContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$HandlerName, $singularHandlerName, $mTableName], $HandlerContent);
         fwrite($file, $HandlerContent);
         fclose($file);
-        
+
         mkdir("$newModule/Routes", $mode);
         $file = fopen("$newModule/Routes/route.php", "w+");
-        $RouteContent = file_get_contents(__DIR__."/templatesData/Routes/route.php");
-        $RouteContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$controllerName,$singularControllerName,$mTableName], $RouteContent);
+        $RouteContent = file_get_contents(__DIR__ . "/templatesData/Routes/route.php");
+        $RouteContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$controllerName, $singularControllerName, $mTableName], $RouteContent);
         fwrite($file, $RouteContent);
         fclose($file);
-        
+
         mkdir("$newModule/Services", $mode);
         $ServiceName = ucfirst($moduleName);
         $singularServiceName = ucfirst($newModuleName);
         $file = fopen("$newModule/Services/$ServiceName" . "Services.php", "w+");
-        $ServiceContent = file_get_contents(__DIR__."/templatesData/Services/$pluralDefaultName" . "Services.php");
-        $ServiceContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$ServiceName,$singularServiceName,$mTableName], $ServiceContent);
+        $ServiceContent = file_get_contents(__DIR__ . "/templatesData/Services/$pluralDefaultName" . "Services.php");
+        $ServiceContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$ServiceName, $singularServiceName, $mTableName], $ServiceContent);
         fwrite($file, $ServiceContent);
         fclose($file);
-        
+
         mkdir("$newModule/Utilities", $mode);
         $helperName = ucfirst($moduleName);
         $singularHelperName = ucfirst($newModuleName);
         $file = fopen("$newModule/Utilities/$helperName" . "Helper.php", "w+");
-        $helperContent = file_get_contents(__DIR__."/templatesData/Utilities/$pluralDefaultName" . "Helper.php");
-        $helperContent = str_replace([$pluralDefaultName,$defaultName,$dTableName], [$helperName,$singularHelperName,$mTableName], $helperContent);
+        $helperContent = file_get_contents(__DIR__ . "/templatesData/Utilities/$pluralDefaultName" . "Helper.php");
+        $helperContent = str_replace([$pluralDefaultName, $defaultName, $dTableName], [$helperName, $singularHelperName, $mTableName], $helperContent);
         fwrite($file, $helperContent);
         fclose($file);
-        
+
         umask($old_umask);
         shell_exec('composer dump-autoload');
         $this->info("New module ($moduleName) has been created successfully");
@@ -133,7 +130,8 @@ class createModuleCommand extends Command {
      *
      * @return array
      */
-    protected function getArguments() {
+    protected function getArguments()
+    {
         return array(
             array('moduleName', null, InputOption::VALUE_REQUIRED, false),
         );
@@ -144,11 +142,11 @@ class createModuleCommand extends Command {
      *
      * @return array
      */
-    protected function getOptions() {
+    protected function getOptions()
+    {
         return array(
             array('host', null, InputOption::VALUE_OPTIONAL, 'The host address to serve the application on.', 'localhost'),
             array('port', null, InputOption::VALUE_OPTIONAL, 'The port to serve the application on.', 8000),
         );
     }
-
 }

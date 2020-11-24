@@ -93,24 +93,13 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model
 
     static function getBannerBySlug($slug)
     {
-        // $category = ItemCategory::where('category_slug', $slug)->first();
-        // $return['id'] = $category->id;
-        // if ($category && $category->banner_ref) {
-        //     $return[] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref);
-        //     return $return;
-        // } else {
-        //     $return[] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
-        //     return $return;
-        // }
-
-
         $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner')];
         $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $category = ItemCategory::where('category_slug', $slug)->first();
         if ($category) {
             $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $category->id)
                 ->where('type', 3)->first();
-            $return['id'] = $category->parent_id==0? $category->id:"";
+            $return['id'] = $category->parent_id == 0 ? $category->id : "";
             $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->banner_ref, 'shop_banner')];
             $return['storeName'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($category, 'name');
             $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($category->image_ref);
