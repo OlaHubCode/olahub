@@ -45,7 +45,7 @@ class OlaHubGuestController extends BaseController
 
     function registerUser()
     {
-       
+
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "registerUser"]);
@@ -91,7 +91,7 @@ class OlaHubGuestController extends BaseController
         } else {
             $userData = new UserModel;
         }
-        foreach ($this->requestData as $input => $value) {  
+        foreach ($this->requestData as $input => $value) {
             if (isset(UserModel::$columnsMaping[$input])) {
                 if ($input == 'userEmail' && is_numeric($value)) {
                     $input = 'userPhoneNumber';
@@ -393,19 +393,22 @@ class OlaHubGuestController extends BaseController
                 $userData->is_active = 1;
             }
         }
-      
+
 
         $userData->facebook_id = $this->requestData["userFacebook"];
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
-            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture'])) {
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) && !$userData->is_first_login) {
+
                 $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageFacebook($userData, 'profile_picture', $this->requestData['userPicture']);
+
                 $userData->profile_picture = $imagePath;
-                
+
+
                 $saved = $userData->save();
             }
-            
+
             $returnUserToSecure = array(
                 'country_id' => $userData->country_id,
                 'username' => "$userData->first_name $userData->last_name",
@@ -882,20 +885,18 @@ class OlaHubGuestController extends BaseController
             return ['status' => false, 'msg' => 'PasswordNotCorrect', 'code' => 204];
         }
     }
-   public function subscribe()
+    public function subscribe()
     {
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
         if (!empty($this->requestData['email'])) {
 
-        $subscribe = new UserSubscribe();
-        $subscribe->email = $this->requestData['email'];
-        $subscribe->save();
-        return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
-
-        }else{
+            $subscribe = new UserSubscribe();
+            $subscribe->email = $this->requestData['email'];
+            $subscribe->save();
+            return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
+        } else {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
-
         }
     }
     function checkActiveCode()
