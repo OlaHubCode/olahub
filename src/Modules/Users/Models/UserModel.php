@@ -48,7 +48,6 @@ class UserModel extends Model
             'column' => 'country_id',
             'type' => 'int',
             'relation' => false,
-            // 'validation' => 'required'
         ],
         'userFirstName' => [
             'column' => 'first_name',
@@ -78,19 +77,16 @@ class UserModel extends Model
             'type' => 'string',
             'relation' => false,
             'validation' => 'max:50'
-            // 'validation' => 'max:50|email'
         ],
         'userBirthday' => [
             'column' => 'user_birthday',
             'type' => 'string',
             'relation' => false,
-            // 'validation' => 'max:50|date'
         ],
         'userGender' => [
             'column' => 'user_gender',
             'type' => 'string',
             'relation' => false,
-            // 'validation' => 'in:m,f'
         ],
         'userPassword' => [
             'column' => 'password',
@@ -204,7 +200,6 @@ class UserModel extends Model
 
     static function searchUsers($q = 'a', $eventId = false, $groupId = false, $count = 15, $active = false)
     {
-        // $q = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::rightPhoneNoJO($q);
         $words = explode(" ", $q);
         $userQuery =[];
         foreach ($words as $word)
@@ -234,36 +229,6 @@ class UserModel extends Model
                 $query->where(function ($q1) use ($relatedQuery) {
                     $q1->whereRaw($relatedQuery);
                 });
-                // $query->orWhere(function ($q2) use ($words) {
-                //     foreach ($words as $word) {
-                //         $length = strlen($word);
-                //         if ($length >= 3) {
-                //             $firstWords = substr($word, 0, 3);
-                //             $q2->Where('first_name', 'like', '%' . $firstWords . '%');
-                //             if ($length >= 6) {
-                //                 $lastWords = substr($word, -3);
-                //                 $q2->Where('first_name', 'like', '%' . $lastWords . '%');
-                //             }
-                //         } else if ($length == 2) {
-                //             $q2->Where('first_name', 'like', '%' . $word . '%');
-                //         }
-                //     }
-                // });
-                // $query->orWhere(function ($q2) use ($words) {
-                //     foreach ($words as $word) {
-                //         $length = strlen($word);
-                //         if ($length >= 3) {
-                //             $firstWords = substr($word, 0, 3);
-                //             $q2->Where('last_name', 'like', '%' . $firstWords . '%');
-                //             if ($length >= 6) {
-                //                 $lastWords = substr($word, -3);
-                //                 $q2->Where('last_name', 'like', '%' . $lastWords . '%');
-                //             }
-                //         } else if ($length == 2) {
-                //             $q2->Where('last_name', 'like', '%' . $word . '%');
-                //         }
-                //     }
-                // });
             })->where('users.id', '<>', app('session')->get('tempID'))->limit(10)->get();
 
         if ($eventId) {
@@ -290,11 +255,6 @@ class UserModel extends Model
             "related" => $related
         );
     }
-    //$userModel->where(function ($query) use ($q) {
-    //            $query->whereRaw('LOWER(`email`) like ?', "%" . $q . "%")
-    //                ->orWhere("users.mobile_no", 'like', "%" . $q . "%")
-    //                ->orWhereRaw("concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like ?", "%" . $q . "%");
-    //        })->where('users.id', '<>', app('session')->get('tempID'));
     static function getUserSlug($user)
     {
 

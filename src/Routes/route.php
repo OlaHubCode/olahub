@@ -55,7 +55,6 @@ $router->group([], function () use ($router) {
         $router->post('notification', 'OlaHubGeneralController@getUserNotification');
         $router->post('readNotification', 'OlaHubGeneralController@readNotification');
         $router->post('getAllNotifications', 'OlaHubGeneralController@getUserNotification');
-        // $router->post('getAllNotifications', 'OlaHubGeneralController@getAllNotifications');
         $router->post('shareItem', 'OlaHubGeneralController@shareNewItem');
         $router->post('checkUserMerchant', 'OlaHubGeneralController@checkUserMerchant');
         $router->post('getCitiesByRegion/{regionId}', 'OlaHubGeneralController@getCities');
@@ -66,36 +65,13 @@ $router->group([], function () use ($router) {
     });
 });
 
-$router->get('mysitemap', function(){
+$router->get('mysitemap', function () {
 
     $sitemap = App::make("sitemap");
-    
-    // add items to the sitemap (url, date, priority, freq)
-    // $sitemap->add(url('/'), '2012-08-25T20:10:00+02:00', '1.0', 'daily');
-    
     $posts = OlaHub\UserPortal\Models\CatalogItem::orderBy('created_at', 'desc')->get();
-    // $brands = OlaHub\UserPortal\Models\Brand::orderBy('created_at', 'desc')->get();
-    // $categories = OlaHub\UserPortal\Models\ItemCategory::orderBy('created_at', 'desc')->get();
-    foreach ($posts as $post)
-    {
-        $sitemap->add('https://olahub.com/product/'.$post->item_slug, $post->updated_at, 0.8, "monthly");
+    foreach ($posts as $post) {
+        $sitemap->add('https://olahub.com/product/' . $post->item_slug, $post->updated_at, 0.8, "monthly");
     }
-
-    // foreach ($brands as $brand)
-    // {
-    //     $sitemap->add('https://olahub.com/brand/'.$brand->store_slug, $brand->updated_at, 0.8, "monthly");
-    // }
-
-    // foreach ($categories as $category)
-    // {
-    //     $sitemap->add('https://olahub.com/category/'.$category->category_slug, $category->updated_at, 0.8, "monthly");
-    // }
-
     $path = DEFAULT_IMAGES_PATH;
-    $sitemap->store('xml', 'sitemap',$path);
-    // $sitemap->store('xml', 'sitemap');
-
+    $sitemap->store('xml', 'sitemap', $path);
 });
-
-
-

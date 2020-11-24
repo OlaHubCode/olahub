@@ -20,7 +20,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNewUser($userData, $code)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send new user SMS", "action_startData" => json_encode($userData). $code]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR001';
         $username = "$userData->first_name $userData->last_name";
@@ -32,7 +31,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendAccountActivationCode($userData, $code)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send account activation code SMS", "action_startData" => json_encode($userData). $code]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR002';
         $username = "$userData->first_name $userData->last_name";
@@ -44,7 +42,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendAccountActivated($userData)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send account activated SMS", "action_startData" => json_encode($userData)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR003';
         $username = "$userData->first_name $userData->last_name";
@@ -56,12 +53,10 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendSessionActivation($userData, $fullAgent, $code)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activation SMS", "action_startData" => json_encode($userData). $fullAgent. $code]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR004';
         $username = "$userData->first_name $userData->last_name";
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
-        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]'];
         $with = [$username, $code, $agent];
         $to = $this->countryCode . (int) $userData->mobile_no;
@@ -70,7 +65,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendSessionActivationCode($userData, $agent, $code)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activation SMS", "action_startData" => json_encode($userData). $agent. $code]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR005';
         $username = "$userData->first_name $userData->last_name";
@@ -82,12 +76,10 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendSessionActivated($userData, $fullAgent)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activated SMS", "action_startData" => json_encode($userData). $fullAgent]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR006';
         $username = "$userData->first_name $userData->last_name";
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
-        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $replace = ['[UserName]', '[UserSessionAgent]'];
         $with = [$username, $agent];
         $to = $this->countryCode . (int) $userData->mobile_no;
@@ -96,7 +88,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendForgetPassword($userData)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send forget password SMS", "action_startData" => json_encode($userData)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR007';
         $username = "$userData->first_name $userData->last_name";
@@ -108,7 +99,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendForgetPasswordConfirmation($userData)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send forget password confirmation SMS", "action_startData" => json_encode($userData)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR008';
         $username = "$userData->first_name $userData->last_name";
@@ -120,7 +110,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNotRegisterUserCelebrationInvition($userData, $celebrationOwner, $celebrationID, $password)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user celebration invition SMS", "action_startData" => json_encode($userData). $celebrationOwner. $celebrationID. $password]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR015';
         $username = "$userData->first_name $userData->last_name";
@@ -132,7 +121,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendPublishedCelebration($userData, $celebrationName, $celebrationID)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user celebration invition SMS", "action_startData" => json_encode($userData). $celebrationID. "******"]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR017';
         $username = "$userData->first_name $userData->last_name";
@@ -144,7 +132,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserCODRequest($billing, $userData)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user COD request SMS", "action_startData" => json_encode($billing). json_encode($userData)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR013';
         $userName = "$userData->first_name $userData->last_name";
@@ -158,7 +145,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendDeletedCelebration($userData, $celebrationCreator, $celebrationName, $celebrationOwner)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send deleted celebration SMS", "action_startData" => json_encode($userData). $celebrationCreator. $celebrationName. $celebrationOwner]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR016';
         $username = "$userData->first_name $userData->last_name";
@@ -170,7 +156,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendRegisterUserCelebrationInvition($userData, $celebrationOwner, $celebrationID, $celebrationName)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send register user celebration invition SMS", "action_startData" => json_encode($userData). $celebrationOwner. $celebrationID. $celebrationName]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR014';
         $replace = ['[UserName]', '[CelebrationURL]', '[CelebrationEvent]'];
@@ -181,7 +166,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendAcceptCelebration($userData, $acceptedName, $celebrationName)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send accept celebration SMS", "action_startData" => json_encode($userData). $acceptedName. $celebrationName]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR018';
         $username = "$userData->first_name $userData->last_name";
@@ -193,7 +177,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendCommitedCelebration($userData, $celebrationID, $celebrationName)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send accept celebration SMS", "action_startData" => json_encode($userData). $celebrationID. $celebrationName]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR019';
         $username = "$userData->first_name $userData->last_name";
@@ -205,7 +188,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNotRegisterPublishedCelebrationOwner($userData, $celebrationName, $celebrationID, $password)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send accept celebration SMS", "action_startData" => json_encode($userData). $celebrationName. $celebrationID. "******"]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR020';
         $username = "$userData->first_name $userData->last_name";
@@ -217,7 +199,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendScheduleCelebration($userData, $celebrationName, $celebrationID, $celebrationOwner)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send schedule celebration SMS", "action_startData" => json_encode($userData). $celebrationName. $celebrationID. $celebrationOwner]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR021';
         $username = "$userData->first_name $userData->last_name";
@@ -229,7 +210,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserNewOrderDirect($userData, $billing)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user new order direct SMS", "action_startData" => json_encode($userData). json_encode($billing)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR009';
         $username = "$userData->first_name $userData->last_name";
@@ -254,7 +234,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserNewOrderGift($userData, $billing)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user new order gift SMS", "action_startData" => json_encode($userData). json_encode($billing)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR010';
         $username = "$userData->first_name $userData->last_name";
@@ -279,7 +258,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNoneRegisteredTargetUserOrderGift($userData, $billing, $billDetails, $target)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send none registered target user order gift SMS", "action_startData" => json_encode($userData). json_encode($billing). json_encode($billDetails). json_encode($target)]);
         $this->getCountryCode($target->country_id);
         $template = 'USR011';
         $username = "$userData->first_name $userData->last_name";
@@ -296,7 +274,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendRegisteredTargetUserOrderGift($userData, $billing, $billDetails, $target)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send registered target user order gift SMS", "action_startData" => json_encode($userData). json_encode($billing). json_encode($billDetails). json_encode($target)]);
         $this->getCountryCode($target->country_id);
         $template = 'USR012';
         $username = "$userData->first_name $userData->last_name";
@@ -310,7 +287,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     private function handleUserGiftOrderItemsHtml($stores = [], $billing = [])
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Handle user gift order items Html", "action_startData" => json_encode($stores). json_encode($billing)]);
         if (isset($stores['voucher'])) {
             unset($stores['voucher']);
         }
@@ -343,7 +319,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNotRegisterUserGroupInvition($userData, $GroupOwner, $groupID, $password)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user group invition SMS", "action_startData" => json_encode($userData). $GroupOwner. $groupID. "******"]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR027';
         $username = "$userData->first_name $userData->last_name";
@@ -355,7 +330,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendNotRegisterUserInvition($userData, $invitorName, $password)
     {
-        ////(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user group invition SMS", "action_startData" => json_encode($userData). $invitorName. "******"]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR028';
         $username = "$userData->first_name $userData->last_name";
@@ -367,7 +341,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserFailPayment($userData, $billing, $reason)
     {
-        ////(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user group invition SMS", "action_startData" => json_encode($userData). json_encode($billing). $reason]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR030';
         $username = "$userData->first_name $userData->last_name";
@@ -379,7 +352,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserCancelConfirmation($userData, $item, $billing)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user cancel confirmation SMS", "action_startData" => json_encode($userData). json_encode($item). json_encode($billing)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR031';
         $username = "$userData->first_name $userData->last_name";
@@ -391,7 +363,6 @@ class SmsHelper extends OlaHubCommonHelper
 
     function sendUserRefundConfirmation($userData, $item, $billing)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user refund confirmation SMS", "action_startData" => json_encode($userData). json_encode($item). json_encode($billing)]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR032';
         $username = "$userData->first_name $userData->last_name";
@@ -402,7 +373,6 @@ class SmsHelper extends OlaHubCommonHelper
     }
     function sendDeletedRegistry($userData, $registryName, $registryOwner)
     {
-        //(new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send deleted celebration SMS", "action_startData" => json_encode($userData). $celebrationCreator. $celebrationName. $celebrationOwner]);
         $this->getCountryCode($userData->country_id);
         $template = 'USR033';
         $username = "$userData->first_name $userData->last_name";

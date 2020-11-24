@@ -65,8 +65,6 @@ class OlaHubAdvertisesController extends BaseController
         } elseif ((array_key_exists('categorySlug', $this->requestFilter) && strlen($this->requestFilter['categorySlug']) > 0)) {
             $this->mainModule = 'category';
             $this->return = \OlaHub\UserPortal\Models\ItemCategory::getBannerBySlug($this->requestFilter['categorySlug']);
-            // $this->return['mainBanner'][] = \OlaHub\UserPortal\Models\ItemCategory::getBannerBySlug($this->requestFilter['categorySlug']);
-            // $this->return['storeData'] = \OlaHub\UserPortal\Models\ItemCategory::getStoreForAdsBySlug($this->requestFilter['categorySlug']);
         } elseif ((array_key_exists('classificationSlug', $this->requestFilter) && strlen($this->requestFilter['classificationSlug']) > 0)) {
             $this->mainModule = 'calssification';
             $this->return['mainBanner'][] = \OlaHub\UserPortal\Models\Classification::getBannerBySlug($this->requestFilter['classificationSlug']);
@@ -74,8 +72,6 @@ class OlaHubAdvertisesController extends BaseController
         } elseif ((array_key_exists('occasionSlug', $this->requestFilter) && strlen($this->requestFilter['occasionSlug']) > 0)) {
             $this->mainModule = 'occasion';
             $this->return = \OlaHub\UserPortal\Models\Occasion::getBannerBySlug($this->requestFilter['occasionSlug']);
-            // $this->return['mainBanner'][] = \OlaHub\UserPortal\Models\Occasion::getBannerBySlug($this->requestFilter['occasionSlug']);
-            // $this->return['storeData'] = \OlaHub\UserPortal\Models\Occasion::getStoreForAdsBySlug($this->requestFilter['occasionSlug']);
         } elseif ((array_key_exists('interestSlug', $this->requestFilter) && strlen($this->requestFilter['interestSlug']) > 0)) {
             $this->mainModule = 'occasion';
             $this->return['mainBanner'][] = \OlaHub\UserPortal\Models\Interests::getBannerBySlug($this->requestFilter['interestSlug']);

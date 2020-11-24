@@ -198,18 +198,6 @@ class WishList extends Model
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = 0;
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = 0;
         $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productInCart'] = 0;
-
-        //wishlist
-        // if (\OlaHub\UserPortal\Models\WishList::where('item_id', $itemID)->count() > 0) {
-        //     $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productWishlisted'] = 1;
-        // }
-
-        //like
-        // if (\OlaHub\UserPortal\Models\LikedItems::where('item_id', $itemID)->count() > 0) {
-        //     $this->return[$this->data->occasion_id]["items"][$this->data->item_id . $this->data->item_type]['productLiked'] = 1;
-        // }
-
-        //Cart
         if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID, $type) {
             $q->where('item_id', $itemID);
             $q->where('item_type', $type);

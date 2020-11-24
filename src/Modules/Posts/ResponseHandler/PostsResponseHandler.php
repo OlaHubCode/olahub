@@ -34,7 +34,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     {
         $this->return = [
             'type' => 'post',
-            // 'comments_count' => isset($this->data->comments) ? count($this->data->comments) : 0,
             'comments' => [],
             'total_share_count' => 0,
             'shares_count' =>  isset($this->data->shares) ? count($this->data->shares) : 0,
@@ -63,7 +62,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $userData = app('session')->get('tempID');
         $isUserVoted = $this->data->author['id'] == $userData;
 
-        // $isUserVoted = false;
         if ($votes) {
             foreach ($votes as $vote) {
                 foreach ($vote->usersVote as $voted) {
@@ -108,19 +106,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $commentsArray = $this->data->comments->pluck('id');
         $replies = PostReplies::whereIn('comment_id', $commentsArray)->count();
         $this->return['comments_count'] = $commentsArray->count() + $replies;
-
-        // $this->data->post_id;
-        // $comments = \OlaHub\UserPortal\Models\PostReport::where("post_id", $this->data->post_id)->where('user_id', app('session')->get('tempID'))->first();
-        // if (!empty($this->data->post_images)) {
-        //     $imgs = explode(",", $this->data->post_images);
-        //     $path = [];
-        //     foreach ($imgs as $img) {
-        //         $imagePath = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($img);
-        //         array_push($path, $imagePath);
-        //     }
-        //     $finalPath = $path;
-        // }
-        // $this->return['post_img'] = $finalPath;
     }
     private function setPostImg()
     {

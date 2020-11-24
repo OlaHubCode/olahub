@@ -40,7 +40,6 @@ class PurchasedItemResponseHandler extends Fractal\TransformerAbstract
             'itemCancelDate' => $this->data->is_canceled && $this->data->cancel_date ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($this->data->cancel_date) : "",
             'itemRefunded' => $this->data->is_refund ? $this->data->is_refund : 0,
             'itemRefundDate' => $this->data->is_refund && $this->data->refund_date ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($this->data->refund_date) : "",
-            // 'itemSlug' => $this->data->item_slug,
         ];
     }
 

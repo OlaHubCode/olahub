@@ -21,15 +21,12 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         $requestAll = $request->all();
         if (!@$requestAll['vpc_TransactionNo'] && !@$requestAll["TransactionId"]) {
             return redirect()->to(REDIRECT_FRONT . "/payment-status/" . $requestAll['vpc_Message']);
-            // return redirect()->to(REDIRECT_FRONT . '/payment-fail?{paymentFail:true,failMsg:"' . $requestAll['vpc_Message'] . '"}');
         }
-        // print_r($requestAll); return "";
         if (isset($requestAll["TransactionId"])) {
             $billnumber = explode("_", $request["TransactionId"]);
         } else {
             $billnumber = explode('_', $this->request->{config('paymentGateway.vpc_MerchTxnRef')});
         }
-        //  print_r($requestAll); return "";
         $this->billnumber = $billnumber[0];
         $this->billtoken = $billnumber[1];
         $this->getBillMainData($requestAll);
@@ -47,9 +44,6 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
             throw new NotAcceptableHttpException(404);
         }
         $check = (new \OlaHub\UserPortal\Helpers\SecureHelper)->verifyPayToken($this->billing, $this->billtoken);
-        // if (!$check) {
-        //     throw new NotAcceptableHttpException(404);
-        // }
         if (!app('session')->get('tempID')) {
             $user = \OlaHub\UserPortal\Models\UserModel::where("id", $this->billing->user_id)->first();
             if (!$user || !$user->is_active) {
@@ -60,7 +54,6 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         }
 
         $this->billingDetails = $this->billing->billDetails;
-        // print_r($this->billingDetails); return "";
         $this->billing->pay_result = serialize($requestAll);
         $this->billing->bill_time = null;
         $this->billing->bill_token = null;
@@ -127,18 +120,9 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
 
         if ($txnResponseCode != "0" || $errorExists) {
             $this->finalizeFailPayment($txnResponseCodeDesc);
-            $this->return .= 'fail';
-            // $this->return = ['status' => true, 'action' => 'fail', 'msg' => 'paymentFail', 'code' => 200];
-            // if ($this->celebrationID) {
-            //     $this->return['celebration'] = $this->celebrationID;
-            // }
         } else {
             $this->finalizeSuccessPayment(true, 2);
             $this->return .= 'paid';
-            // $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
-            // if ($this->celebrationID) {
-            //     $this->return['celebration'] = $this->celebrationID;
-            // }
         }
         if ($this->celebrationID)
             $this->return .= '/' . $this->celebrationID;
@@ -157,10 +141,8 @@ class OlaHubPaymentsCallbackController extends OlaHubPaymentsMainController
         } else {
             $this->finalizeSuccessPayment(true, 2);
             $this->return .= 'paid';
-            // $this->return = ['status' => true, 'action' => 'paid', 'msg' => 'paidSuccessfully', 'code' => 200];
             if ($this->celebrationID) {
                 $this->return .= '/' . $this->celebrationID;
-                // $this->return['celebration'] = $this->celebrationID;
             }
         }
     }

@@ -8,14 +8,13 @@
  * @version 1.0.0
  */
 $router->group([
-//    'middleware' => ['checkAuth'],
+    //    'middleware' => ['checkAuth'],
     'prefix' => basename(strtolower(dirname(__DIR__)))
-        ], function () use($router) {
+], function () use ($router) {
     $router->post('/', 'OlaHubPostController@getPosts');
     $router->post('{type:\bgroup|friend\b}', 'OlaHubPostController@getPosts');
     $router->post('add', 'OlaHubPostController@addNewPost');
     $router->post('likePost', 'OlaHubPostController@likePost');
-//    $router->post('sharePost', 'OlaHubPostController@sharePost');
     $router->post('sharePost', 'OlaHubPostController@newSharePost');
     $router->post('removeSharePost', 'OlaHubPostController@removeSharePost');
     $router->post('addComment', 'OlaHubPostController@addNewComment');
@@ -30,9 +29,8 @@ $router->group([
     $router->post('hashTag', 'OlaHubPostController@hashPost');
     $router->post('ReportPost', 'OlaHubPostController@ReportPost');
     $router->get('getTophashTags', 'OlaHubPostController@getTophashTags');
-    $router->post('votersOnPost','OlaHubPostController@votersOnPost');
+    $router->post('votersOnPost', 'OlaHubPostController@votersOnPost');
     $router->put('updatePrivacyPost', 'OlaHubPostController@updatePrivacyPost');
     $router->post('countUserClick', 'OlaHubPostController@countUserClick');
     $router->post('addView', 'OlaHubPostController@addView');
-
 });

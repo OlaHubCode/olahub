@@ -252,7 +252,6 @@ class PaymentHelper extends OlaHubCommonHelper
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
                             'itemPrice' => number_format($item->country_paid, 2),
-                            // 'itemPrice' => number_format($item->item_price, 2),
                             'itemQuantity' => $item->quantity,
                             'itemTotal' => number_format($item->country_paid * $item->quantity, 2),
                             'itemAttributes' => $details['attributes'],
@@ -302,16 +301,12 @@ class PaymentHelper extends OlaHubCommonHelper
                                 $itemMain->save();
                             }
                         }
-                        // $newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price, true, $designer->country_id);
-                        // $newTotal = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($item->price * $item->quantity, true, $designer->country_id);
                         $return[$item->store_id]['items'][] = [
                             'itemName' => OlaHubCommonHelper::returnCurrentLangField($item, 'item_name'),
                             'itemImage' => OlaHubCommonHelper::setContentUrl($item->item_image),
                             'itemPrice' => number_format($item->country_paid, 2),
-                            // 'itemPrice' => $newPrice,
                             'itemQuantity' => $item->quantity,
                             'itemTotal' => number_format($item->country_paid * $item->quantity, 2),
-                            // 'itemTotal' => $newTotal,
                             'itemAttributes' => $details['attributes'],
                             'fromPickupAddress' => isset($designer->full_address) ? $designer->full_address : '',
                             'fromPickupCity' => isset($designer->city) ? $designer->city : '',

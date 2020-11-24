@@ -96,8 +96,7 @@ class OlaHubPostController extends BaseController
             } catch (Exception $ex) {
             }
 
-            if ($postsTemp->count() > 0) {
-                // shuffle($timeline);
+            // if ($postsTemp->count() > 0) {
                 $all = array_merge([], $posts["data"]);
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
                     ->where(function ($q) use ($group) {
@@ -159,9 +158,8 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
-                //shuffle($all);
                 $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
-            }
+            // }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
             return response($return, 200);
@@ -185,7 +183,6 @@ class OlaHubPostController extends BaseController
                     if ($userID) {
 
                         $q->orWhere(function ($userPost) use ($userID) {
-                            // $userPost->where('user_id', app('session')->get('tempID'));
                             $userPost->where('friend_id', $userID);
                         });
                     }
@@ -205,7 +202,6 @@ class OlaHubPostController extends BaseController
                         $userPost->where('group_id', NULL);
                     });
                     $q->orWhere(function ($userPost) use ($userID) {
-                        // $userPost->where('user_id', app('session')->get('tempID'));
                         $userPost->where('friend_id', $userID);
                     });
                     $q->orWhere(function ($userPost) use ($userID, $myGroups) {
@@ -219,7 +215,6 @@ class OlaHubPostController extends BaseController
         }
         if ($posts->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-            // $posts = $posts['data'];
             if ($type != 'group') {
                 $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
                     ->where(function ($q) use ($userID) {
@@ -272,15 +267,9 @@ class OlaHubPostController extends BaseController
                 }
             }
 
-
-            //shuffle($return['data']);
-
-
             @usort($return['data'], array($this, "sortPosts"));
-            // $return['data'] = $posts;
             $return['status'] = TRUE;
             $return['code'] = 200;
-            // unset($return['message']);
         }
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
@@ -385,8 +374,6 @@ class OlaHubPostController extends BaseController
 
             if ($post) {
                 $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
-
-                // $likes = $post->likes;
                 $likerData = [];
                 foreach ($likes as $like) {
                     $userData = $like->author;
@@ -711,8 +698,6 @@ class OlaHubPostController extends BaseController
             $return['status'] = TRUE;
             $return['code'] = 200;
         }
-        // $log->setLogSessionData(['response' => $return]);
-        // $log->saveLogSessionData();
         $log->saveLog($userData->id, $this->requestData, 'Add Post');
 
         return response($return, 200);
@@ -1292,7 +1277,6 @@ class OlaHubPostController extends BaseController
 
             $comment->comment = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $comment->save();
-            // $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($comment, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -1467,13 +1451,8 @@ class OlaHubPostController extends BaseController
                 $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
             }
-
             $post->privacy = isset($this->requestData['privacyID']) ? $this->requestData['privacyID'] : NULL;
-
-            // var_dump($this->requestData['privacyID']);
             $post->save();
-
-            // var_dump($post);return;
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
             $return['code'] = 200;

@@ -6,7 +6,8 @@ use Closure;
 use OlaHub\UserPortal\Models\Country;
 use OlaHub\UserPortal\Models\Language;
 
-class LocaleMiddleware {
+class LocaleMiddleware
+{
 
     /**
      * Handle an incoming request.
@@ -15,7 +16,8 @@ class LocaleMiddleware {
      * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next) {
+    public function handle($request, Closure $next)
+    {
         $defLang = FALSE;
         $country = Country::where('two_letter_iso_code', env('DEFAULT_COUNTRY_CODE', 'JO'))->first();
         $defCountry = $country;
@@ -38,18 +40,18 @@ class LocaleMiddleware {
         }
 
 
-        $languageCode = $request->headers->get('language'); //explode('_', $request->headers->get('language'))[0];
+        $languageCode = $request->headers->get('language');
         if ($languageCode) {
             $language = Language::where('default_locale', $languageCode)->first();
             if ($language) {
-                $defLang = $language; //explode('_', $language->default_locale)[0];
+                $defLang = $language;
             }
         }
 
         if (!$defLang) {
             $language = Language::find($defCountry->language_id);
             if ($language) {
-                $defLang = $language; //explode('_', $language->default_locale)[0];
+                $defLang = $language;
             }
         }
         app('session')->put('def_lang', $defLang);
@@ -57,5 +59,4 @@ class LocaleMiddleware {
         app('session')->put('def_currency', $defCountry->currencyData);
         return $next($request);
     }
-
 }
