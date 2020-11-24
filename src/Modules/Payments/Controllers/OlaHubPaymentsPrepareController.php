@@ -33,13 +33,11 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
         $this->checkPayPoint();
         $this->setCurrencyCode();
         $this->getCartDetails();
-        // print_r($this->total); return "";
         if ($this->userVoucher > 0 && $this->total <= $this->userVoucher) {
             $this->voucherUsed = $this->total;
             $this->voucherAfterPay = $this->userVoucher - $this->total;
             $this->finalSave = TRUE;
             $this->createUserBillingHistory("0", "paid_by_voucher");
-            // $this->updateUserVoucher();
             $this->createUserBillingDetails();
             $this->doVoucherOnlyPaid();
         } else {
@@ -80,7 +78,6 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
             $this->voucherAfterPay = $this->userVoucher - $this->total;
             $this->finalSave = TRUE;
             $this->createUserBillingHistory("0", "paid_by_voucher");
-            // $this->updateUserVoucher();
         } else {
             $this->createUserBillingHistory($this->paymentMethodData->id);
         }
@@ -142,7 +139,7 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
 
             try {
                 $credit_amountTotal = ($this->billing->billing_total - ($this->billing->voucher_used + $this->billing->points_used_curr));
-                $credit_amount = $credit_amountTotal; // - ($credit_amountTotal * 0.10);
+                $credit_amount = $credit_amountTotal;
                 $billingNumber = $this->billing->billing_number . "_" . $this->billing->bill_token;
                 $token = (new \OlaHub\UserPortal\PaymentGates\Helpers\ZainConnector)->generateToken($credit_amount, $this->billing->billing_currency, $billingNumber, $userData->mobile_no, $userData->email);
                 $url = 'zain/zain.html?token=' . $token->Token;

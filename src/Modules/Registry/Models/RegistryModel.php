@@ -20,20 +20,12 @@ class RegistryModel extends Model
             'column' => 'image',
             'type' => 'string',
             'relation' => false,
-            // 'validation' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048'
         ],
         'registryVideo' => [
             'column' => 'video',
             'type' => 'string',
             'relation' => false,
-            // 'validation' => 'mimes:mp4,mov,ogg,qt | max:20000'
         ],
-        //        'registryOwner' => [
-        //            'column' => 'user_id',
-        //            'type' => 'number',
-        //            'relation' => false,
-        //            'validation' => 'required|numeric|exists:users,id'
-        //        ],
         'registryDate' => [
             'column' => 'registry_date',
             'type' => 'string',

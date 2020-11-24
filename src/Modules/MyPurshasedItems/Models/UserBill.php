@@ -3,11 +3,11 @@
 namespace OlaHub\UserPortal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-// use Illuminate\Database\Eloquent\SoftDeletes;
 
-class UserBill extends Model {
-    // use SoftDeletes;
-    public function __construct(array $attributes = array()) {
+class UserBill extends Model
+{
+    public function __construct(array $attributes = array())
+    {
         parent::__construct($attributes);
 
         static::addGlobalScope('currntUser', function ($query) {
@@ -53,12 +53,6 @@ class UserBill extends Model {
             'relation' => false,
             'validation' => 'required_if:billType,1,2|max:350'
         ],
-//        'billCity' => [
-//            'column' => 'type_id',
-//            'type' => 'number',
-//            'relation' => false,
-//            'validation' => 'required_if:billType,1,2|max:100'
-//        ],
         'billState' => [
             'column' => 'type_id',
             'type' => 'number',
@@ -77,16 +71,10 @@ class UserBill extends Model {
             'relation' => false,
             'validation' => 'required_if:billType,1,2'
         ],
-        // 'billZipCode' => [
-        //     'column' => 'type_id',
-        //     'type' => 'number',
-        //     'relation' => false,
-        //     'validation' => 'required_if:billType,1,2'
-        // ],
     ];
-    
-    function billDetails(){
+
+    function billDetails()
+    {
         return $this->hasMany('\OlaHub\UserPortal\Models\UserBillDetails', 'billing_id');
     }
-
 }

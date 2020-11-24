@@ -85,14 +85,6 @@ class groups extends Model
 
         $items->orWhere('description', '=',$text);
         $items->orWhere('name', '=', $text);
-
-//        $groupsModel = (new groups)->newQuery();
-//        $groupsModel->where(function ($query) use ($q) {
-//            $query->whereRaw('LOWER(`name`)  like ?', "%$q%")
-//                ->orWhereRaw('LOWER(`description`)  like ?', "%$q%");
-//        })->whereIn("privacy", [2, 3]);
-
-
         if ($count > 0) {
             return $items->paginate($count);
         } else {

@@ -44,10 +44,8 @@ class OlaHubLandingPageController extends BaseController
         $interests = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($interests, '\OlaHub\UserPortal\ResponseHandlers\InterestsHomeResponseHandler');
         $return['interests'] = $interests['data'];
 
-        // // offers
+        // offers
         $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
-        // $itemModel->selectRaw('*, ((discounted_price / price) * 100) as discount_perc');
-
         $itemModel->where(function ($query) {
             $query->selectRaw('*, ((discounted_price / price) * 100) as discount_perc')
                 ->whereNotNull('discounted_price_start_date')
@@ -162,10 +160,6 @@ class OlaHubLandingPageController extends BaseController
                     ->orderBy('name', 'ASC')
                     ->take($count);
                 $items = $itemModel->get();
-
-                // if ($items->count() < 1) {
-                //     throw new NotAcceptableHttpException(404);
-                // }
                 foreach ($items as $item) {
                     $data[] = $item;
                 }
@@ -174,7 +168,6 @@ class OlaHubLandingPageController extends BaseController
             $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($data, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
             shuffle($data['data']);
         } else {
-            // if (app('session')->get('tempID') == NUll || count($data['data']) < 1) {
             $itemModel = (new \OlaHub\UserPortal\Models\CatalogItem)->newQuery();
             $itemModel->whereHas('quantityData', function ($q) {
                 $q->where('quantity', '>', 0);
@@ -186,10 +179,6 @@ class OlaHubLandingPageController extends BaseController
                 ->orderBy('name', 'ASC')
                 ->take(6);
             $items = $itemModel->get();
-
-            // if ($items->count() < 1) {
-            //     throw new NotAcceptableHttpException(404);
-            // }
             $data = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($items, '\OlaHub\UserPortal\ResponseHandlers\ItemsListResponseHandler');
         }
 
@@ -267,7 +256,8 @@ class OlaHubLandingPageController extends BaseController
         return @$return['data'];
     }
 
-    public function getHomeData(){
+    public function getHomeData()
+    {
         $return['trending'] = $this->getTrendingData();
         $return['offers'] = $this->getMostOfferData();
         $return['recommended'] = $this->getRecommendedData();
@@ -277,8 +267,6 @@ class OlaHubLandingPageController extends BaseController
     }
     public function getRecommendedData()
     {
-        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        // $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getRecommendedData"]);
         $items = [];
         if (app('session')->get('tempID')) {
             // intrest items
@@ -413,12 +401,6 @@ class OlaHubLandingPageController extends BaseController
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getClasses"]);
 
         $classesMainModel = (new \OlaHub\UserPortal\Models\Classification)->newQuery();
-        //        if (count($this->requestFilter) > 0) {
-        //            foreach ($this->requestFilter as $input => $value) {
-        //                $classesMainModel->where(\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\Classification::$columnsMaping, $input), $value);
-        //            }
-        //            unset($value, $input);
-        //        }
         $classesMainModel->where('is_main', $type);
         $classesMainModel->whereHas('itemsMainData', function ($query) {
             $query->where('is_published', '1');

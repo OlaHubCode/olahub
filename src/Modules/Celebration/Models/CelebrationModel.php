@@ -14,7 +14,6 @@ class CelebrationModel extends Model
             'column' => 'title',
             'type' => 'string',
             'relation' => false,
-            // 'validation' => 'required|max:200'
         ],
         'celebrationOwner' => [
             'column' => 'user_id',

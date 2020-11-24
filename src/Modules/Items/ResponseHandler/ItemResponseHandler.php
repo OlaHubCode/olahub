@@ -126,7 +126,6 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
     {
         $this->return["productOwnerFollowed"] = 0;
         $this->return["productOwnerFollowers"] = 0;
-        // $this->return["productOwnerFollowers"] = $followers;
         $this->return["productOwnerFollowers"] = 0;
     }
 
@@ -150,13 +149,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
             $this->return['productLiked'] = 1;
         }
 
-        //share
-        // if ($post && isset($post->shares) && in_array(app('session')->get('tempID'), $post->shares)) {
-        //     $this->return['productShared'] = '1';
-        // }
-
         //Cart
-
         if (app('session')->get('tempID')) {
             $itemID = $this->data->id;
             if (\OlaHub\UserPortal\Models\Cart::whereHas('cartDetails', function ($q) use ($itemID) {

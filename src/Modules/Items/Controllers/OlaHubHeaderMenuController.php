@@ -135,12 +135,6 @@ class OlaHubHeaderMenuController extends BaseController
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getClasses"]);
 
         $classesMainModel = (new \OlaHub\UserPortal\Models\Classification)->newQuery();
-        //        if (count($this->requestFilter) > 0) {
-        //            foreach ($this->requestFilter as $input => $value) {
-        //                $classesMainModel->where(\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(\OlaHub\UserPortal\Models\Classification::$columnsMaping, $input), $value);
-        //            }
-        //            unset($value, $input);
-        //        }
         $classesMainModel->where('is_main', $type);
         $classesMainModel->whereHas('itemsMainData', function ($query) {
             $query->where('is_published', '1');

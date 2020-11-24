@@ -47,7 +47,6 @@ class RegistryParticipantController extends BaseController
         if ($existParticipants) {
             $usersId = array_diff($numArray, $existParticipants);
         }
-        //var_dump($usersId);
         if ($usersId) {
             $log = new \OlaHub\UserPortal\Helpers\LogHelper();
             foreach ($usersId as $userId) {
@@ -119,33 +118,6 @@ class RegistryParticipantController extends BaseController
             $participant = RegistryUsersModel::where('user_id', $this->requestData['userId'])->where('registry_id', $this->requestData['registryId'])->first();
             if ($participant && $this->registry->user_id != $this->requestData['userId']) {
                 $participant->delete();
-
-                // if ($this->requestData['userId'] != app('session')->get('tempID')) {
-                //     $notification = new \OlaHub\UserPortal\Models\Notifications();
-                //     $notification->type = 'registry';
-                //     $notification->content = "notifi_removeParticipantRegistry";
-                //     $notification->registry_id = $this->requestData['registryId'];
-                //     $notification->user_id = $this->requestData['userId'];
-                //     $notification->friend_id = app('session')->get('tempID');
-                //     $notification->save();
-
-                //     $userData = app('session')->get('tempData');
-                //     $targe = \OlaHub\UserPortal\Models\UserModel::where('id', $this->requestData['userId'])->first();
-                //     \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                //         $targe->id,
-                //         "registry_part_remove",
-                //         array(
-                //             "type" => "registry_part_remove",
-                //             "registryId" => $this->registry->id,
-                //             "registryTitle" => $this->registry->title,
-                //             "username" => "$userData->first_name $userData->last_name",
-                //         ),
-                //         $targe->lang,
-                //         "$userData->first_name $userData->last_name",
-                //         $this->registry->title
-                //     );
-                // }
-
                 $log->setLogSessionData(['response' => ['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200]]);
                 $log->saveLogSessionData();
                 return response(['status' => true, 'msg' => 'ParticipantDeleted', 'code' => 200], 200);

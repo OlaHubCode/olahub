@@ -24,22 +24,17 @@ class OlaHubSharesController extends BaseController
 
     public function newSharedItemsUser()
     {
-          
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        // $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "newSharedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
         $groupId = isset($this->requestData['groupId']) ? $this->requestData['groupId'] : NULL;
         $shared = SharedItems::where('item_id', $this->requestData['itemID'])
             ->where('item_type', $this->requestData['itemType'])
             ->where('group_id', $groupId)
-            // ->where('is_published', 1)
-
             ->where('user_id', app('session')->get('tempID'))->first();
         if (!$shared) {
             $like = new SharedItems;
@@ -48,9 +43,6 @@ class OlaHubSharesController extends BaseController
             $like->item_type = isset($this->requestData['itemType']) ? $this->requestData['itemType'] : 'store';
             $like->save();
         }
-
-        // $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'newSharedItemsUser', 'code' => 200]]);
-        // $log->saveLogSessionData();
         $log->saveLog($userData->id, $this->requestData, 'Share_Item');
 
         return response(['status' => TRUE, 'code' => 200], 200);
@@ -58,14 +50,11 @@ class OlaHubSharesController extends BaseController
 
     public function removeSharedItemsUser()
     {
-        
+
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        // $log->setLogSessionData(['module_name' => "Likes", 'function_name' => "removeSharedItemsUser"]);
 
         if (isset($this->requestData['itemID']) && !$this->requestData['itemID']) {
-            // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-            // $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
         $groupId = isset($this->requestData['groupId']) ? $this->requestData['groupId'] : NULL;
@@ -73,8 +62,6 @@ class OlaHubSharesController extends BaseController
             ->where('item_type', $this->requestData['itemType'])
             ->where('group_id', $groupId)
             ->where('user_id', app('session')->get('tempID'))->delete();
-        // $log->setLogSessionData(['response' => ['status' => TRUE, 'msg' => 'unlikeProductNow', 'code' => 200]]);
-        // $log->saveLogSessionData();
         $log->saveLog($userData->id, $this->requestData, 'Remove_shared_Item');
 
         return response(['status' => TRUE, 'code' => 200], 200);

@@ -10,25 +10,23 @@
 
 $router->group([
     'prefix' => basename(strtolower(dirname(__DIR__)))
-        ], function () use($router) {
+], function () use ($router) {
 
     $router->group([
         'middleware' => ['checkAuth']
-            ], function () use($router) {
+    ], function () use ($router) {
 
 
-    $router->post('/calendar', 'FriendController@listFriendCalendar');
-    $router->post('/wishList', 'FriendController@listFriendWishList');
-    //$router->post('/info', 'FriendController@getProfileInfo');
-    $router->post('/sendFriend', 'FriendController@sendFriendRequest');
-    $router->post('/upComingEvent', 'FriendController@listUserUpComingEvent');
-    $router->post('/sendFriend', 'FriendController@sendFriendRequest');
-    $router->post('/cancelFriend', 'FriendController@cancelFriendRequest');
-    $router->post('/rejectFriend', 'FriendController@rejectFriendRequest');
-    $router->post('/acceptFriend', 'FriendController@acceptFriendRequest');
-    $router->post('/removeFriend', 'FriendController@removeFriend');
-    $router->post('/blockUser', 'FriendController@blockUser');
-
+        $router->post('/calendar', 'FriendController@listFriendCalendar');
+        $router->post('/wishList', 'FriendController@listFriendWishList');
+        $router->post('/sendFriend', 'FriendController@sendFriendRequest');
+        $router->post('/upComingEvent', 'FriendController@listUserUpComingEvent');
+        $router->post('/sendFriend', 'FriendController@sendFriendRequest');
+        $router->post('/cancelFriend', 'FriendController@cancelFriendRequest');
+        $router->post('/rejectFriend', 'FriendController@rejectFriendRequest');
+        $router->post('/acceptFriend', 'FriendController@acceptFriendRequest');
+        $router->post('/removeFriend', 'FriendController@removeFriend');
+        $router->post('/blockUser', 'FriendController@blockUser');
     });
 
     $router->post('/info', 'FriendController@getProfileInfo');

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * MerBankInfos routes
  * Handling URL requests with method type to send to Controller
@@ -13,17 +14,14 @@
 
 $router->group([
     'prefix' => basename(strtolower(dirname(__DIR__)))
-        ], function () use($router) {
+], function () use ($router) {
     $router->post('/', 'OlaHubItemController@getItemsData');
     $router->post('sitemap', 'OlaHubLandingPageController@getItemsSitemap');
-    // $router->post('/', 'OlaHubItemController@getItems');
     $router->post('voucher', 'OlaHubItemController@getVoucherItems');
     $router->post('ads', 'OlaHubAdvertisesController@getAdsData');
     $router->post('classifications', 'OlaHubHeaderMenuController@getClassificationsData');
     $router->post('categories', 'OlaHubHeaderMenuController@getCategoriesData');
     $router->post('homeItems', 'OlaHubLandingPageController@getHomeData');
-    // $router->post('trending', 'OlaHubLandingPageController@getTrendingData');
-    // $router->post('offers', 'OlaHubLandingPageController@getMostOfferData');
     $router->post('recommended', 'OlaHubLandingPageController@getRecommendedData');
     $router->post('homeOccasions', 'OlaHubLandingPageController@getOccasionsData');
     $router->post('homeInterests', 'OlaHubLandingPageController@getInterestsData');
@@ -38,17 +36,16 @@ $router->group([
     /*
      * Filters (Left side filters)
      */
-    
+
     $router->group([
         'prefix' => 'filters'
-            ], function () use($router) {
+    ], function () use ($router) {
 
         // Filter paginated routes
         $router->post('brands', 'OlaHubItemController@getItemFiltersBrandData');
         $router->post('attributes', 'OlaHubItemController@getItemFiltersAttrsData');
         $router->post('classifications', 'OlaHubItemController@getItemFiltersClassessData');
         $router->post('categories', 'OlaHubItemController@getCatsData');
-        // $router->post('categories', 'OlaHubItemController@getItemFiltersCatsData');
         $router->post('occasions', 'OlaHubItemController@getItemFiltersOccasionData');
         $router->post('mayAlsoLike', 'OlaHubItemController@getAlsoLikeItems');
         $router->post('selectedAttributes', 'OlaHubItemController@getSelectedAttributes');
@@ -60,14 +57,13 @@ $router->group([
         $router->post('categories/{all:\ball\b}', 'OlaHubItemController@getItemFiltersCatsData');
         $router->post('occasions/{all:\ball\b}', 'OlaHubItemController@getItemFiltersOccasionData');
     });
-    
-    
+
+
     $router->group([
         'middleware' => ['checkAuth']
-            ], function () use($router) {
+    ], function () use ($router) {
         $router->post('reviews/add', 'OlaHubItemReviewsController@addReview');
     });
-    
 });
 
 /*
@@ -76,13 +72,10 @@ $router->group([
 
 $router->group([
     'prefix' => 'item/{slug}'
-        ], function () use($router) {
+], function () use ($router) {
     $router->post('/', 'OlaHubItemController@getOneItem');
     $router->post('/attribute', 'OlaHubItemController@getOneItemAttrsData');
     $router->post('related', 'OlaHubItemController@getOneItemRelatedItems');
     $router->post('mostViewed', 'OlaHubItemController@getOneItemMostViewedItems');
     $router->post('reviews', 'OlaHubItemReviewsController@getReviews');
-
-    
 });
-

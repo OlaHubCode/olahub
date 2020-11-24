@@ -6,13 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class CatalogItem extends Model
 {
-    // use SoftDeletes;
     protected $connection = 'mysql';
 
     public function __construct(array $attributes = array())
     {
-    //  $this->lang = $request->header('language');
-    parent::__construct($attributes);
+        parent::__construct($attributes);
 
         static::addGlobalScope('published', function (\Illuminate\Database\Eloquent\Builder $builder) {
             $builder->where('is_published', '1');
@@ -25,13 +23,13 @@ class CatalogItem extends Model
             });
         });
     }
-    static function lang(){
-    $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
-    return strtolower($languageArray[0]);
+    static function lang()
+    {
+        $languageArray = explode("_", app('session')->get('def_lang')->default_locale);
+        return strtolower($languageArray[0]);
     }
     protected $table = 'catalog_items';
     static $columnsMaping = [
-        //Main table
         'categories' => [
             'column' => 'category_id',
             'type' => 'number',
@@ -50,20 +48,12 @@ class CatalogItem extends Model
             'relation' => false,
             'validation' => 'numeric'
         ],
-        //Relations tables
-        //        'attributes' => [
-        //            'column' => 'item_attribute_value_id',
-        //            'type' => 'number',
-        //            'relation' => 'valuesData',
-        //            'validation' => 'numeric'
-        //        ],
         'occasions' => [
             'column' => 'occasion_id',
             'type' => 'number',
             'relation' => 'occasions',
             'validation' => 'numeric'
         ],
-        //Slugs
         'categorySlug' => [
             'column' => 'category_slug',
             'type' => 'number',
@@ -241,16 +231,12 @@ class CatalogItem extends Model
         $occQuery = [];
 
         foreach ($words as $word)
-            // array_push($occQuery, "replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', '') REGEXP '$word'");\
-            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', ''), '\"', '') REGEXP '".json_encode($word , JSON_UNESCAPED_UNICODE)."'");
+            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', ''), '\"', '') REGEXP '" . json_encode($word, JSON_UNESCAPED_UNICODE) . "'");
 
-        // each items
         $itemQuery = [];
         foreach ($words as $word)
-            array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . json_encode($word , JSON_UNESCAPED_UNICODE) . "[[:>:]]'");
+            array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . json_encode($word, JSON_UNESCAPED_UNICODE) . "[[:>:]]'");
         $itemQuery = join(' and ', $itemQuery);
-        // end each
-
         $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
@@ -285,8 +271,8 @@ class CatalogItem extends Model
                 unset($newWords[$key]);
 
 
-        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
-        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$.".self::lang()."')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
+        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
+        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
         if ($withRelated) {
             $related = [];
             $occasions = Occasion::whereRaw($whereQuery)->whereHas('occasionItemsData')->get();
@@ -371,11 +357,6 @@ class CatalogItem extends Model
 
         // check the item name
         if ($find->count() == 0) {
-            // $itemQuery = [];
-            // foreach ($words as $word)
-            //     array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . $word . "[[:>:]]'");
-            // $itemQuery = join(' and ', $itemQuery);
-
             $find->orWhere(function ($q1) use ($text) {
                 $q1->where(function ($query) {
                     $query->whereNull('parent_item_id');

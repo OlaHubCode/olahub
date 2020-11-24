@@ -85,13 +85,8 @@ class OlaHubCartController extends BaseController
         if (isset($checkPermission['status']) && !$checkPermission['status']) {
             return response($checkPermission, 200);
         }
-        // $countryData = \OlaHub\UserPortal\Models\Country::withoutGlobalScope("countrySupported")->find($country);
-        // if (!$countryData) {
-        //     throw new NotAcceptableHttpException(404);
-        // }
         $this->checkCart($type);
         $this->cart->shipped_to = $country == $this->cart->country_id ? NULL : $country;
-        // $this->cart->shipment_fees = 44.90;
         $this->cart->save();
         $return["status"] = true;
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
@@ -233,18 +228,10 @@ class OlaHubCartController extends BaseController
             $return = [];
             $return['status'] = TRUE;
             $return['code'] = 200;
-            //    var_dump($requestData);
-            //     return;
         } else {
             throw new NotAcceptableHttpException(404);
         }
-        // var_dump($this->request);
-        // return;
         $log->saveLog($userData->id, $this->request, 'Add To Cart ');
-
-
-        // $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
-        // $logHelper->setLog($this->requestData, $return, 'newCartItem', $this->userAgent);
         return response($return, 200);
     }
 
@@ -269,7 +256,7 @@ class OlaHubCartController extends BaseController
         } else {
             $data = false;
             $data = $this->cart->cartDetails()->where('item_id', $this->requestData->itemID)->where("item_type", $itemType)->first();
-            
+
             if ($data) {
                 if ($this->celebration) {
                     if ($this->celebration->commit_date || ($data->created_by != app('session')->get('tempID') && $this->celebration->created_by != app('session')->get('tempID'))) {
@@ -361,7 +348,6 @@ class OlaHubCartController extends BaseController
             throw new UnauthorizedHttpException(401);
         }
         if ($type == "event" && $this->id > 0 && $this->userId > 0) {
-            // $this->friends = $this->friends;
             $time = strtotime("+3 Days");
             $minTime = date("Y-m-d", $time);
             $this->calendar = \OlaHub\UserPortal\Models\CalendarModel::whereIn("user_id", $this->friends)
@@ -417,7 +403,6 @@ class OlaHubCartController extends BaseController
             } else {
                 $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $this->cart->id)->orderBy('paricipant_likers', 'desc')->get();
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($cartDetails, '\OlaHub\UserPortal\ResponseHandlers\CelebrationGiftResponseHandler');
-                // var_dump($return);
             }
             $participant = \OlaHub\UserPortal\Models\CelebrationParticipantsModel::where('celebration_id', $this->celebration->id)
                 ->where('user_id', app('session')->get('tempID'))->first();
@@ -469,7 +454,6 @@ class OlaHubCartController extends BaseController
             $this->cart = $checkCart;
             if ($this->cart->country_id == 0) {
                 $this->cart->country_id = $countryTo;
-                // $this->cart->country_id = 5;
                 $this->cart->save();
             }
             (new \OlaHub\UserPortal\Helpers\CartHelper)->checkOutOfStockInCartItem($checkCart->id, $this->celebration);
@@ -480,7 +464,6 @@ class OlaHubCartController extends BaseController
                 $this->cart = $this->cartFilter($type);
                 if ($this->cart->country_id == 0) {
                     $this->cart->country_id = $countryTo;
-                    // $this->cart->country_id = 5;
                     $this->cart->save();
                 }
             } else {
@@ -584,8 +567,6 @@ class OlaHubCartController extends BaseController
                     }
                     if ($cartItems->save()) {
                         $totalPrice = \OlaHub\UserPortal\Models\Cart::getCartSubTotal($this->cart, false);
-                        //                        $this->cart->total_price = $totalPrice;
-                        //                        $this->cart->save();
                         if ($this->celebration) {
                             $this->handleAddItemToCelebration($totalPrice);
                         }
@@ -681,7 +662,6 @@ class OlaHubCartController extends BaseController
         $itemImage = $this->setItemImageData($item);
         $itemOwner = $this->setItemOwnerData($item);
         $itemAttrs = $this->setItemSelectedAttrData($item);
-        //$productAttributes = $this->setAttrData($item);
         $itemFinal = \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false);
         $country = \OlaHub\UserPortal\Models\Country::find($item->country_id);
         $currency = $country->currencyData;
@@ -703,7 +683,6 @@ class OlaHubCartController extends BaseController
             "productOwnerName" => $itemOwner['productOwnerName'],
             "productOwnerSlug" => $itemOwner['productOwnerSlug'],
             "productselectedAttributes" => $itemAttrs,
-            //"productAttributes" => $productAttributes,
         ];
         return $return;
     }
@@ -752,7 +731,6 @@ class OlaHubCartController extends BaseController
         if (isset($this->NotLoginCartItems["cookieId"]) && $this->NotLoginCartItems["cookieId"]) {
         }
         $_COOKIE["cookie"] = $this->NotLoginCartItems["cookieId"];
-        //var_dump($_COOKIE["cookie"]);
         app("session")->put("userCheck", "wwww");
         return response(["status" => true], 200)->withCookie(new Cookie("userCheck", $this->NotLoginCartItems["cookieId"], 2592000, "/", "localhost"));
     }

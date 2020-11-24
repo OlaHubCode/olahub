@@ -6,7 +6,6 @@ class UserShippingAddressHelper extends OlaHubCommonHelper {
 
     function getUserShippingAddress($userData, $requestData = []) {
         $userShippingAddress = $userData->shippingAddress;
-        // var_dump($userShippingAddress);
         if (!$userShippingAddress) {
             $userShippingAddress = new \OlaHub\UserPortal\Models\UserShippingAddressModel;
         }

@@ -177,11 +177,9 @@ class OlaHubGeneralController extends BaseController
             ->orderBy('shipping_countries.name', 'asc')->get();
         foreach ($allCountries as $country) {
             $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text');
-            // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
         }
         foreach ($allCountriesDropDown as $A) {
             $A->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($A, 'text');
-            // $country->text = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($country, 'text') . " ($country->phonecode)";
         }
 
         $return['allCountries'] = $allCountries;
@@ -312,7 +310,6 @@ class OlaHubGeneralController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Get all Interests"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start fetch interest data"]);
         $interests = \OlaHub\UserPortal\Models\Interests::get();
-        // $interests = \OlaHub\UserPortal\Models\Interests::whereIn('countries', [app('session')->get('def_country')->id])->get();
         if ($interests->count() < 1) {
             throw new NotAcceptableHttpException(404);
         }
@@ -364,7 +361,6 @@ class OlaHubGeneralController extends BaseController
             ];
         }
 
-        // (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $faqsReturn]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End fetch static pages"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
         return response(['data' => $faqsReturn, 'code' => 200, 'status' => true]);
@@ -401,7 +397,6 @@ class OlaHubGeneralController extends BaseController
             ->groupBy('followed_slug')
             ->get();
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
-        //return($newItemscnotification);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start check notification existance"]);
         $allNotifications = [];
         $newItemsNotifications = [];
@@ -459,8 +454,6 @@ class OlaHubGeneralController extends BaseController
         }
 
         if ($notification->count() > 0) {
-            // dd($newItemscnotification);
-            // return($newItemscnotification);
             foreach ($notification as $one) {
                 if ($one->content == 'notifi_post_comment_for_follower' || $one->content == 'notifi_post_like_for_follower') {
                     $postID = $one->post_id;
@@ -565,24 +558,8 @@ class OlaHubGeneralController extends BaseController
         if (isset($this->requestData->notificationId) && $this->requestData->notificationId) {
             if ($this->requestData->notificationId == 'all') {
                 \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->update(['read' => 1]);
-
-                // \OlaHub\UserPortal\Models\UserNotificationNewItems::->whereRaw("!FIND_IN_SET($sessionUserId,read_items)")->update(['read_items' => 0]);
                 return ['status' => true, 'msg' => 'Notifications has been read', 'code' => 200];
-            }
-            // else if($this->requestData->type=="newItems"){
-            //     $notification = \OlaHub\UserPortal\Models\UserNotificationNewItems::where('user_id', app('session')->get('tempID'))->find($this->requestData->notificationId);
-            //     if ($notification) {
-            //         $notification->save();
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'Notification has been read', 'code' => 200]]);
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-            //         return ['status' => true, 'msg' => 'Notification has been read', 'code' => 200];
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_endData" => "End making notification read"]);
-            //     }
-            // }
-
-            else {
-
+            } else {
                 $notification = \OlaHub\UserPortal\Models\Notifications::where('user_id', app('session')->get('tempID'))->find($this->requestData->notificationId);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start making notification read"]);
                 if ($notification) {
@@ -710,7 +687,6 @@ class OlaHubGeneralController extends BaseController
 
     public function searchAll()
     {
-        // var_dump('xx',$this->requestFilter->word);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "General", 'function_name' => "Search All"]);
 
         $return = ['status' => false, 'no_data' => '1', 'msg' => 'NoData', 'code' => 204];
@@ -754,8 +730,6 @@ class OlaHubGeneralController extends BaseController
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
 
-                    //    var_dump('handle',$handle);$q
-                       
             // brands
             if ($handle[0]->search > 0 && !is_numeric($q)) {
                 $searchData[] = [
@@ -936,18 +910,6 @@ class OlaHubGeneralController extends BaseController
         }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start invite new user"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check email existance of new user"]);
-        // if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
-        //     $checkExist = \OlaHub\UserPortal\Models\UserModel::where("email", $this->requestData->userEmail)->first();
-        //     if ($checkExist) {
-        //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]]]);
-        //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-        //         return response(['status' => false, 'msg' => 'emailExist', 'code' => 406, 'errorData' => ['userEmail' => ['validation.unique.email']]], 200);
-        //     }
-        //     $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("email", $this->requestData->userEmail)->first();
-        //     if ($checkTemp) {
-        //         $user = $checkTemp;
-        //     }
-        // }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check phoneNumber existance of new user"]);
         if (isset($this->requestData->userPhoneNumber) && strlen($this->requestData->userPhoneNumber) > 3) {
             $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData->userPhoneNumber);
@@ -959,22 +921,6 @@ class OlaHubGeneralController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
             }
-            // $checkTemp = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope("notTemp")->where("mobile_no", $this->requestData->userPhoneNumber)->first();
-            // if ($checkTemp) {
-            //     if (isset($this->requestData->userEmail) && strlen($this->requestData->userEmail) > 3) {
-            //         if ($user) {
-            //             if ($user->id != $checkTemp->id) {
-            //                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]]]);
-            //                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-            //                 return response(['status' => false, 'msg' => 'phoneExist', 'code' => 406, 'errorData' => ['userPhoneNumber' => ['validation.unique.phone']]], 200);
-            //             }
-            //         } else {
-            //             $user = $checkTemp;
-            //         }
-            //     } else {
-            //         $user = $checkTemp;
-            //     }
-            // }
         }
         $user = new \OlaHub\UserPortal\Models\UserModel;
         if (!empty($this->requestData->userPhoneNumber)) {
@@ -1081,7 +1027,6 @@ class OlaHubGeneralController extends BaseController
 
     public function getUserTimeline(Request $request)
     {
-        // dd($request->input('page'));
         $page = (int) $request->input('page') || 1;
         $now = date('Y-m-d');
         $month = 'created_at BETWEEN DATE_ADD(CURRENT_DATE(), INTERVAL -300 DAY) AND CURRENT_DATE()';
@@ -1092,7 +1037,6 @@ class OlaHubGeneralController extends BaseController
         $upcoming = [];
         $celebrations = [];
         $return = ['status' => true, 'code' => 200];
-        // $user = \OlaHub\UserPortal\Models\UserModel::find(app('session')->get('tempID'));
         $user = app('session')->get('tempData');
         if ($user) {
             $this->userInfo = [
@@ -1230,11 +1174,9 @@ class OlaHubGeneralController extends BaseController
 
             // posts
             try {
-
                 if (!$friends) {
                     $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList($user->id);
                 }
-
                 $myGroups = \OlaHub\UserPortal\Models\GroupMembers::getGroupsArr($user->id);
                 $posts = Post::where(function ($q) use ($friends, $myGroups) {
                     $q->where(function ($userPost) use ($friends) {
@@ -1538,7 +1480,6 @@ class OlaHubGeneralController extends BaseController
                 ->whereIn('interest_id', $followedInterests)
 
                 ->paginate(10);
-            // $timeline[] = $this->handlePostTimeline($interestsItems, 'intrests_multi_item');
             $itemsInterests = [];
             foreach ($interestsItems as $item) {
                 if (!isset($itemsInterests[$item->interest_id])) {
@@ -1601,7 +1542,6 @@ class OlaHubGeneralController extends BaseController
         // designers
         $designers = \OlaHub\UserPortal\Models\Designer::whereHas("itemsMainData")
             ->whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
-        // $designers = \OlaHub\UserPortal\Models\Designer::whereRaw($month)->orderBy('created_at', 'desc')->paginate(20);
         foreach ($designers as $designer) {
             $timeline[] = $this->handlePostTimeline($designer, 'designer');
         }
@@ -1689,7 +1629,6 @@ class OlaHubGeneralController extends BaseController
         }
 
         if (count($timeline) > 0) {
-            // shuffle($timeline);
             $count_timeline = count($timeline);
             $breakSponsor = count($sponsors_arr) > 1 ? (int) @($count_timeline / count($sponsors_arr) / 2) : 0;
             $breakCommunity = count($communities_arr) > 1 ? (int) @($count_timeline / count($communities_arr) / 2) : 0;
@@ -1715,7 +1654,6 @@ class OlaHubGeneralController extends BaseController
             $return['celebrations'] = $celebrations;
             $return['upcoming'] = $upcoming;
         }
-        // dd($return)
         return response($return, 200);
     }
 
@@ -2150,7 +2088,6 @@ class OlaHubGeneralController extends BaseController
 
         $suggestedFriendsIds = [];
         $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
-        // dd($friends);
         $requestedFriends = \OlaHub\UserPortal\Models\Friends::getAllSentRequest(app('session')->get('tempID'));
         $blocked = \OlaHub\UserPortal\Models\Friends::getAllblocked(app('session')->get('tempID'));
         if (count($friends) > 0) {
