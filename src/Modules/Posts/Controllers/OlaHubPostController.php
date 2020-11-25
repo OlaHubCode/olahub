@@ -97,68 +97,70 @@ class OlaHubPostController extends BaseController
             }
 
             // if ($postsTemp->count() > 0) {
-                $all = array_merge([], $posts["data"]);
-                $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($group) {
-                        $q->where(function ($query) use ($group) {
-                            $query->where('group_id', $group->id);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
-                if ($sharedItems->count()) {
-                    foreach ($sharedItems as $litem) {
-                        if ($litem->item_type == 'store') {
-                            $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
-                            if ($item)
-                                $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
-                        } else {
-                            $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
-                            if ($item)
-                                $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
-                        }
+            $all = array_merge([], $posts["data"]);
+            $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($group) {
+                    $q->where(function ($query) use ($group) {
+                        $query->where('group_id', $group->id);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
+            if ($sharedItems->count()) {
+                foreach ($sharedItems as $litem) {
+                    if ($litem->item_type == 'store') {
+                        $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
+                        if ($item)
+                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
+                    } else {
+                        $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
+                        if ($item)
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
                     }
                 }
-                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($group) {
-                        $q->where(function ($query) use ($group) {
-                            $query->where('group_id', $group->id);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
+            }
+            $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($group) {
+                    $q->where(function ($query) use ($group) {
+                        $query->where('group_id', $group->id);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
 
 
-                if ($sharedPosts->count()) {
-                    foreach ($sharedPosts as $litem) {
-                        $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
-                        $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-                        $item = $item['data'];
-                        $item['type'] = 'post_shared';
-                        $item['sharedUser_info'] = [
-                            'user_id' => $litem->author->id,
-                            'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
-                            'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
-                            'username' => $litem->user_name,
-                        ];
-                        $item['time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
-                        $all[] = $item;
+            if ($sharedPosts->count()) {
+                foreach ($sharedPosts as $litem) {
+                    $item = \OlaHub\UserPortal\Models\Post::where('post_id', $litem->post_id)->first();
+                    if (!$item)
+                        continue;
+                    $item = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($item, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+                    $item = $item['data'];
+                    $item['type'] = 'post_shared';
+                    $item['sharedUser_info'] = [
+                        'user_id' => $litem->author->id,
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($litem->author->profile_picture),
+                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($litem->author, 'profile_url', $litem->user_name, '.'),
+                        'username' => $litem->user_name,
+                    ];
+                    $item['time'] = isset($litem->created_at) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($litem->created_at) : NULL;
+                    $all[] = $item;
+                }
+            }
+
+            usort($all, array($this, "sortPosts"));
+            $final = [];
+            $count_posts = count($all);
+            $count_sponsers = count($sponsers_arr);
+            $break = $count_sponsers > 0 ? (int) ($count_posts / $count_sponsers - 1) : 0;
+            $start_in = 0;
+            for ($i = 0; $i < $count_posts; $i++) {
+                $final[] = $all[$i];
+                if ($break - 1 == $i) {
+                    if (isset($sponsers_arr[$start_in])) {
+                        $final[] = $sponsers_arr[$start_in];
+                        $start_in++;
+                        $break = $break * 2;
                     }
                 }
-
-                usort($all, array($this, "sortPosts"));
-                $final = [];
-                $count_posts = count($all);
-                $count_sponsers = count($sponsers_arr);
-                $break = $count_sponsers > 0 ? (int) ($count_posts / $count_sponsers - 1) : 0;
-                $start_in = 0;
-                for ($i = 0; $i < $count_posts; $i++) {
-                    $final[] = $all[$i];
-                    if ($break - 1 == $i) {
-                        if (isset($sponsers_arr[$start_in])) {
-                            $final[] = $sponsers_arr[$start_in];
-                            $start_in++;
-                            $break = $break * 2;
-                        }
-                    }
-                }
-                $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
+            }
+            $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             // }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
