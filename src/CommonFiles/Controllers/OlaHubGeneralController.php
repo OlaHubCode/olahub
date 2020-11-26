@@ -725,8 +725,10 @@ class OlaHubGeneralController extends BaseController
 
                 // groups
                 $searchQuery[] = "select count(id) as search from groups
-                where LOWER(`name`) sounds like '" . $q . "'
-                or LOWER(`description`) sounds like '" . $q . "'";
+                where (LOWER(`name`) sounds like '" . $q . "'
+                or LOWER(`name`)  like '%" . $q . "%'
+                or LOWER(`description`) sounds like '" . $q . "')
+                and   privacy != 1 ";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
 
