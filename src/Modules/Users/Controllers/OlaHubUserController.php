@@ -132,7 +132,7 @@ class OlaHubUserController extends BaseController
                     "username" => $user->first_name . ' ' .  $user->last_name,
                 ];
             }
-            
+
             $return['status'] = TRUE;
             $return['code'] = 200;
             $log->setLogSessionData(['response' => $return]);
@@ -230,13 +230,6 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-        // if (empty($this->requestData["userPhoneNumber"]) && empty($this->requestData["userEmail"])) {
-        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
-        // }
-        // if (empty($this->requestData["userProfileUrl"]) && empty($this->requestData["userProfileUrl"])) {
-        //     return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => ['userEmailPhone' => ['validation.userPhoneEmail']]], 200);
-        // }
-
         $validatorUser = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateUpdateUserData(UserModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorUser['status']) && !$validatorUser['status']) {
             if ($validatorUser['err'] == 'uniqueUserName') {
@@ -246,6 +239,7 @@ class OlaHubUserController extends BaseController
         }
         $validatorAddress = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(UserShippingAddressModel::$columnsMaping, (array) $this->requestData);
         if (isset($validatorAddress['status']) && !$validatorAddress['status']) {
+
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validatorAddress['data']], 200);
         }
 
@@ -261,7 +255,6 @@ class OlaHubUserController extends BaseController
         if ((!empty($this->requestData['userPhoneNumber']) && $userData->mobile_no != $this->requestData['userPhoneNumber']) ||
             (!empty($this->requestData['userCountry']) && $userData->country_id != $this->requestData['userCountry'])
         ) {
-            // dd("----");
             $phone = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
             $country_id = $this->requestData["userCountry"];
             $u = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $country_id) {
@@ -272,25 +265,27 @@ class OlaHubUserController extends BaseController
             if ($u) {
                 return response(['status' => false, 'msg' => 'phone_exist', 'code' => 406], 200);
             }
-            if (!empty($this->requestData["active_code"])) {
-                $phone = $userData->mobile_no;
-                $country_id = $userData->country_id;
-                $code = $this->requestData["active_code"];
-                $uc = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $code, $country_id) {
-                    $q->where('mobile_no', $phone);
-                    $q->where('country_id', $country_id);
-                    $q->where('activation_code', $code);
-                })->first();
-                if (!$uc) {
-                    return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+            if ($country_id == 5) {
+                if (!empty($this->requestData["active_code"])) {
+                    $phone = $userData->mobile_no;
+                    $country_id = $userData->country_id;
+                    $code = $this->requestData["active_code"];
+                    $uc = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($phone, $code, $country_id) {
+                        $q->where('mobile_no', $phone);
+                        $q->where('country_id', $country_id);
+                        $q->where('activation_code', $code);
+                    })->first();
+                    if (!$uc) {
+                        return response(['status' => false, 'msg' => 'invalid_active_code'], 200);
+                    }
+                } else {
+                    $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
+                    $userData->save();
+                    $userData->country_id = $country_id;
+                    $userData->mobile_no = $phone;
+                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
+                    return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
                 }
-            } else {
-                $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
-                $userData->save();
-                $userData->country_id = $country_id;
-                $userData->mobile_no = $phone;
-                (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
-                return response(['status' => true, 'msg' => 'confirm_phone_sent'], 200);
             }
         }
 
@@ -333,17 +328,16 @@ class OlaHubUserController extends BaseController
             $userData->save();
         }
 
-        /********************/
         if (!empty($this->requestData['userPhoneNumber']))
             $this->requestData['userPhoneNumber'] = (new \OlaHub\UserPortal\Helpers\UserHelper)->fullPhone($this->requestData['userPhoneNumber']);
         if (!empty($this->requestData['userInterests']))
             $this->requestData['userInterests'] = implode(",", $this->requestData['userInterests']);
+        else  $this->requestData['userInterests'] = "";
         foreach ($this->requestData as $input => $value) {
             if (isset($this->requestData['userNewPassword']) && $this->requestData['userNewPassword'] != "") {
                 $userData->password = json_decode(Crypt::decrypt($this->requestData["userNewPassword"], false));
                 if ($userData->is_first_login == "1") {
                     $userData->is_first_login = "0";
-                    // $isFirstLogin = TRUE;
                     $log->saveLog($userData->id, $this->requestData, 'changed_password');
                 }
             }
@@ -353,17 +347,12 @@ class OlaHubUserController extends BaseController
         }
 
         $userData->save();
-
-
-
         (new \OlaHub\UserPortal\Helpers\UserShippingAddressHelper)->getUserShippingAddress($userData, $this->requestData);
         $user = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($userData, '\OlaHub\UserPortal\ResponseHandlers\UsersResponseHandler');
         $return = ['user' => $user['data'], 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
 
         $log->saveLog($userData->id, $this->requestData, 'update_profile');
         $return = ['user' => Crypt::encrypt(json_encode($user['data']), false), 'status' => true, 'msg' => 'updated Account succussfully', 'code' => 200];
-        // $log->setLogSessionData(['response' => $return]);
-        // $log->saveLogSessionData();
         $log->saveLog($userData->id, $this->requestData, 'Upload User Data');
 
         return response($return, 200);
@@ -393,10 +382,6 @@ class OlaHubUserController extends BaseController
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
-
-        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        // $log->setLogSessionData(['module_name' => "Users", 'function_name' => "uploadUserProfilePhoto"]);
-
         $this->requestData = isset($this->uploadData) ? $this->uploadData : [];
         if (count($this->requestData) > 0 && $this->requestData['userProfilePicture']) {
             $user = app('session')->get('tempData');
@@ -407,7 +392,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'))."-profile-Changed";
+                $post->post_id = uniqid(app('session')->get('tempID')) . "-profile-Changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;
@@ -422,16 +407,11 @@ class OlaHubUserController extends BaseController
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;
-                // $log->setLogSessionData(['response' => $return]);
-                // $log->saveLogSessionData();
                 $log->saveLog($userData->id, $this->requestData, 'Upload Profile Phote');
 
                 return response($return, 200);
             }
         }
-        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        // $log->saveLogSessionData();
-
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
 
@@ -452,7 +432,7 @@ class OlaHubUserController extends BaseController
                 //add photo as post
                 $post = new Post;
                 $post->user_id = app('session')->get('tempID');
-                $post->post_id = uniqid(app('session')->get('tempID'))."cover-changed";
+                $post->post_id = uniqid(app('session')->get('tempID')) . "cover-changed";
                 $post->content = NULL;
                 $post->color = NULL;
                 $post->friend_id = NULL;
@@ -467,15 +447,11 @@ class OlaHubUserController extends BaseController
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($user, '\OlaHub\UserPortal\ResponseHandlers\HeaderDataResponseHandler');
                 $return["status"] = TRUE;
                 $return["code"] = 200;
-                // $log->setLogSessionData(['response' => $return]);
-                // $log->saveLogSessionData();
                 $log->saveLog($userData->id, $this->requestData, 'Upload Cover Photo');
 
                 return response($return, 200);
             }
         }
-        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        // $log->saveLogSessionData();
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }

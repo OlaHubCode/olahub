@@ -11,7 +11,6 @@ class UserShippingAddressModel extends Model {
         
         static::addGlobalScope('currentUser', function ($query) {
             $query->where('user_id', app('session')->get('tempID'));
-            $query->where('country_id', app('session')->get('def_country')->id);
         });
         
         static::saving(function ($model){
@@ -26,6 +25,12 @@ class UserShippingAddressModel extends Model {
 
     protected $table = 'user_shipping_addresses';
     static $columnsMaping = [
+    'shippingCountry' => [
+        'column' => 'country_id',
+        'type' => 'integer',
+        'relation' => false,
+        'validation' => 'max:200'
+    ],
         'userState' => [
             'column' => 'shipping_address_state',
             'type' => 'string',
@@ -76,6 +81,7 @@ class UserShippingAddressModel extends Model {
                 $array->{$this->columnsMaping[$key]['column']} = $value;
             }
         }
+
         return $array;
     }
 
@@ -84,6 +90,7 @@ class UserShippingAddressModel extends Model {
         $return = [];
         $user = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $userID)->first();
         $address = UserShippingAddressModel::withoutGlobalScope("currentUser")->where('user_id', $userID)
+
                 ->where('country_id', $countryID)
                 ->where('is_default', '1')
                 ->first();

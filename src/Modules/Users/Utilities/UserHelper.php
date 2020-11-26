@@ -9,12 +9,11 @@ class UserHelper extends OlaHubCommonHelper
     {
         $ip = $_SERVER['REMOTE_ADDR'];
        return json_decode(file_get_contents("http://api.ipapi.com/$ip?access_key=52d6f557dd6faf1dbeaa8601450321b6"));
-        // return json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
     }
 
     function fullPhone($phone)
     {
-        return $phone = "0" . (int) $phone;
+        return $phone = (int) $phone;
     }
 
     function getDeviceID()
@@ -73,8 +72,6 @@ class UserHelper extends OlaHubCommonHelper
                 )
             );
         }
-        // $code = parent::randomString(6, 'num');
-        // return $userLogin;
     }
 
     function checkUnique($value = false, $country_id, $is_phone)
@@ -101,38 +98,9 @@ class UserHelper extends OlaHubCommonHelper
         }
         return false;
     }
-    // function checkUnique($value = false, $country_id) {
-    //     if ($value && strlen($value) > 3) {
-    //         $exist = \OlaHub\UserPortal\Models\UserModel::where('email', $value)
-    //                 ->orWhere('mobile_no', $value)
-    //                 ->orWhere('facebook_id', $value)
-    //                 ->orWhere('google_id', $value)
-    //                 ->orWhere('twitter_id', $value)
-    //                 ->first();
-    //         if (!$exist) {
-    //             return true;
-    //         }
-    //     } elseif (strlen($value) <= 3) {
-    //         return TRUE;
-    //     }
-    //     return false;
-    // }
 
     function createProfileSlug($userName, $userId)
     {
-        /*$profileSlug = parent::createSlugFromString($userName, '.');
-        $existSlug = \Illuminate\Support\Facades\DB::table('users')
-                        ->where('profile_url', 'LIKE', $profileSlug . '%')->orderBy('profile_url', 'desc')->first();
-        if ($existSlug) {
-            $values = explode(".", $existSlug->profile_url);
-            if (is_array($values) && end($values)) {
-                $profileSlug = $profileSlug . '.' . ((int) end($values) + 1);
-            } else {
-                $profileSlug = $profileSlug . '.' . 1;
-            }
-        }*/
-
-
         $lower = strtolower($userName);
         $replace = str_replace(' ', '_', $lower);
         $replaceSpcial = preg_replace('/^[\p{Arabic}a-zA-Z\p{N}]+\h?[\p{N}\p{Arabic}a-zA-Z]*$/u', '', $replace);

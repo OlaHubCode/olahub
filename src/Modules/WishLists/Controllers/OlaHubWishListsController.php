@@ -54,9 +54,6 @@ class OlaHubWishListsController extends BaseController
         if (isset($validator['status']) && !$validator['status']) {
             return response(['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => $validator['data']], 200);
         }
-
-        // if ($this->requestData['itemType'] == 'designer') {
-        // }
         $data = WishList::withoutGlobalScope("wishlistCountry")->where('item_id', $this->requestData['itemID'])->where('user_id', app('session')->get('tempID'))->get();
         if ($data->count() > 0) {
             foreach ($data as $one) {
@@ -134,9 +131,6 @@ class OlaHubWishListsController extends BaseController
     }
 
     public function getWishlistOccasions() {
-        // $log = new \OlaHub\UserPortal\Helpers\LogHelper();
-        // $log->setLogSessionData(['module_name' => "WishLists", 'function_name' => "getWishlistOccasions"]);
-        
         $occassionsCountry = \OlaHub\UserPortal\Models\ManyToMany\occasionCountries::where('country_id', app('session')->get('def_country')->id)->where('is_published',1)->get();
         if ($occassionsCountry->count() < 1) {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
@@ -160,8 +154,6 @@ class OlaHubWishListsController extends BaseController
         $return['wishlistType'] = $wishlistType;
         $return['status'] = true;
         $return['code'] = 200;
-        // $log->saveLog($userData->id, $this->requestData, 'Get Wishlist Occasions');
-
         return response($return, 200);
     }
 

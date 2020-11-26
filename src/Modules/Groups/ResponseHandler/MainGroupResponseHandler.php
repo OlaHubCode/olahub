@@ -28,8 +28,10 @@ class MainGroupResponseHandler extends Fractal\TransformerAbstract
         $members = \OlaHub\UserPortal\Models\GroupMembers::where('group_id', $this->data->id)->where('status', 1)->count();
 
         $this->return = [
+            "value" => isset($this->data->id) ? $this->data->id : 0,
             "groupId" => isset($this->data->id) ? $this->data->id : 0,
             "groupName" => isset($this->data->name) ? $this->data->name : NULL,
+            "text" => isset($this->data->name) ? $this->data->name : NULL,
             "groupDescription" => isset($this->data->description) ? $this->data->description : NULL,
             "groupPrivacy" => isset($this->data->privacy) ? $this->data->privacy : 0,
             "groupPostApprove" => isset($this->data->posts_approve) ? $this->data->posts_approve : 0,

@@ -47,14 +47,6 @@ class Occasion extends Model
 
     static function getBannerBySlug($slug)
     {
-        // $occasion = Occasion::where('occasion_slug', $slug)->first();
-        // if ($occasion && $occasion->banner_ref) {
-        //     return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($occasion->banner_ref);
-        // } else {
-        //     return \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner');
-        // }
-
-        
         $return['mainBanner'] = [\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false, 'shop_banner')];
         $return['storeData']['storeLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
         $occasion = Occasion::where('occasion_slug', $slug)->first();

@@ -35,7 +35,6 @@ $router->group([
         $router->post('listParticipants', 'ParticipantController@ListCelebrationParticipants');
         
         $router->post('newGift', 'GiftController@addGiftToCelebration');
-        //$router->post('deleteGift', 'GiftController@deleteGiftFromCelebration');
         $router->post('listGifts', 'GiftController@listCelebrationGifts');
         $router->post('likeGift', 'GiftController@likeCelebrationGift');
         $router->delete('deleteGift', 'GiftController@deleteCelebrationGift');

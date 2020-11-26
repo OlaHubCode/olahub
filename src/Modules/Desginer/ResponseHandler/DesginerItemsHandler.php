@@ -25,8 +25,6 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         $this->setDefaultData();
         $this->setCartData();
         $this->setItemSelectedAttrData();
-        // $this->setBrandData();
-
         return $this->return;
     }
 
@@ -51,7 +49,6 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         $this->setRateData();
         $this->setShippingDatesData();
         $this->setFollowStatus();
-        // $this->setItemSelectedAttrData();
     }
 
     private function setDesignerData()
@@ -68,7 +65,9 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         if ($this->data->discounted_price_end_date && $this->data->discounted_price_end_date >= date("Y-m-d")) {
             $this->return["productOriginalPrice"] = $this->data->price ? \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->price, true) : 0;
             $this->return["productWillSavePerc"] = ceil(((\OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->price, false) - \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->discounted_price, false)) / \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->price, false)) * 100);
-            $this->return["productWillSaveMount"] = ((\OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->price, false) - \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->discounted_price, false))) . " JOD";
+            $this->return["productWillSaveMount"] = ((\OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->price, false) - \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->discounted_price, false)));
+            $this->return['productDiscountedPrice'] = \OlaHub\UserPortal\Helpers\CommonHelper::setDesignerPrice($this->data->discounted_price, true);
+            $this->return['productHasDiscount'] = true;
         }
     }
 
@@ -108,7 +107,6 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
         if (app('session')->get('tempID')) {
             $headerCelebration = $this->request->headers->get("celebration") ? $this->request->headers->get("celebration") : "";
             if ($headerCelebration && $headerCelebration > 0) {
-                // $this->checkCelebrationCart($headerCelebration, $itemID);
             } else {
                 $this->checkDefaultCart($itemID);
             }
@@ -148,7 +146,7 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
             ->where('user_id', app('session')->get('tempID'))->first();
         $this->return['followed'] = $d ? true : false;
     }
-    
+
     private function setItemSelectedAttrData()
     {
         // $this->return['productAttributes'] = [];
@@ -164,7 +162,7 @@ class DesginerItemsHandler extends Fractal\TransformerAbstract
     private function setBrandData()
     {
         $brandData = $this->parentData->designer;
-        
+
         $this->return["productBrand"] = 0;
         $this->return["productBrandName"] = null;
         $this->return["productBrandSlug"] = null;

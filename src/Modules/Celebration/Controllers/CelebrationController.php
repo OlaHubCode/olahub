@@ -50,7 +50,6 @@ class CelebrationController extends BaseController
                     } else {
                         $fullName = explode(" ", trim($this->requestData["userFullName"]));
                         $user = new \OlaHub\UserPortal\Models\UserModel;
-                        // $secureHelper = new \OlaHub\UserPortal\Helpers\SecureHelper;
                         $user->country_id = $country_id;
                         $user->first_name = $fullName[0];
                         $user->last_name = isset($fullName[1]) ? $fullName[1] : "";
@@ -58,7 +57,6 @@ class CelebrationController extends BaseController
                         $user->mobile_no = $phone;
                         $user->invited_by = app('session')->get('tempID');
                         $user->is_first_login = 1;
-                        // $user->password = $secureHelper->setPasswordHashing(\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6));
                         $user->save();
                         $user_id = $user->id;
                     }
@@ -480,16 +478,6 @@ class CelebrationController extends BaseController
             if ($celebration) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Show details of selected celebration"]);
                 $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($celebration, '\OlaHub\UserPortal\ResponseHandlers\CelebrationResponseHandler');
-                // $country = \OlaHub\UserPortal\Models\Country::where('id', $return['data']['celebrationCountry'])->first();
-                // $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
-                // $reg = [];
-                // foreach ($regions as $region) {
-                //     $reg[] = [
-                //         'text' => $region->name,
-                //         'value' => $region->id,
-                //     ];
-                // }
-                // $return['cities'] = $reg;
                 $return['status'] = true;
                 $return['code'] = 200;
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => $return]);
@@ -521,14 +509,6 @@ class CelebrationController extends BaseController
             $countryId = app('session')->get('def_country')->id;
         }
         $country = \OlaHub\UserPortal\Models\Country::where('id', $countryId)->first();
-        // $regions = \OlaHub\UserPortal\Models\ShippingRegions::where('country_code', $country->two_letter_iso_code)->get();
-        // $reg = [];
-        // foreach ($regions as $region) {
-        //     $reg[] = [
-        //         'text' => $region->name,
-        //         'value' => $region->id,
-        //     ];
-        // }
         if (isset($this->requestData['userId']) && $this->requestData['userId']) {
 
             $user = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $this->requestData['userId'])->first();
@@ -565,8 +545,6 @@ class CelebrationController extends BaseController
                     "userPhoneNumber" => isset($user->mobile_no) ? (new \OlaHub\UserPortal\Helpers\UserHelper)->handleUserPhoneNumber($user->mobile_no) : NULL,
                 ];
             }
-
-            // $return['cities'] = $reg;
 
             $return['status'] = true;
             $return['code'] = 200;

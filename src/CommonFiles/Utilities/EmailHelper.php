@@ -57,7 +57,6 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR004';
         $username = "$userData->first_name $userData->last_name";
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
-        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]'];
         $with = [$username, $code, $agent];
         $to = $userData;
@@ -80,7 +79,6 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activated Email", "action_startData" => json_encode($userData) .  $fullAgent]);
         $template = 'USR006';
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
-        // $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent) . " - " . OlaHubCommonHelper::returnCurrentLangField(app('session')->get("def_country"), "name");
         $username = "$userData->first_name $userData->last_name";
         $replace = ['[UserName]', '[UserSessionAgent]'];
         $with = [$username, $agent];

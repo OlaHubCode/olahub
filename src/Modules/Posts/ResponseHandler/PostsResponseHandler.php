@@ -3,6 +3,7 @@
 namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\PostReplies;
 use League\Fractal;
 
 class PostsResponseHandler extends Fractal\TransformerAbstract
@@ -24,6 +25,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->likersData();
         $this->setVoteData();
         $this->reportedBefore();
+        $this->countComment();
 
         return $this->return;
     }
@@ -32,7 +34,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     {
         $this->return = [
             'type' => 'post',
-            'comments_count' => isset($this->data->comments) ? count($this->data->comments) : 0,
             'comments' => [],
             'total_share_count' => 0,
             'shares_count' =>  isset($this->data->shares) ? count($this->data->shares) : 0,
@@ -44,9 +45,11 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'content' => isset($this->data->content) ?  $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
+            'prev_link_data' => isset($this->data->prev_link_data) ? unserialize($this->data->prev_link_data) : NULL,
             'privacy' => $this->data->privacy,
             'isApprove' => $this->data->is_approve == 1 ? true : false,
-            'is_admin' => $this->data->is_admin == 1 ? true : false
+            'is_admin' => $this->data->is_admin == 1 ? true : false,
+            'admin_post_reached' => $this->data->admin_post_reached
 
 
         ];
@@ -57,8 +60,8 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $votes = $this->data->choices;
         $dataVotes = [];
         $userData = app('session')->get('tempID');
+        $isUserVoted = $this->data->author['id'] == $userData;
 
-        $isUserVoted = false;
         if ($votes) {
             foreach ($votes as $vote) {
                 foreach ($vote->usersVote as $voted) {
@@ -98,6 +101,12 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->return['votes'] = $dataVotes;
     }
 
+    private function countComment()
+    {
+        $commentsArray = $this->data->comments->pluck('id');
+        $replies = PostReplies::whereIn('comment_id', $commentsArray)->count();
+        $this->return['comments_count'] = $commentsArray->count() + $replies;
+    }
     private function setPostImg()
     {
         $finalPath = NULL;
@@ -122,7 +131,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             foreach ($Links as $link) {
                 array_push($urls, $link);
             }
-           
         }
         $this->return['post_img_links'] = $urls;
     }

@@ -135,21 +135,6 @@ class RegistryController extends BaseController
             $this->deleteRegistryDetails($registry);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete Registry"]);
             $registry->delete();
-
-            // foreach ($participants as $Participant) {
-
-            //     $participantData = \OlaHub\UserPortal\Models\UserModel::withoutGlobalScope('notTemp')->where('id', $Participant->user_id)->first();
-
-            //     if ($participantData->mobile_no && $participantData->email) {
-            //         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-            //         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-            //     } else if ($participantData->mobile_no) {
-            //         (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-            //     } else if ($participantData->email) {
-            //         (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendDeletedRegistry($participantData, $registry->title, $registry->user_name);
-            //     }
-            // }
-            // (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Remove notifications related to registry"]);
             \OlaHub\UserPortal\Models\Notifications::where('type', 'registry')->where('registry_id', $this->requestData['registryId'])->delete();
 
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => true, 'msg' => 'registryDeletedSuccessfully', 'code' => 200]]);
@@ -157,13 +142,8 @@ class RegistryController extends BaseController
 
             return response(['status' => true, 'msg' => 'registryDeletedSuccessfully', 'code' => 200], 200);
         }
-
-
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-        // $log->setLogSessionData(['response' => ['status' => false, 'msg' => 'NoData', 'code' => 204]]);
-        // $log->saveLogSessionData();
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
     }
@@ -180,19 +160,6 @@ class RegistryController extends BaseController
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete registry details", "action_startData" => $registry]);
         $items = \OlaHub\UserPortal\Models\RegistryGiftModel::where('registry_id', $registry->id)->delete();
         $items = \OlaHub\UserPortal\Models\RegistryUsersModel::where('registry_id', $registry->id)->delete();
-
-        //        $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->where('registry_id', $registry->id)->first();
-        //
-        //        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete gift items related to celebration"]);
-        //        if ($cart) {
-        //            $cartDetails = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $cart->id)->get();
-        //            if (count($cartDetails) > 0) {
-        //                foreach ($cartDetails as $cartDetail) {
-        //                    $cartDetail->delete();
-        //                }
-        //            }
-        //            $cart->delete();
-        //        }
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Delete video and image related to registry"]);
 
         if ($registry->video) {
@@ -231,12 +198,10 @@ class RegistryController extends BaseController
         if ($saved) {
             if (isset($this->requestData['registryImage'])) {
                 $image = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryImage'], "registries/" . $this->registry->id);
-                // $image = (new \OlaHub\UserPortal\Helpers\RegistryHelper)->uploadImage($this->registry, 'image', $this->requestData['registryImage']);
                 $this->registry->image = $image;
             }
             if (isset($this->requestData['registryVideo'])) {
                 $video = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryVideo'], "registries/" . $this->registry->id);
-                // $video = \OlaHub\UserPortal\Helpers\GeneralHelper::uploader($this->requestData['registryVideo'], DEFAULT_IMAGES_PATH . "registries/" . $this->registry->id, "registries/" . $this->registry->id, false);
                 $this->registry->video = $video;
             }
             $saved = $this->registry->save();
@@ -280,10 +245,6 @@ class RegistryController extends BaseController
 
     public function getOneRegistry()
     {
-        //$log = new \OlaHub\UserPortal\Helpers\Logs();
-        //$userData = app('session')->get('tempData');
-
-       // $log->saveLog($userData->id, $this->requestData, ' get_One_Registry');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Get one Registry"]);
 
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
@@ -292,22 +253,6 @@ class RegistryController extends BaseController
                     $q->where('user_id', app('session')->get('tempID'))
                         ->orWhere('is_published', 1);
                 })->first();
-            // $participant = RegistryUsersModel::where('registry_id', $this->requestData['registryId'])->where('user_id', app('session')->get('tempID'))->first();
-            // if (!$participant) {
-            //     if ($registry->status == 3 && $registry->user_id == app('session')->get('tempID')) {
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'authorizedToOpenRegistry', 'code' => 400]]);
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-            //         return response(['status' => false, 'msg' => 'authorizedToOpenRegistry', 'code' => 400], 200);
-            //     } elseif ($registry->user_id != app('session')->get('tempID')) {
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'authorizedToOpenRegistry', 'code' => 400]]);
-            //         (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
-
-            //         return response(['status' => false, 'msg' => 'authorizedToOpenRegistry', 'code' => 401], 200);
-            //     }
-            // }
-            // if (empty(app('session')->get('tempID')))
-            //     return response(['status' => false, 'msg' => 'authorizedToOpenRegistry', 'code' => 401], 200);
             (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Check registry existance to show its details for user"]);
             if ($registry) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Show details of selected registry"]);
