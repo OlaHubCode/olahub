@@ -872,26 +872,19 @@ class OlaHubPostController extends BaseController
         $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
+        if (count($this->requestData) > 0 ) {
             $postID = $this->requestData['post_id'];
             $post = Post::where('post_id', $postID)->first();
 
-            $likes = $post->likes;
-            $comments = $post->comments;
+            $likes = $post->likes->pluck('user_id')->toArray();
+            $comments = $post->comments->pluck('user_id')->toArray();
+            $array = array_unique(array_merge($likes, $comments));
+
             $followers = [];
-            foreach ($likes as $userID) {
-                $x = "ID" . $userID->user_id;
+            foreach ($array as $key => $value) {
+                $x = "ID" . $value;
                 $followers[$x] = [
-
-                    'user_id' => $userID->user_id
-                ];
-            }
-            foreach ($comments as $userID) {
-
-                $x = "ID" . $userID->user_id;
-                $followers[$x] = [
-
-                    'user_id' => $userID->user_id
+                    'user_id' => $value
                 ];
             }
 
@@ -902,65 +895,37 @@ class OlaHubPostController extends BaseController
                 $comment->comment = $this->requestData['content']['comment'];
                 $comment->save();
 
+                if($post->user_id != app('session')->get('tempID') ) {
+                    $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
 
-                foreach ($followers as $userId) {
+                    foreach ($followers as $userId) {
 
-                    if (
-                        $post->user_id != app('session')->get('tempID') && ($post->user_id !=  $userId['user_id']) &&
-                        ($comment->user_id !=  $userId['user_id'])
-                    ) {
-                        $notification = new \OlaHub\UserPortal\Models\Notifications();
-                        $notification->type = 'post';
-                        $notification->content = "notifi_post_comment_for_follower";
-                        $notification->user_id = $userId['user_id'];
-                        $notification->friend_id = app('session')->get('tempID');
-                        $notification->post_id = $postID;
-                        $notification->save();
+                        if (($post->user_id != $userId['user_id']) && ($comment->user_id != $userId['user_id'])) {
+                            $notification = new \OlaHub\UserPortal\Models\Notifications();
+                            $notification->type = 'post';
+                            $notification->content = "notifi_post_comment_for_follower";
+                            $notification->user_id = $userId['user_id'];
+                            $notification->friend_id = app('session')->get('tempID');
+                            $notification->post_id = $postID;
+                            $notification->save();
 
-                        $userData = app('session')->get('tempData');
-                        $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                            $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
+                                \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                                    $userId['user_id'],
+                                    "notifi_post_comment_for_follower",
+                                    array(
+                                        "type" => "post_comment",
+                                        "postId" => $postID,
+                                        "subject" => $post->content,
+                                        "username" => "$userData->first_name $userData->last_name",
 
-                        $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
-                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                            $userId['user_id'],
-                            "notifi_post_comment_for_follower",
-                            array(
-                                "type" => "post_comment",
-                                "postId" => $postID,
-                                "subject" => $post->content,
-                                "username" => "$userData->first_name $userData->last_name",
-
-                            ),
-                            $owner->lang,
-                            "$userData->first_name $userData->last_name",
-                            "$posterName->first_name $posterName->last_name"
-                        );
+                                    ),
+                                    $owner->lang,
+                                    "$userData->first_name $userData->last_name",
+                                    "$posterName->first_name $posterName->last_name"
+                                );
+                        }
                     }
-                }
-
-
-                $author = app('session')->get('tempData');
-                $authorName = "$author->first_name $author->last_name";
-                $commentData = [
-                    'replies' => [],
-                    'comment_id' => $comment->id,
-                    'user_id' => app('session')->get('tempID'),
-                    'comment' => $comment->comment,
-                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
-                    'user_info' => [
-                        'user_id' => $author->id,
-                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($author->profile_picture),
-                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($author, 'profile_url', $authorName, '.'),
-                        'username' => $authorName,
-                    ]
-                ];
-                $return['data'] = $commentData;
-                $return['status'] = TRUE;
-                $return['code'] = 200;
-                $postID = $this->requestData['post_id'];
-
-                if ($post->user_id != app('session')->get('tempID')) {
-
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
                     $notification->type = 'post';
                     $notification->content = "notifi_comment";
@@ -969,8 +934,6 @@ class OlaHubPostController extends BaseController
                     $notification->post_id = $postID;
                     $notification->save();
 
-                    $userData = app('session')->get('tempData');
-                    $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                     \OlaHub\UserPortal\Models\Notifications::sendFCM(
                         $post->user_id,
                         "post_comment",
@@ -981,10 +944,29 @@ class OlaHubPostController extends BaseController
                             "subject" => $post->content,
                             "username" => "$userData->first_name $userData->last_name",
                         ),
-                        $owner->lang,
+                        $posterName->lang,
                         "$userData->first_name $userData->last_name"
                     );
+
                 }
+
+                $authorName = "$userData->first_name $userData->last_name";
+                $commentData = [
+                    'replies' => [],
+                    'comment_id' => $comment->id,
+                    'user_id' => app('session')->get('tempID'),
+                    'comment' => $comment->comment,
+                    'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
+                    'user_info' => [
+                        'user_id' => $userData->id,
+                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture),
+                        'profile_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($userData, 'profile_url', $authorName, '.'),
+                        'username' => $authorName,
+                    ]
+                ];
+                $return['data'] = $commentData;
+                $return['status'] = TRUE;
+                $return['code'] = 200;
             }
         }
         $log->saveLog($userData->id, $this->requestData, 'Add Comment');
@@ -1082,7 +1064,7 @@ class OlaHubPostController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 && TRUE /* \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::validateData(Post::$columnsMaping, $this->requestData) */) {
+        if (count($this->requestData) > 0 ) {
             $commentId = $this->requestData['comment_id'];
             $comment = PostComments::find($commentId);
             if ($comment) {
