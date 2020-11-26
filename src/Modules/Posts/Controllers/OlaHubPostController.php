@@ -1012,20 +1012,16 @@ class OlaHubPostController extends BaseController
                             $canEdit = true;
                             $canDelete = true;
                         }
-                        $post = Post::where('post_id', $this->requestData['postId'])->first();
-                        if ($post) {
-                            if ($post->user_id == app('session')->get('tempID')) {
-                                $canDelete = true;
-                            }
+
+                        if ($post->user_id == app('session')->get('tempID')) {
+                            $canDelete = true;
                         }
                         if ((app('session')->get('tempID')) == $comment->user_id) {
                             $canEditReply = true;
                             $canDeleteReply = true;
                         }
-                        if ($post) {
-                            if ($post->user_id == app('session')->get('tempID')) {
-                                $canDeleteReply = true;
-                            }
+                        if ($post->user_id == app('session')->get('tempID')) {
+                            $canDeleteReply = true;
                         }
 
                         $return["data"][] = [
