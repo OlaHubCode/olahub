@@ -875,18 +875,10 @@ class OlaHubPostController extends BaseController
         if (count($this->requestData) > 0 ) {
             $postID = $this->requestData['post_id'];
             $post = Post::where('post_id', $postID)->first();
-
+            $followers = [];
             $likes = $post->likes->pluck('user_id')->toArray();
             $comments = $post->comments->pluck('user_id')->toArray();
-            $array = array_unique(array_merge($likes, $comments));
-
-            $followers = [];
-            foreach ($array as $key => $value) {
-                $x = "ID" . $value;
-                $followers[$x] = [
-                    'user_id' => $value
-                ];
-            }
+            $followers = array_unique(array_merge($likes, $comments));
 
             if ($post) {
                 $comment = new PostComments();
@@ -897,28 +889,33 @@ class OlaHubPostController extends BaseController
 
                 if($post->user_id != app('session')->get('tempID') ) {
                     $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
-
-                    foreach ($followers as $userId) {
-
-                        if (($post->user_id != $userId['user_id']) && ($comment->user_id != $userId['user_id'])) {
+                    $posPost = array_search($post->user_id, $followers);
+                    $posComment = array_search($comment->user_id, $followers);
+                    if($posPost){
+                        unset($followers[$posPost]);
+                    }
+                    if($posComment){
+                        unset($followers[$posComment]);
+                    }
+                    foreach ($followers as $key => $userId) {
+                        if (($post->user_id != $userId) && ($comment->user_id != $userId)) {
                             $notification = new \OlaHub\UserPortal\Models\Notifications();
                             $notification->type = 'post';
                             $notification->content = "notifi_post_comment_for_follower";
-                            $notification->user_id = $userId['user_id'];
+                            $notification->user_id = $userId;
                             $notification->friend_id = app('session')->get('tempID');
                             $notification->post_id = $postID;
                             $notification->save();
 
-                            $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
+                            $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
                                 \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                                    $userId['user_id'],
+                                    $userId,
                                     "notifi_post_comment_for_follower",
                                     array(
                                         "type" => "post_comment",
                                         "postId" => $postID,
                                         "subject" => $post->content,
                                         "username" => "$userData->first_name $userData->last_name",
-
                                     ),
                                     $owner->lang,
                                     "$userData->first_name $userData->last_name",
