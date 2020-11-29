@@ -348,12 +348,8 @@ class OlaHubGuestController extends BaseController
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
-            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) &&!$userData->profile_picture) {
-
-                $imagePath = (new \OlaHub\UserPortal\Helpers\UserHelper)->uploadUserImageFacebook($userData, 'profile_picture', $this->requestData['userPicture']);
-
-                $userData->profile_picture = $imagePath;
-
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture'])) {
+                $userData->profile_picture = $this->requestData['userPicture'];
                 $saved = $userData->save();
             }
 

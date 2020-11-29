@@ -46,7 +46,7 @@ class Notifications extends Model
                 'sound' => "default",
                 'click_action' => "FCM_PLUGIN_ACTIVITY",
                 "title" => $title ? $title : $username,
-                "body" => Notifications::translate($key, $lang, $word, $word2),
+                "body" => $data['body'],
             ),
             'data' => $data,
         );
