@@ -1202,6 +1202,8 @@ class OlaHubPostController extends BaseController
             }
 
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            if (isset($this->requestData['postLinkRemoved']) && $this->requestData['postLinkRemoved'])
+                $post->prev_link_data = NULL;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
