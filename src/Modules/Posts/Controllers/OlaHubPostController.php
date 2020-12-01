@@ -13,6 +13,7 @@ use OlaHub\UserPortal\Models\PostReport;
 use OlaHub\UserPortal\Models\VotePostUser;
 use OlaHub\UserPortal\Models\PostVote;
 use OlaHub\UserPortal\Models\PostLikes;
+use OlaHub\UserPortal\Models\CommentLike;
 
 class OlaHubPostController extends BaseController
 {
@@ -366,14 +367,14 @@ class OlaHubPostController extends BaseController
     }
 
     public function usersLike()
-    {
+    {   
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "usersLike"]);
 
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('post_id', $this->requestData['postId'])->first();
-
             if ($post) {
                 $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
                 $likerData = [];
@@ -391,6 +392,29 @@ class OlaHubPostController extends BaseController
 
                 $return['data'] = $likerData;
                 $return['lastPage'] = $likes->lastPage();
+                $return['status'] = TRUE;
+                $return['code'] = 200;
+            }
+        }elseif(isset($this->requestData['commentId']) && $this->requestData['commentId']) {
+            $likers = CommentLike::where('comment_id', $this->requestData['commentId'])->paginate(20);
+            if ($likers) {
+                // var_dump($likers);
+                // $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
+                $likerData = [];
+                foreach ($likers as $like) {
+                    $userData = $like->author;
+                    $name = isset($userData->first_name) ? $userData->first_name . ' ' . $userData->last_name : "";
+
+                    $likerData[] = [
+                        'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                        'likerName' => isset($name) ? $name : NULL,
+                        'likerid' => isset($userData->id) ? $userData->id  : NULL
+                    ];
+                }
+
+                $return['data'] = $likerData;
+                $return['lastPage'] = $likers->lastPage();
                 $return['status'] = TRUE;
                 $return['code'] = 200;
             }
@@ -1047,14 +1071,18 @@ class OlaHubPostController extends BaseController
                             }
                         }
                         $commentsLikesData = [];
+                        $likersCount = 0 ;
+                        $isLike = false;
+                        $likers = [] ;
                         if(isset($comment->likes) && !empty($comment->likes) ){
                             foreach ($comment->likes as $like) {
                                 $userlikesData = $like->author;
                                 $commentsLikesData[] = [
-                                    'is_like'=>\OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->where('is_delete',0)->first() ? true : false,
+                                    'is_like'=>\OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->first() ? true : false,
                                     'like_id' => $like->id,
                                     'user_id' => $like->user_id,
                                     'comment_id'=>$like->comment_id,
+                                    'count'=>\OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count(),
                                     'user_info' => [
                                         'user_id' => $userlikesData->id,
                                         'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userlikesData->profile_picture),
@@ -1062,7 +1090,16 @@ class OlaHubPostController extends BaseController
                                         'username' => $userlikesData->first_name . " " . $userlikesData->last_name,
                                     ]
                                 ];
-                            }
+                                   
+                                    $likersCount =  \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count() ? \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count():0;
+                                    $isLike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->first() ? true : false;
+                                    $likers []= [
+                                        'user_id' => $userlikesData->id,
+                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userlikesData->profile_picture),
+                                        'profile_url' => $userlikesData->profile_url,
+                                        'username' => $userlikesData->first_name . " " . $userlikesData->last_name,
+                                    ];
+                                }
                         }
 
                         $return["data"][] = [
@@ -1083,6 +1120,10 @@ class OlaHubPostController extends BaseController
                             ],
                             'replies' => $repliesData,
                             'commentslikes'=>$commentsLikesData,
+                            'likerCount'=>$likersCount,
+                            'is_liked'=>$isLike,
+                            'likers'=>$likers
+                             
                         ];
                     }
                     $return["status"] = true;
@@ -1559,11 +1600,9 @@ class OlaHubPostController extends BaseController
             $comments = $post->comments->where('id',$commentId)->first();
             $isLiked = $comments->likes->where('user_id',app('session')->get('tempID'))->first();
             if( $comments->delete == 0){
-
-                if($isLiked && $isLiked->is_delete == 1){
+                if($isLiked){
                     $like =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$commentId)->first();
-                    $like->is_delete = 0 ;
-                    $like->save();
+                    $like->delete();
                     return response(['status' => true, 'msg' => 'successa', 'code' => 200], 200);
                 }
                 if(!$isLiked) {
@@ -1578,11 +1617,11 @@ class OlaHubPostController extends BaseController
                 
 
             }   
-            $unlike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$commentId)->first();
-            $unlike->is_delete = 1 ;
-            $unlike->save();
+            // $unlike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$commentId)->first();
+            // $unlike->is_delete = 1 ;
+            // $unlike->save();
 
-            return response(['status' => true, 'msg' => 'unlike', 'code' => 200], 200);
+            return response(['status' => true, 'msg' => 'noData', 'code' => 204], 200);
 
         }
        
