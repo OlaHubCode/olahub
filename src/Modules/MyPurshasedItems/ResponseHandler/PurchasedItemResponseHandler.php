@@ -114,14 +114,8 @@ class PurchasedItemResponseHandler extends Fractal\TransformerAbstract
                 $deliveryDate = $userBillDetail->updated_at;
                 $allow_date_refund = date('Y-m-d', strtotime("+" . $refund_days-1 . " days", strtotime($deliveryDate)));
                 if(strtotime($allow_date_refund) >= strtotime(date('Y-m-d'))) {
-                    if ((int)$this->data->paid_by == 255) {
-                        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
-                            $refundStatus = 1;
-                        }
-                    }else{
-                        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
-                            $refundStatus = 1;
-                        }
+                    if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+                        $refundStatus = 1;
                     }
                 }
             }
