@@ -27,4 +27,9 @@ class PostComments extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\PostReplies', 'comment_id');
     }
+
+    public function likes()
+    {
+        return $this->hasMany('OlaHub\UserPortal\Models\CommentLike', 'comment_id');
+    }
 }

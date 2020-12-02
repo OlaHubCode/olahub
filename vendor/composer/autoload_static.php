@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
+class ComposerStaticInit6dd70efd0d32eb564c317c487be7570a
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -630,6 +630,7 @@ class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
         'OlaHub\\UserPortal\\Models\\CelebrationParticipantsModel' => __DIR__ . '/../..' . '/src/Modules/Celebration/Models/CelebrationParticipantsModel.php',
         'OlaHub\\UserPortal\\Models\\CelebrationShippingAddressModel' => __DIR__ . '/../..' . '/src/Modules/Celebration/Models/CelebrationShippingAddressModel.php',
         'OlaHub\\UserPortal\\Models\\Classification' => __DIR__ . '/../..' . '/src/Modules/Items/Models/Classification.php',
+        'OlaHub\\UserPortal\\Models\\CommentLike' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/CommentLike.php',
         'OlaHub\\UserPortal\\Models\\CompanyStaticData' => __DIR__ . '/../..' . '/src/CommonFiles/Models/CompanyStaticData.php',
         'OlaHub\\UserPortal\\Models\\CountriesShipping' => __DIR__ . '/../..' . '/src/CommonFiles/Models/CountriesShipping.php',
         'OlaHub\\UserPortal\\Models\\Country' => __DIR__ . '/../..' . '/src/CommonFiles/Models/Country.php',
@@ -716,6 +717,7 @@ class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
         'OlaHub\\UserPortal\\Models\\VotePostUser' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/VotePostUser.php',
         'OlaHub\\UserPortal\\Models\\WishList' => __DIR__ . '/../..' . '/src/Modules/WishLists/Models/WishList.php',
         'OlaHub\\UserPortal\\Models\\groups' => __DIR__ . '/../..' . '/src/Modules/Groups/Models/groups.php',
+        'OlaHub\\UserPortal\\Models\\postsStatistics' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/postsStatistics.php',
         'OlaHub\\UserPortal\\Observers\\OlaHubCommonObserve' => __DIR__ . '/../..' . '/src/Observes/OlaHubCommonObserve.php',
         'OlaHub\\UserPortal\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/src/Providers/AppServiceProvider.php',
         'OlaHub\\UserPortal\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/src/Providers/EventServiceProvider.php',
@@ -1326,11 +1328,11 @@ class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$classMap;
 
         }, null, ClassLoader::class);
     }
