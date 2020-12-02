@@ -142,8 +142,25 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function setItemCancelStatus($userBillDetail)
     {
         $cancelStatus = 0;
-        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->cancel_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
-            $cancelStatus = 1;
+        $policy = $this->getItemPolicy($userBillDetail);
+        if ($policy) {
+            $exchange_days = $policy->exchange_days;
+            $allow_exchange = $policy->allow_exchange;
+            if($allow_exchange && $exchange_days > 0) {
+                $billDate = $userBillDetail->created_at;
+                $allow_date_exchange = date('Y-m-d', strtotime("+" . $exchange_days-1 . " days", strtotime($billDate)));
+                if(strtotime($allow_date_exchange) >= strtotime(date('Y-m-d'))){
+                    if ((int)$this->data->paid_by == 255) {
+                        if ((($this->paymenStatus && $this->paymenStatus->id == 13)) && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+                            $cancelStatus = 1;
+                        }
+                    }else{
+                        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->cancel_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+                            $cancelStatus = 1;
+                        }
+                    }
+                }
+            }
         }
         return $cancelStatus;
     }
@@ -151,8 +168,25 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     private function setItemRefundStatus($userBillDetail)
     {
         $refundStatus = 0;
-        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
-            $refundStatus = 1;
+        $policy = $this->getItemPolicy($userBillDetail);
+        if ($policy) {
+            $refund_days = $policy->refund_days;
+            $allow_refund = $policy->allow_refund;
+            if($allow_refund && $refund_days > 0) {
+                $deliveryDate = $userBillDetail->updated_at;
+                $allow_date_refund = date('Y-m-d', strtotime("+" . $refund_days-1 . " days", strtotime($deliveryDate)));
+                if(strtotime($allow_date_refund) >= strtotime(date('Y-m-d'))) {
+                    if ((int)$this->data->paid_by == 255) {
+                        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+                            $refundStatus = 1;
+                        }
+                    }else{
+                        if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+                            $refundStatus = 1;
+                        }
+                    }
+                }
+            }
         }
         return $refundStatus;
     }
@@ -198,5 +232,23 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         ];
 
         return $info;
+    }
+
+    private function getItemPolicy($userBillDetail)
+    {
+        $policy = false;
+        switch ($userBillDetail->item_type) {
+            case "store":
+                $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $userBillDetail->item_id)->first();
+                break;
+            case "designer":
+                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $userBillDetail->item_id)->first();
+
+                break;
+        }
+        if($item){
+            $policy = $item->exchangePolicy;
+        }
+        return $policy;
     }
 }

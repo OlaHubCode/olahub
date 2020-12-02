@@ -64,7 +64,7 @@ class PurchasedItemsController extends BaseController
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
-            if ($this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->cancel_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
+            if ((((int)$bill->paid_by == 255 && $this->setPayStatusDataForCash($bill)) || ((int)$bill->paid_by != 255 && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->cancel_enabled )) && !$purchasedItem->is_canceled && !$purchasedItem->is_refund && $this->getItemPolicy($purchasedItem,'cancel')) {
                 $purchasedItem->is_canceled = 1;
                 $purchasedItem->cancel_date = date("Y-m-d");
                 $purchasedItem->save();
@@ -104,7 +104,7 @@ class PurchasedItemsController extends BaseController
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
-            if ($this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->refund_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
+            if ($this->getItemPolicy($purchasedItem,'refund') && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->refund_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
                 $purchasedItem->is_refund = 1;
                 $purchasedItem->refund_date = date("Y-m-d");
                 $purchasedItem->save();
@@ -147,5 +147,60 @@ class PurchasedItemsController extends BaseController
         }
 
         return false;
+    }
+
+    private function setPayStatusDataForCash($bill)
+    {
+        $paymentStatusID = $bill->pay_status;
+        if ($paymentStatusID > 0 && $paymentStatusID == 13) {
+            return true;
+        } elseif ($paymentStatusID == 0 && $bill->voucher_used > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function getItemPolicy($purchasedItem ,$type)
+    {
+        $policy = false;
+        switch ($purchasedItem->item_type) {
+            case "store":
+                $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $purchasedItem->item_id)->first();
+                break;
+            case "designer":
+                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $purchasedItem->item_id)->first();
+                break;
+        }
+        if($item){
+            $policy = $item->exchangePolicy;
+            if ($policy) {
+                switch ($type) {
+                    case "cancel":
+                        $exchange_days = $policy->exchange_days;
+                        $allow_exchange = $policy->allow_exchange;
+                        if ($allow_exchange && $exchange_days > 0) {
+                            $billDate = $purchasedItem->created_at;
+                            $allow_date_exchange = date('Y-m-d', strtotime("+" . $exchange_days - 1 . " days", strtotime($billDate)));
+                            if (strtotime($allow_date_exchange) >= strtotime(date('Y-m-d'))) {
+                                $policy = true;
+                            }
+                        }
+                        break;
+                    case "refund":
+                        $refund_days = $policy->refund_days;
+                        $allow_refund = $policy->allow_refund;
+                        if ($allow_refund && $refund_days > 0) {
+                            $deliveryDate = $userBillDetail->updated_at;
+                            $allow_date_refund = date('Y-m-d', strtotime("+" . $refund_days - 1 . " days", strtotime($deliveryDate)));
+                            if (strtotime($allow_date_refund) >= strtotime(date('Y-m-d'))) {
+                                $policy = true;
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+        return $policy;
     }
 }

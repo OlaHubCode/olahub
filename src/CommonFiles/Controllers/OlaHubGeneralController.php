@@ -699,34 +699,36 @@ class OlaHubGeneralController extends BaseController
 
             // brands
             $searchQuery[] = "select count(id) as search from merchant_stors
-            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
+            where LOWER(`name`) like '%" . $q . "%' ";
 
             // designers
             $searchQuery[] = "select count(id) as search from designers
-            where LOWER(`brand_name`) like '%" . $q . "%' or LOWER(`brand_name`) sounds like '" . $q . "'";
+            where LOWER(`brand_name`) like '%" . $q . "%'";
 
             // items
             $searchQuery[] = "select count(id) as search from catalog_items
-            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
+            where LOWER(`name`) like '%" . $q . "%' ";
 
             // designer items
             $searchQuery[] = "select count(id) as search from designer_items
-            where LOWER(`name`) like '%" . $q . "%' or LOWER(`name`) sounds like '" . $q . "'";
+            where LOWER(`name`) like '%" . $q . "%' ";
 
             if (app('session')->get('tempID')) {
                 // users
                 $searchQuery[] = "select count(id) as search from users
                 where( (LOWER(`email`) like '%" . $q . "%'
                 or mobile_no like '%" . $q . "%'
-                or concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like '" . $q . "'
-                or LOWER(`first_name`) sounds like '" . $q . "'
-                or LOWER(`last_name`) sounds like '" . $q . "'))
+                or concat(LOWER(`first_name`), ' ', LOWER(`last_name`)) like '%" . $q . "%'
+       
+                
+                ))
                 and id <> " . app('session')->get('tempID') . " and is_active = 1";
 
                 // groups
                 $searchQuery[] = "select count(id) as search from groups
-                where LOWER(`name`) sounds like '" . $q . "'
-                or LOWER(`description`) sounds like '" . $q . "'";
+                where( LOWER(`name`)  like '%" . $q . "%'
+                or LOWER(`description`)  like '%" . $q . "%')
+                and   privacy != 1 ";
             }
             $handle = \DB::select(\DB::raw(implode(' union all ', $searchQuery)));
 
