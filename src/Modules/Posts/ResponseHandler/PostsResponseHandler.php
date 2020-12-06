@@ -42,7 +42,7 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
             'color' => isset($this->data->color) ? json_decode($this->data->color) : NULL,
             'groupId' => isset($this->data->group_id) ? $this->data->group_id : 0,
             'friendId' => isset($this->data->friend_id) ? $this->data->friend_id : NULL,
-            'content' => isset($this->data->content) ? $this->data->content : NULL,
+            'content' => isset($this->data->content) ?  $this->data->content : NULL,
             'subject' => isset($this->data->subject) ? $this->data->subject : NULL,
             'mentions' => isset($this->data->mentions) ? unserialize($this->data->mentions) : NULL,
             'prev_link_data' => isset($this->data->prev_link_data) ? unserialize($this->data->prev_link_data) : NULL,
