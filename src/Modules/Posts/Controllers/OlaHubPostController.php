@@ -872,7 +872,7 @@ class OlaHubPostController extends BaseController
         $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 ) {
+        if (count($this->requestData) > 0) {
             $postID = $this->requestData['post_id'];
             $post = Post::where('post_id', $postID)->first();
             $followers = [];
@@ -887,14 +887,14 @@ class OlaHubPostController extends BaseController
                 $comment->comment = $this->requestData['content']['comment'];
                 $comment->save();
 
-                if($post->user_id != app('session')->get('tempID') ) {
+                if ($post->user_id != app('session')->get('tempID')) {
                     $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                     $posPost = array_search($post->user_id, $followers);
                     $posComment = array_search($comment->user_id, $followers);
-                    if($posPost){
+                    if ($posPost) {
                         unset($followers[$posPost]);
                     }
-                    if($posComment){
+                    if ($posComment) {
                         unset($followers[$posComment]);
                     }
                     foreach ($followers as $key => $userId) {
@@ -908,19 +908,19 @@ class OlaHubPostController extends BaseController
                             $notification->save();
 
                             $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
-                                \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                                    $userId,
-                                    "notifi_post_comment_for_follower",
-                                    array(
-                                        "type" => "post_comment",
-                                        "postId" => $postID,
-                                        "subject" => $post->content,
-                                        "username" => "$userData->first_name $userData->last_name",
-                                    ),
-                                    $owner->lang,
-                                    "$userData->first_name $userData->last_name",
-                                    "$posterName->first_name $posterName->last_name"
-                                );
+                            \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                                $userId,
+                                "notifi_post_comment_for_follower",
+                                array(
+                                    "type" => "post_comment",
+                                    "postId" => $postID,
+                                    "subject" => $post->content,
+                                    "username" => "$userData->first_name $userData->last_name",
+                                ),
+                                $owner->lang,
+                                "$userData->first_name $userData->last_name",
+                                "$posterName->first_name $posterName->last_name"
+                            );
                         }
                     }
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
@@ -944,7 +944,6 @@ class OlaHubPostController extends BaseController
                         $posterName->lang,
                         "$userData->first_name $userData->last_name"
                     );
-
                 }
 
                 $authorName = "$userData->first_name $userData->last_name";
@@ -1057,7 +1056,7 @@ class OlaHubPostController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 ) {
+        if (count($this->requestData) > 0) {
             $commentId = $this->requestData['comment_id'];
             $comment = PostComments::find($commentId);
             if ($comment) {
@@ -1177,8 +1176,7 @@ class OlaHubPostController extends BaseController
             }
 
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            if (isset($this->requestData['postLinkRemoved']) && $this->requestData['postLinkRemoved'])
-                $post->prev_link_data = NULL;
+            $post->prev_link_data = isset($this->requestData['linkPrevData']) ?serialize( $this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
