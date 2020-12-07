@@ -351,7 +351,7 @@ class OlaHubGuestController extends BaseController
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
-            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture'])) {
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) && !$userData->profile_picture) {
                 $userData->profile_picture = $this->requestData['userPicture'];
                 $saved = $userData->save();
             }
@@ -550,6 +550,7 @@ class OlaHubGuestController extends BaseController
 
     function resendActivationCode()
     {
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resendActivationCode"]);
 
@@ -607,8 +608,9 @@ class OlaHubGuestController extends BaseController
                     $q->where('for_merchant', 0);
                 })->first();
             }
-
             if ($userData) {
+                $lastActivation = 50 - $userData->updated_at->diffInSeconds(\Carbon\Carbon::now());
+
                 $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
                 $userData->save();
 
@@ -618,18 +620,24 @@ class OlaHubGuestController extends BaseController
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200], 200);
                 } else if ($userData->mobile_no) {
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                    if ($lastActivation > 0)
+                        return response(['status' => false,  'timeLeft' => true]);
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200], 200);
                 } else if ($userData->email) {
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
                 }
             }
@@ -825,19 +833,16 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
         if (!empty($this->requestData['email'])) {
-            $isSub = UserSubscribe::where('email',$this->requestData['email'])->first();
-            if(!$isSub){
+            $isSub = UserSubscribe::where('email', $this->requestData['email'])->first();
+            if (!$isSub) {
                 $subscribe = new UserSubscribe();
                 $subscribe->email = $this->requestData['email'];
                 $subscribe->save();
                 return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
-            }else{
+            } else {
                 return response(['status' => false, 'msg' => 'youAreSubscribe', 'code' => 204], 200);
-    
             }
-        
-
-        }else{
+        } else {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
     }
