@@ -142,12 +142,14 @@ class OlaHubGuestController extends BaseController
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
 
-        $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
-        $country_id = $this->requestData["userCountry"];
-        $emailPhone = $this->requestData["userEmail"];
+        $country_id = @$this->requestData["userCountry"];
+        $fromCart = @$this->requestData["fromCart"];
+        $emailPhone = !empty($this->requestData["cartEmail"]) ? 
+            Crypt::decrypt($this->requestData["cartEmail"], false) : 
+            $this->requestData["userEmail"] ;
+        $type = $this->userHelper->checkEmailOrPhoneNumber($emailPhone);
         $userData = NULL;
-
         // check if email or phone with ip country
         if ($type == 'email') {
             $userData = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($emailPhone) {
@@ -171,6 +173,7 @@ class OlaHubGuestController extends BaseController
             return response(['status' => false, 'msg' => 'invalidEmailPhone', 'code' => 404], 200);
         }
 
+        // login by SMS
         if ($userData && !empty($this->requestData["useSMS"]) && empty($this->requestData["userPassword"])) {
             $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
             $userData->save();
@@ -203,7 +206,7 @@ class OlaHubGuestController extends BaseController
             $status = (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($this->requestData["userPassword"], $userData->password);
         }
 
-        if (!$status && empty($this->requestData["useSMS"])) {
+        if (!$status && !$fromCart && empty($this->requestData["useSMS"])) {
             return response(['status' => false, 'msg' => 'invalidPassword', 'code' => 204], 200);
         }
         $checkUserSession = $this->userHelper->checkUserSession($userData, $this->userAgent);
@@ -245,7 +248,7 @@ class OlaHubGuestController extends BaseController
             }
             $this->userHelper->addUserLogin($this->requestData, $userData->id, $status, $code);
         }
-        if ($twostep) {
+        if ($twostep && !$fromCart) {
             if ($userData->email == $this->requestData["userEmail"]) {
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSessionActivation($userData, $this->userAgent, $code);
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'secure', 'token' => false, 'type' => "email", 'code' => 200], 200);
