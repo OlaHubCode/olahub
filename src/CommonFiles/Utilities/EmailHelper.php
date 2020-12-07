@@ -22,9 +22,10 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send new user Email", "action_startData" => json_encode($userData) . $code]);
         $template = 'USR001';
+        $footer = $this->handleFooterHtml();
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[UserActivationCode]'];
-        $with = [$username, $code];
+        $replace = ['[UserName]', '[UserActivationCode]', '[Footer]'];
+        $with = [$username, $code ,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -34,8 +35,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send account activation code Email", "action_startData" => json_encode($userData) . $code]);
         $template = 'USR002';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[UserActivationCode]'];
-        $with = [$username, $code];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[UserActivationCode]', '[Footer]'];
+        $with = [$username, $code,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -44,9 +46,10 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send account activated Email", "action_startData" => json_encode($userData)]);
         $template = 'USR003';
+        $footer = $this->handleFooterHtml();
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]'];
-        $with = [$username];
+        $replace = ['[UserName]', '[Footer]'];
+        $with = [$username,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -56,9 +59,10 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activation Email", "action_startData" => json_encode($userData) .  $fullAgent . $code]);
         $template = 'USR004';
         $username = "$userData->first_name $userData->last_name";
+        $footer = $this->handleFooterHtml();
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
-        $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]'];
-        $with = [$username, $code, $agent];
+        $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]', '[Footer]'];
+        $with = [$username, $code, $agent,$footer];
         $to = $userData;
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -68,8 +72,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send session activation code Email", "action_startData" => json_encode($userData) .  $agent . $code]);
         $template = 'USR005';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]'];
-        $with = [$username, $code, $agent];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[UserSessionActivationCode]', '[UserSessionAgent]', '[Footer]'];
+        $with = [$username, $code, $agent,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -80,8 +85,9 @@ class EmailHelper extends OlaHubCommonHelper
         $template = 'USR006';
         $agent = OlaHubCommonHelper::getUserBrowserAndOS($fullAgent);
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[UserSessionAgent]'];
-        $with = [$username, $agent];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[UserSessionAgent]', '[Footer]'];
+        $with = [$username, $agent,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -90,10 +96,11 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send forget password Email", "action_startData" => json_encode($userData)]);
         $template = 'USR007';
+        $footer = $this->handleFooterHtml();
         $username = "$userData->first_name $userData->last_name";
         $link = FRONT_URL . "/reset_password?token=$userData->reset_pass_token";
-        $replace = ['[UserName]', '[ResetPasswordLink]', '[UserTempCode]'];
-        $with = [$username, "<a href='$link'>$link</a>", $userData->reset_pass_code];
+        $replace = ['[UserName]', '[ResetPasswordLink]', '[UserTempCode]', '[Footer]'];
+        $with = [$username, "<a href='$link'>$link</a>", $userData->reset_pass_code,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -102,9 +109,10 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send forget passworf confirmation Email", "action_startData" => json_encode($userData)]);
         $template = 'USR008';
+        $footer = $this->handleFooterHtml();
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]'];
-        $with = [$username];
+        $replace = ['[UserName]', '[Footer]'];
+        $with = [$username,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -282,8 +290,9 @@ class EmailHelper extends OlaHubCommonHelper
                 <br />
                 thank you for your shopping
                 </div>';
-        $replace = ['[userName]', '[orderNumber]', '[orderDetails]'];
-        $with = [$username, $billing->billing_number, $orderDetails];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[userName]', '[orderNumber]', '[orderDetails]', '[Footer]'];
+        $with = [$username, $billing->billing_number, $orderDetails,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -462,8 +471,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send user fail payment Email", "action_startData" =>  json_encode($userData) . json_encode($billing) . $reason]);
         $template = 'USR030';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', "[failReason]"];
-        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $reason];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[orderNumber]', '[orderAmmount]', "[failReason]", '[Footer]'];
+        $with = [$username, $billing->billing_number, $this->handleNumbers($billing->billing_total) . " " . $billing->billing_currency, $reason,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -502,9 +512,9 @@ class EmailHelper extends OlaHubCommonHelper
                 <br />
                 thank you for your shopping
                 </div>';
-
-        $replace = ['[UserName]', '[orderNumber]', '[orderDetails]'];
-        $with = [$username, $billing->billing_number, $orderDetails];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[orderNumber]', '[orderDetails]', '[Footer]'];
+        $with = [$username, $billing->billing_number, $orderDetails,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -542,8 +552,8 @@ class EmailHelper extends OlaHubCommonHelper
                 <br />
                 thank you for your shopping
                 </div>';
-
-        $replace = ['[UserName]', '[orderNumber]', '[orderDetails]'];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[orderNumber]', '[orderDetails]', '[Footer]'];
         $with = [$username, $billing->billing_number, $orderDetails];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
@@ -1140,9 +1150,10 @@ class EmailHelper extends OlaHubCommonHelper
     {
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user celebration invition Email", "action_startData" => json_encode($userData) . $celebrationOwner . $celebrationID . "*******"]);
         $template = 'USR015';
+        $footer = $this->handleFooterHtml();
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationURL]', '[UserEmail]', '[UserPassword]'];
-        $with = [$celebrationOwner, FRONT_URL . "/celebration/view/" . $celebrationID, $userData->email, $password];
+        $replace = ['[UserName]', '[CelebrationURL]', '[UserEmail]', '[UserPassword]', '[Footer]'];
+        $with = [$celebrationOwner, FRONT_URL . "/celebration/view/" . $celebrationID, $userData->email, $password,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1152,8 +1163,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send Published clebration Email", "action_startData" => json_encode($userData) . $celebrationID]);
         $template = 'USR017';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationEvent]', '[CelebrationURL]'];
-        $with = [$username, $celebrationName, FRONT_URL . "/celebration/view/" . $celebrationID];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[CelebrationEvent]', '[CelebrationURL]', '[Footer]'];
+        $with = [$username, $celebrationName, FRONT_URL . "/celebration/view/" . $celebrationID,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1163,8 +1175,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send deleted celebration Email", "action_startData" => json_encode($userData) . $celebrationOwner]);
         $template = 'USR016';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationCreatorName]', '[CelebrationEvent]', '[CelebrationOwnerName]'];
-        $with = [$username, $celebrationCreator, $celebrationName, $celebrationOwner];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[CelebrationCreatorName]', '[CelebrationEvent]', '[CelebrationOwnerName]', '[Footer]'];
+        $with = [$username, $celebrationCreator, $celebrationName, $celebrationOwner,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1174,8 +1187,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send register user celebration invition Email", "action_startData" => json_encode($userData) . $celebrationOwner . $celebrationID . $celebrationName]);
         $template = 'USR014';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationURL]', '[CelebrationEvent]'];
-        $with = [$celebrationOwner, FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[CelebrationURL]', '[CelebrationEvent]', '[Footer]'];
+        $with = [$celebrationOwner, FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1185,8 +1199,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send accept celebration Email", "action_startData" => json_encode($userData) . $acceptedName . $celebrationName]);
         $template = 'USR018';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationEvent]'];
-        $with = [$acceptedName, $celebrationName];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[CelebrationEvent]', '[Footer]'];
+        $with = [$acceptedName, $celebrationName,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1196,8 +1211,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send commited celebration Email", "action_startData" => json_encode($userData) . $celebrationID . $celebrationName]);
         $template = 'USR019';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[CelebrationURL]', '[CelebrationEvent]'];
-        $with = [FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[CelebrationURL]', '[CelebrationEvent]', '[Footer]'];
+        $with = [FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1207,8 +1223,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send commited celebration Email", "action_startData" => json_encode($userData) . $celebrationName . $celebrationID . "********"]);
         $template = 'USR020';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[CelebrationURL]', '[CelebrationEvent]', '[UserEmail]', '[UserPassword]'];
-        $with = [FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName, $userData->email, $password];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[CelebrationURL]', '[CelebrationEvent]', '[UserEmail]', '[UserPassword]', '[Footer]'];
+        $with = [FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName, $userData->email, $password,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1218,8 +1235,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send schedule celebration Email", "action_startData" => json_encode($userData) . $celebrationName . $celebrationID . $celebrationOwner]);
         $template = 'USR021';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[CelebrationURL]', '[CelebrationEvent]', '[UserEmail]', '[CelebrationOwnerName]'];
-        $with = ["$username", FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName, $userData->email, $celebrationOwner];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[CelebrationURL]', '[CelebrationEvent]', '[UserEmail]', '[CelebrationOwnerName]', '[Footer]'];
+        $with = ["$username", FRONT_URL . "/celebration/view/" . $celebrationID, $celebrationName, $userData->email, $celebrationOwner,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1229,8 +1247,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user group invition Email", "action_startData" => json_encode($userData)]);
         $template = 'USR027';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[GroupURL]', '[UserEmail]', '[UserPassword]'];
-        $with = [$GroupOwner, FRONT_URL . "/group/" . $groupID, $userData->email, $password];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[GroupURL]', '[UserEmail]', '[UserPassword]', '[Footer]'];
+        $with = [$GroupOwner, FRONT_URL . "/group/" . $groupID, $userData->email, $password,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1240,8 +1259,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user invition Email", "action_startData" => json_encode($userData)]);
         $template = 'USR028';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[UserEmail]', '[UserPassword]', "[OlaHubURL]"];
-        $with = [$invitorName, $userData->email, $password, FRONT_URL . "/login"];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[UserEmail]', '[UserPassword]', "[OlaHubURL]", '[Footer]'];
+        $with = [$invitorName, $userData->email, $password, FRONT_URL . "/login",$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1254,8 +1274,9 @@ class EmailHelper extends OlaHubCommonHelper
         $designerName = $designerData->designer_name;
         $designerEmail = $designerData->designer_email;
         $designerPhone = $designerData->designer_phone;
-        $replace = ['[desName]', '[desEmail]', '[desPhoneNum]'];
-        $with = [$designerName, $designerEmail, $designerPhone];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[desName]', '[desEmail]', '[desPhoneNum]', '[Footer]'];
+        $with = [$designerName, $designerEmail, $designerPhone,$footer];
         $to = [[$franchise->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1281,8 +1302,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send deleted registry Email", "action_startData" => json_encode($userData) . $registryOwner]);
         $template = 'USR033';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[RegistryEvent]', '[RegistryOwnerName]'];
-        $with = [$username, $registryName, $registryOwner];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[RegistryEvent]', '[RegistryOwnerName]', '[Footer]'];
+        $with = [$username, $registryName, $registryOwner,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1291,8 +1313,9 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send register user registry invition Email", "action_startData" => json_encode($userData) . $registryOwner . $registryID . $registryName]);
         $template = 'USR034';
         $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
-        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]', '[Footer]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName,$footer];
         $to = [[$userData->email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -1301,10 +1324,22 @@ class EmailHelper extends OlaHubCommonHelper
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send not register user registry invition Email", "action_startData" => json_encode($email) . $registryOwner . $registryID . $registryName]);
         $template = 'USR034';
         //        $username = "$userData->first_name $userData->last_name";
-        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
-        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
+        $footer = $this->handleFooterHtml();
+        $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]', '[Footer]'];
+        $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName,$footer];
         $to = [[$email]];
         //        $to = [[$email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
+    }
+    function handleFooterHtml()
+    {
+        $return = ' <div style="background:#dedede;padding: 10px;margin-top:20px;text-align:center;display: block;">
+                         <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">All Rights Reserved.<br/>© 2016-2020 OlaHub.com Copyright</span></p>
+                <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:12px;line-height:16.8px;color:#7e8c8d;font-family:arial,helvetica,sans-serif"><a href="https://olahub.com/policy/privacy" target="_blank">PRIVACY POLICY</a> |&nbsp; <a href="https://olahub.com/policy/terms"  target="_blank">TERM &amp; CONDITIONS</a> | <a href="https://olahub.com/contact-us" target="_blank">CONTACT US</a></span><br>
+                <span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">E-Mail our Customer Service at <a href="mailto:support@Olahub.COM" target="_blank">support@Olahub.COM </a></span></p>
+                <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">for answers to your inquires.</span></p>
+
+        </div>';
+        return $return;
     }
 }

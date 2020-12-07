@@ -988,11 +988,12 @@ class OlaHubGeneralController extends BaseController
                     $inviteMerchant->country_id = $country->id;
                     $inviteMerchant->save();
                     $franchises = \OlaHub\UserPortal\Models\Franchise::where('country_id', app('session')->get('def_country')->id)->where('is_license', "1")->get();
+                    $footer = $this->handleFooterHtml();
                     if ($franchises->count()) {
                         $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
                         $sendMail->template_code = 'ADM006';
-                        $sendMail->replace = ['[merName]', '[merEmail]', '[merPhoneNum]'];
-                        $sendMail->replace_with = [$this->requestData->userName, $this->requestData->userEmail, $this->requestData->userPhoneNumber];
+                        $sendMail->replace = ['[merName]', '[merEmail]', '[merPhoneNum]', '[Footer]'];
+                        $sendMail->replace_with = [$this->requestData->userName, $this->requestData->userEmail, $this->requestData->userPhoneNumber , $footer];
                         foreach ($franchises as $franchise) {
                             if (isset($franchise->email) && strlen($franchise->email) > 5) {
                                 $sendMail->to[] = [$franchise->email, "$franchise->first_name $franchise->last_name"];
@@ -1000,10 +1001,12 @@ class OlaHubGeneralController extends BaseController
                         }
                         $sendMail->send();
                     }
+                   
+
                     $sendMail = new \OlaHub\UserPortal\Libraries\OlaHubNotificationHelper();
                     $sendMail->template_code = 'MER002';
-                    $sendMail->replace = ['[merName]'];
-                    $sendMail->replace_with = [$this->requestData->userName];
+                    $sendMail->replace = ['[merName]', '[Footer]'];
+                    $sendMail->replace_with = [$this->requestData->userName,$footer];
                     $sendMail->to[] = [$this->requestData->userEmail, $this->requestData->userName];
                     $sendMail->send();
                     $return = ['status' => true, 'msg' => 'sentOurManagers', 'code' => 200];
@@ -2322,5 +2325,16 @@ class OlaHubGeneralController extends BaseController
             return response($return, 200);
         }
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function handleFooterHtml()
+    {
+        $return = ' <div style="background:#dedede;padding: 10px;margin-top:20px;text-align:center;display: block;">
+                         <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">All Rights Reserved.<br/>© 2016-2020 OlaHub.com Copyright</span></p>
+                <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:12px;line-height:16.8px;color:#7e8c8d;font-family:arial,helvetica,sans-serif"><a href="https://olahub.com/policy/privacy" target="_blank">PRIVACY POLICY</a> |&nbsp; <a href="https://olahub.com/policy/terms"  target="_blank">TERM &amp; CONDITIONS</a> | <a href="https://olahub.com/contact-us" target="_blank">CONTACT US</a></span><br>
+                <span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">E-Mail our Customer Service at <a href="mailto:support@Olahub.COM" target="_blank">support@Olahub.COM </a></span></p>
+                <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">for answers to your inquires.</span></p>
+
+        </div>';
+        return $return;
     }
 }

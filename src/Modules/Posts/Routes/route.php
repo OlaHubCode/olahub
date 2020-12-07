@@ -15,6 +15,7 @@ $router->group([
     $router->post('{type:\bgroup|friend\b}', 'OlaHubPostController@getPosts');
     $router->post('add', 'OlaHubPostController@addNewPost');
     $router->post('likePost', 'OlaHubPostController@likePost');
+    $router->post('likeComment', 'OlaHubPostController@likeComment');
     $router->post('sharePost', 'OlaHubPostController@newSharePost');
     $router->post('removeSharePost', 'OlaHubPostController@removeSharePost');
     $router->post('addComment', 'OlaHubPostController@addNewComment');
