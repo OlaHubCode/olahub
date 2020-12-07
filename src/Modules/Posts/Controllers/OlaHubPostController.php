@@ -215,16 +215,23 @@ class OlaHubPostController extends BaseController
             }
             $posts = $posts->orderBy('created_at', 'desc')->paginate(20);
         }
-        if ($posts->count() > 0) {
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-            if ($type != 'group') {
-                $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($userID) {
-                        $q->where(function ($query) use ($userID) {
-                            $query->where('user_id', $userID);
-                            $query->where('group_id', NULL);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
+        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+        if ($type != 'group') {
+            $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($userID) {
+                    $q->where(function ($query) use ($userID) {
+                        $query->where('user_id', $userID);
+                        $query->where('group_id', NULL);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
+            $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($userID) {
+                    $q->where(function ($query) use ($userID) {
+                        $query->where('user_id', $userID);
+                        $query->where('group_id', NULL);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
+            if ($posts->count() > 0 || $sharedPosts->count()||$sharedItems->count()) {
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
@@ -240,13 +247,6 @@ class OlaHubPostController extends BaseController
                     }
                 }
 
-                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($userID) {
-                        $q->where(function ($query) use ($userID) {
-                            $query->where('user_id', $userID);
-                            $query->where('group_id', NULL);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedPosts->count()) {
                     foreach ($sharedPosts as $litem) {
 
@@ -1176,7 +1176,7 @@ class OlaHubPostController extends BaseController
             }
 
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            $post->prev_link_data = isset($this->requestData['linkPrevData']) ?serialize( $this->requestData['linkPrevData']) : null;
+            $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
