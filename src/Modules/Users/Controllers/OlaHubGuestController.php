@@ -615,29 +615,35 @@ class OlaHubGuestController extends BaseController
                 $userData->save();
 
                 if ($userData->mobile_no && $userData->email) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
+
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                    if ($lastActivation > 0)
-                        return response(['status' => false, 'timeLeft' => true]);
+                    
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200], 200);
                 } else if ($userData->mobile_no) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false,  'timeLeft' => true]);
+                        
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                    if ($lastActivation > 0)
-                        return response(['status' => false,  'timeLeft' => true]);
+                    
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200], 200);
                 } else if ($userData->email) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
+
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                    if ($lastActivation > 0)
-                        return response(['status' => false, 'timeLeft' => true]);
+                   
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
                 }
             }
