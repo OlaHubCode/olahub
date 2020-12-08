@@ -138,15 +138,15 @@ class OlaHubGeneralController extends BaseController
         return response(["status" => true, 'data' => $adsReturn]);
     }
 
-    public function getCities($regionId)
+    public function getCities($countryId)
     {
-        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('region_id', $regionId)->get();
+        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('country_id', $countryIdy)->get();
         $result = [];
         foreach ($cities as $city) {
             $result[] = [
                 'key' => $city->id,
                 'value' => $city->id,
-                'text' => $city->name,
+                'text' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($city, "name"),
             ];
         }
         $return['cities'] = $result;
