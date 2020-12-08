@@ -142,12 +142,14 @@ class OlaHubGuestController extends BaseController
             return response(['status' => false, 'msg' => 'rightEmailPhone', 'code' => 406, 'errorData' => []], 200);
         }
 
-        $type = $this->userHelper->checkEmailOrPhoneNumber($this->requestData["userEmail"]);
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
-        $country_id = $this->requestData["userCountry"];
-        $emailPhone = $this->requestData["userEmail"];
+        $country_id = @$this->requestData["userCountry"];
+        $fromCart = @$this->requestData["fromCart"];
+        $emailPhone = !empty($this->requestData["cartEmail"]) ? 
+            Crypt::decrypt($this->requestData["cartEmail"], false) : 
+            $this->requestData["userEmail"] ;
+        $type = $this->userHelper->checkEmailOrPhoneNumber($emailPhone);
         $userData = NULL;
-
         // check if email or phone with ip country
         if ($type == 'email') {
             $userData = UserModel::withOutGlobalScope('notTemp')->where(function ($q) use ($emailPhone) {
@@ -171,6 +173,7 @@ class OlaHubGuestController extends BaseController
             return response(['status' => false, 'msg' => 'invalidEmailPhone', 'code' => 404], 200);
         }
 
+        // login by SMS
         if ($userData && !empty($this->requestData["useSMS"]) && empty($this->requestData["userPassword"])) {
             $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
             $userData->save();
@@ -203,7 +206,7 @@ class OlaHubGuestController extends BaseController
             $status = (new \OlaHub\UserPortal\Helpers\SecureHelper)->matchPasswordHash($this->requestData["userPassword"], $userData->password);
         }
 
-        if (!$status && empty($this->requestData["useSMS"])) {
+        if (!$status && !$fromCart && empty($this->requestData["useSMS"])) {
             return response(['status' => false, 'msg' => 'invalidPassword', 'code' => 204], 200);
         }
         $checkUserSession = $this->userHelper->checkUserSession($userData, $this->userAgent);
@@ -245,7 +248,7 @@ class OlaHubGuestController extends BaseController
             }
             $this->userHelper->addUserLogin($this->requestData, $userData->id, $status, $code);
         }
-        if ($twostep) {
+        if ($twostep && !$fromCart) {
             if ($userData->email == $this->requestData["userEmail"]) {
                 (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendSessionActivation($userData, $this->userAgent, $code);
                 return response(['user' => $returnUserToSecure, 'status' => true, 'logged' => 'secure', 'token' => false, 'type' => "email", 'code' => 200], 200);
@@ -348,7 +351,7 @@ class OlaHubGuestController extends BaseController
         if ($userData->save()) {
             $log->setLogSessionData(['user_id' => $userData->id]);
 
-            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture'])) {
+            if (isset($this->requestData['userPicture']) && !empty($this->requestData['userPicture']) && !$userData->profile_picture) {
                 $userData->profile_picture = $this->requestData['userPicture'];
                 $saved = $userData->save();
             }
@@ -547,6 +550,7 @@ class OlaHubGuestController extends BaseController
 
     function resendActivationCode()
     {
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "resendActivationCode"]);
 
@@ -604,29 +608,42 @@ class OlaHubGuestController extends BaseController
                     $q->where('for_merchant', 0);
                 })->first();
             }
-
             if ($userData) {
+                $lastActivation = 50 - $userData->updated_at->diffInSeconds(\Carbon\Carbon::now());
+
                 $userData->activation_code = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::randomString(6, 'num');
                 $userData->save();
 
                 if ($userData->mobile_no && $userData->email) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
+
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                    
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200], 200);
                 } else if ($userData->mobile_no) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false,  'timeLeft' => true]);
+                        
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                    
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200], 200);
                 } else if ($userData->email) {
+                    if ($lastActivation > 0)
+                        return response(['status' => false, 'timeLeft' => true]);
+
                     (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
+                   
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
                 }
             }
@@ -822,19 +839,16 @@ class OlaHubGuestController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Users", 'function_name' => "getHeaderInfo"]);
         if (!empty($this->requestData['email'])) {
-            $isSub = UserSubscribe::where('email',$this->requestData['email'])->first();
-            if(!$isSub){
+            $isSub = UserSubscribe::where('email', $this->requestData['email'])->first();
+            if (!$isSub) {
                 $subscribe = new UserSubscribe();
                 $subscribe->email = $this->requestData['email'];
                 $subscribe->save();
                 return response(['status' => true, 'msg' => 'successSubscribe', 'code' => 200], 200);
-            }else{
+            } else {
                 return response(['status' => false, 'msg' => 'youAreSubscribe', 'code' => 204], 200);
-    
             }
-        
-
-        }else{
+        } else {
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
     }

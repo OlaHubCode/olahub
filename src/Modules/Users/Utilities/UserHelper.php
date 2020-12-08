@@ -47,9 +47,9 @@ class UserHelper extends OlaHubCommonHelper
         $row = \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->first();
         if (!$row) {
             $userLogin = new \OlaHub\UserPortal\Models\UserLoginsModel;
-            $userLogin->device_id = $data['deviceID'];
-            $userLogin->device_model = $data['deviceModel'];
-            $userLogin->device_platform = $data['platform'];
+            $userLogin->device_id = @$data['deviceID'];
+            $userLogin->device_model = @$data['deviceModel'];
+            $userLogin->device_platform = @$data['platform'];
             $userLogin->user_id = $user_id;
             $userLogin->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
             $userLogin->ip = $ipInfo->ip;
@@ -60,9 +60,9 @@ class UserHelper extends OlaHubCommonHelper
         } else {
             \OlaHub\UserPortal\Models\UserLoginsModel::where('user_id', $user_id)->where('device_id', $data['deviceID'])->update(
                 array(
-                    'device_id' => $data['deviceID'],
-                    'device_platform' => $data['platform'],
-                    'device_model' => $data['deviceModel'],
+                    'device_id' => @$data['deviceID'],
+                    'device_platform' => @$data['platform'],
+                    'device_model' => @$data['deviceModel'],
                     'user_id' => $user_id,
                     'location' => $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city,
                     'ip' => $ipInfo->ip,
