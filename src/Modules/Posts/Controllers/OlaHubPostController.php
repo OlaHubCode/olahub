@@ -115,7 +115,7 @@ class OlaHubPostController extends BaseController
                     } else {
                         $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $$litem->item_id);
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $litem->item_id);
                     }
                 }
             }
@@ -286,6 +286,7 @@ class OlaHubPostController extends BaseController
 
     private function handlePostShared($data, $type, $userId, $time = null)
     {
+        
         $user = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
 
         $userInfo = [
