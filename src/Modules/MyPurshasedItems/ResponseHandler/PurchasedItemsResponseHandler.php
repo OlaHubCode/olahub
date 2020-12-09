@@ -50,11 +50,22 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
     }
 
     private function getCityName($data){
-        var_dump($data);
+       
+        $data = @unserialize($data);
+        $city = \OlaHub\UserPortal\Models\ShippingCities::where('id',$data['city'])->first();
+        if($city){
+
+            $city = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($city, 'name');
+            $data['city'] = $city;
+        }
+
+        return $data ;
+        // var_dump();return $data;
+
+
     }
     private function getShipmentDetails($data)
     {
-        // var_dump($data);
         $data = @unserialize($data);
         if (!$data)
             return NULL;
@@ -246,7 +257,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
                 $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $userBillDetail->item_id)->first();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $userBillDetail->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $userBillDetail->item_id)->first();
 
                 break;
         }

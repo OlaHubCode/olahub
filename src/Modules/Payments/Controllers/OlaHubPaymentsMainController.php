@@ -521,6 +521,7 @@ class OlaHubPaymentsMainController extends BaseController
         } elseif ($this->typeID == 3) {
             $this->finalizeSuccessCelebrationMails();
         }
+        if (PRODUCTION_LEVEL)
         $googleAnalytics = $this->googleAnalytics();
 
         if (!$sendEmails) {

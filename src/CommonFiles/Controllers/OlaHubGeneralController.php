@@ -140,7 +140,7 @@ class OlaHubGeneralController extends BaseController
 
     public function getCities($countryId)
     {
-        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('country_id', $countryIdy)->get();
+        $cities = \OlaHub\UserPortal\Models\ShippingCities::where('country_id', $countryId)->get();
         $result = [];
         foreach ($cities as $city) {
             $result[] = [
