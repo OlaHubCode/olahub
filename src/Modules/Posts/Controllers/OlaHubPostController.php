@@ -115,7 +115,7 @@ class OlaHubPostController extends BaseController
                     } else {
                         $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $litem->item_id);
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $litem->user_id);
                     }
                 }
             }
@@ -286,9 +286,8 @@ class OlaHubPostController extends BaseController
 
     private function handlePostShared($data, $type, $userId, $time = null)
     {
-        
+        $obj = [];
         $user = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
-
         $userInfo = [
             'user_id' => isset($user->id) ? $user->id : "",
             'avatar_url' => isset($user->id) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture) : "",
@@ -298,6 +297,7 @@ class OlaHubPostController extends BaseController
         $return = [
             'user_info' => $userInfo,
             'time' =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($time),
+            'sharedUser_info' => (object)$obj
         ];
         $images = $data->images;
         $return['type'] = 'item_shared';
