@@ -67,31 +67,33 @@ class groups extends Model
     static function searchGroups($text = 'a', $count = 15)
     {
         $words = explode(" ", $text);
-
         $items = groups::whereIn("privacy", [2, 3]);
-        $items->where(function ($q) use($words) {
+        $items->where(function ($q) use ($words, $text) {
 
-            $q->where(function ($q1) use($words) {
-                foreach ($words as $word){
+            $q->where(function ($q1) use ($words) {
+                foreach ($words as $word) {
                     $q1->whereRaw('FIND_IN_SET(?, REPLACE(description, " ", ","))', $word);
                 }
             });
-            $q->orWhere(function ($q2) use($words) {
-                foreach ($words as $word){
+            $q->orWhere(function ($q2) use ($words) {
+                foreach ($words as $word) {
                     $q2->whereRaw('FIND_IN_SET(?, REPLACE(name, " ", ","))', $word);
                 }
             });
+            $q->orWhere(function ($q2) use ($text) {
+                $q2->Where('description', '=', $text);
+            });
+            $q->orWhere(function ($q2) use ($text) {
+                $q2->Where('name', '=', $text);
+            });
         });
 
-        $items->orWhere('description', '=',$text);
-        $items->orWhere('name', '=', $text);
+        // $items->orWhere('description', '=', $text);
+        // $items->orWhere('name', '=', $text);
         if ($count > 0) {
             return $items->paginate($count);
         } else {
             return $items->get()->count();
         }
     }
-
-
-   
 }
