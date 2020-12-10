@@ -14,7 +14,15 @@ namespace OlaHub\UserPortal\Models;
 class ShippingCities extends \Illuminate\Database\Eloquent\Model {
 
 
-    protected $table = 'shipping_cities';
+    protected $table = 'cities';
+
+    public function __construct(array $attributes = array())
+    {
+        parent::__construct($attributes);
+        static::addGlobalScope('city', function (\Illuminate\Database\Eloquent\Builder $builder) {
+            $builder->where('is_published', 1);
+        });
+    }
 
     //     public function country() {
     //     return $this->belongsTo('OlaHub\UserPortal\Models\ShippingCountries');
