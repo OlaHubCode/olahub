@@ -1050,32 +1050,10 @@ class OlaHubPostController extends BaseController
                         $likers = [] ;
                         if(isset($comment->likes) && !empty($comment->likes) ){
                             foreach ($comment->likes as $like) {
-                                $userlikesData = $like->author;
-                                $commentsLikesData[] = [
-                                    'is_like'=>\OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->first() ? true : false,
-                                    'like_id' => $like->id,
-                                    'user_id' => $like->user_id,
-                                    'comment_id'=>$like->comment_id,
-                                    'count'=>\OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count(),
-                                    'user_info' => [
-                                        'user_id' => $userlikesData->id,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userlikesData->profile_picture),
-                                        'profile_url' => $userlikesData->profile_url,
-                                        'username' => $userlikesData->first_name . " " . $userlikesData->last_name,
-                                    ]
-                                ];
-                                   
                                     $likersCount =  \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count() ? \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count():0;
                                     $isLike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->first() ? true : false;
-                                    $likers []= [
-                                        'user_id' => $userlikesData->id,
-                                        'avatar_url' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userlikesData->profile_picture),
-                                        'profile_url' => $userlikesData->profile_url,
-                                        'username' => $userlikesData->first_name . " " . $userlikesData->last_name,
-                                    ];
                                 }
                         }
-
                         $return["data"][] = [
                             'comment_id' => $comment->id,
                             'user_id' => $comment->user_id,
@@ -1093,11 +1071,8 @@ class OlaHubPostController extends BaseController
                                 'username' => $userData->first_name . " " . $userData->last_name,
                             ],
                             'replies' => $repliesData,
-                            'commentslikes'=>$commentsLikesData,
                             'likerCount'=>$likersCount,
                             'is_liked'=>$isLike,
-                            'likers'=>$likers
-                             
                         ];
                     }
                     $return["status"] = true;
@@ -1578,7 +1553,7 @@ class OlaHubPostController extends BaseController
                 if($isLiked){
                     $like =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$commentId)->first();
                     $like->delete();
-                    return response(['status' => true, 'msg' => 'successa', 'code' => 200], 200);
+                    return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
                 }
                 if(!$isLiked) {
                     $like = (new \OlaHub\UserPortal\Models\CommentLike);
@@ -1586,7 +1561,7 @@ class OlaHubPostController extends BaseController
                     $like->comment_id = $comments->id;
                     $like->user_id = app('session')->get('tempID');
                     $like->save();
-                    return response(['status' => true, 'msg' => 'successb', 'code' => 200], 200);
+                    return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
                 }
 
                 
