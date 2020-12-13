@@ -34,6 +34,7 @@ $router->group([
     $router->post('offerItemsPage/categories/{all:\ball\b}', 'OlaHubItemController@getOfferItemsPageCategories');
     $router->post('stores', 'OlaHubHeaderMenuController@getStores');
     $router->post('/{type}', 'OlaHubHeaderMenuController@getBrandsData');
+    $router->post('reviews/add', 'OlaHubItemReviewsController@addReview');
 
     /*
      * Filters (Left side filters)
@@ -61,11 +62,6 @@ $router->group([
     });
 
 
-    $router->group([
-        'middleware' => ['checkAuth']
-    ], function () use ($router) {
-        $router->post('reviews/add', 'OlaHubItemReviewsController@addReview');
-    });
 });
 
 /*

@@ -12,7 +12,7 @@ class PurchasedItemResponseHandler extends Fractal\TransformerAbstract
     private $data;
     private $bill;
     private $shippingStatus = [];
-    private $paymenStatus;
+    private $paymenStatus;addReviewToPurchasedItem
 
     public function transform(UserBillDetails $data)
     {
@@ -130,7 +130,7 @@ class PurchasedItemResponseHandler extends Fractal\TransformerAbstract
                 $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $userBillDetail->item_id)->first();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $userBillDetail->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $userBillDetail->item_id)->first();
 
                 break;
         }

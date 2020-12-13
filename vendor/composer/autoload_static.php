@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
+class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -716,11 +716,13 @@ class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
         'OlaHub\\UserPortal\\Models\\VotePostUser' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/VotePostUser.php',
         'OlaHub\\UserPortal\\Models\\WishList' => __DIR__ . '/../..' . '/src/Modules/WishLists/Models/WishList.php',
         'OlaHub\\UserPortal\\Models\\groups' => __DIR__ . '/../..' . '/src/Modules/Groups/Models/groups.php',
+        'OlaHub\\UserPortal\\Models\\postsStatistics' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/postsStatistics.php',
         'OlaHub\\UserPortal\\Observers\\OlaHubCommonObserve' => __DIR__ . '/../..' . '/src/Observes/OlaHubCommonObserve.php',
         'OlaHub\\UserPortal\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/src/Providers/AppServiceProvider.php',
         'OlaHub\\UserPortal\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/src/Providers/EventServiceProvider.php',
         'OlaHub\\UserPortal\\Providers\\ValidationServiceProvider' => __DIR__ . '/../..' . '/src/Providers/ValidationServiceProvider.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\AdsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Announcement/ResponseHandler/AdsResponseHandler.php',
+        'OlaHub\\UserPortal\\ResponseHandlers\\BillingItemsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/ResponseHandler/BillingItemsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\BrandSearchResponseHandler' => __DIR__ . '/../..' . '/src/CommonFiles/ResponseHandler/BrandSearchResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\BrandsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Items/ResponseHandler/BrandsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\CalendarForCelebrationResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Calendar/ResponseHandler/CalendarForCelebrationResponseHandler.php',
@@ -1326,11 +1328,11 @@ class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$classMap;
 
         }, null, ClassLoader::class);
     }

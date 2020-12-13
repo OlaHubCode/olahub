@@ -2,6 +2,9 @@
 
 namespace OlaHub\UserPortal\Helpers;
 
+use Illuminate\Support\Facades\Crypt;
+
+
 class EmailHelper extends OlaHubCommonHelper
 {
     private function handleNumbers($number)
@@ -1331,6 +1334,21 @@ class EmailHelper extends OlaHubCommonHelper
         //        $to = [[$email, $username]];
         parent::sendEmail($to, $replace, $with, $template);
     }
+    
+    function sendNoneRatingAndReview($userData, $billing_id)
+    {
+        (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Send Rating And Review Email", "action_startData" => json_encode($userData) . $billing_id]);
+        $template = 'USR036';
+        $billing_id = Crypt::encrypt($billing_id, false);
+        $username = "$userData->first_name $userData->last_name";
+        $footer = $this->handleFooterHtml();
+        $ratingURL = $this->handleReviewHtml($billing_id);
+        $replace = ['[UserName]', '[RatingURL]', '[Footer]'];
+        $with = [$username,  $ratingURL,$footer];
+        $to = [[$userData->email, $username]];
+        parent::sendEmail($to, $replace, $with, $template);
+    }
+    
     function handleFooterHtml()
     {
         $return = ' <div style="background:#dedede;padding: 10px;margin-top:20px;text-align:center;display: block;">
@@ -1340,6 +1358,16 @@ class EmailHelper extends OlaHubCommonHelper
                 <p style="font-size:14px;line-height:140%;text-align:center"><span style="font-size:10px;line-height:14px;color:#7e8c8d;font-family:arial,helvetica,sans-serif">for answers to your inquires.</span></p>
 
         </div>';
+        return $return;
+    } 
+    function handleReviewHtml($billing_id)
+    {
+        $return = ' <div style="margin-top: 22px;margin-bottom: 22px;">
+                        <a href="https://olahub.com/rating?' . $billing_id .'" style="box-sizing:border-box;display:inline-block;font-family:arial,helvetica,sans-serif;text-decoration:none;text-align:center;color:#ffffff;background-color:#ae0a3b;border-radius:4px;width:auto;max-width:100%;word-break:break-word;word-wrap:break-word;border-top-width:0px;border-top-style:solid;border-top-color:#ffffff;border-left-width:0px;border-left-style:solid;border-left-color:#ffffff;border-right-width:0px;border-right-style:solid;border-right-color:#ffffff;border-bottom-width:0px;border-bottom-style:solid;border-bottom-color:#ffffff" target="_blank"> 
+                          <span style="display:block;padding:10px 20px;line-height:120%"><strong><span style="font-size:14px;line-height:16.8px">RATING AND REVIEW</span></strong></span>
+                        </a>
+                    </div>';
+
         return $return;
     }
 }

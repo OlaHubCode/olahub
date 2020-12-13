@@ -2,6 +2,7 @@
 
 namespace OlaHub\UserPortal\Controllers;
 
+use Illuminate\Support\Facades\Crypt;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\UserBill;
@@ -17,7 +18,6 @@ class PurchasedItemsController extends BaseController
 
     public function __construct(Request $request)
     {
-
         $return = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getRequest($request);
         $this->requestData = $return['requestData'];
         $this->requestFilter = $return['requestFilter'];
@@ -169,7 +169,7 @@ class PurchasedItemsController extends BaseController
                 $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $purchasedItem->item_id)->first();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $purchasedItem->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $purchasedItem->item_id)->first();
                 break;
         }
         if($item){
@@ -202,5 +202,22 @@ class PurchasedItemsController extends BaseController
             }
         }
         return $policy;
+    }
+    public function getNotRatingBillingItems()
+    {
+        if (!isset($this->requestData["billing_id"])) {
+            return response(['status' => false, 'msg' => 'rightBillingId', 'code' => 406, 'errorData' => []], 200);
+        }
+        $billing_id = Crypt::decrypt($this->requestData["billing_id"], false);
+        $billingItems = UserBillDetails::query()->where('billing_id',$billing_id)->where('is_rated','=',0)->get();
+        if ($billingItems->count() > 0) {
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($billingItems, '\OlaHub\UserPortal\ResponseHandlers\BillingItemsResponseHandler');
+            $return['status'] = TRUE;
+            $return['code'] = 200;
+            return response($return, 200);
+        }
+
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+
     }
 }

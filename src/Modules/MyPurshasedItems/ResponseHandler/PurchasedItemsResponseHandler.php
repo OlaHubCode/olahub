@@ -242,7 +242,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
                 $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $userBillDetail->item_id)->first();
                 break;
             case "designer":
-                $item = \OlaHub\UserPortal\Models\DesignerItem::where("id", $userBillDetail->item_id)->first();
+                $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $userBillDetail->item_id)->first();
 
                 break;
         }
