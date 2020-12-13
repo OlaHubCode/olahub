@@ -368,6 +368,7 @@ class OlaHubPostController extends BaseController
 
     public function usersLike()
     {   
+        // var_dump($this->requestData);
 
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "usersLike"]);

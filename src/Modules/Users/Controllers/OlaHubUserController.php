@@ -218,7 +218,35 @@ class OlaHubUserController extends BaseController
 
     public function getUserRequests()
     {
-        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+        // $friends = \OlaHub\UserPortal\Models\Friends::where('user_id',app('session')->get('tempID'))->where('status',2)->get();
+
+        $userId = app('session')->get('tempID');
+        $friends = \OlaHub\UserPortal\Models\Friends::where(function ($q) use ($userId) {
+            $q->where('user_id', $userId);
+            $q->orWhere('friend_id', $userId);
+        })->where("status", "2")->get();
+        if($friends){
+            $return = [];
+            foreach ($friends as $friend) {
+                if ($friend->friend_id == app('session')->get('tempID'))
+                    $user = $friend->user;
+                else
+                    $user = $friend->friend;
+                $return[]  = [
+                    "profile" => $user->id,
+                    "username" => $user->first_name . " " . $user->last_name,
+                    "profile_url" => isset($user->profile_url) ? $user->profile_url : NULL,
+                    "avatar_url" => isset($user->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture),
+                    "cover_photo" => isset($user->cover_photo) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->cover_photo) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->cover_photo),
+                    'status' => $friend->user_id == app('session')->get('tempID') ? 'request' : "response"
+                ];
+            }
+    
+                                    return response(['data'=>$return ,'status' => true, 'msg' => 'success'], 200);
+
+        }
+        return response(['status' => false, 'msg' => 'failed'], 201);
+
     }
 
     public function getUserResponses()
