@@ -159,11 +159,11 @@ class OlaHubPaymentsMainController extends BaseController
             $this->shippingFees = 0;
         } else {
             $this->shippingFees = $this->cart->shipment_fees;
-            if ($withExtra) {
-                if ($this->paymentMethodCountryData) {
-                    $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
-                }
-            }
+            // if ($withExtra) {
+            //     if ($this->paymentMethodCountryData) {
+            //         $this->cashOnDeliver = $this->paymentMethodCountryData->extra_fees;
+            //     }
+            // }
         }
         $this->total = (float) $this->cartTotal + $this->shippingFees + $this->cashOnDeliver - $this->promoCodeSave;
 
@@ -197,9 +197,11 @@ class OlaHubPaymentsMainController extends BaseController
                 ->get();
         } else {
             $this->paymentMethodCountryData = \OlaHub\UserPortal\Models\ManyToMany\PaymentCountryRelation::where('country_id', $country)
-                ->whereHas('PaymentData', function ($q) use ($typeID) {
-                    $q->whereHas('typeDataSync', function ($query) use ($typeID) {
+                ->whereHas('PaymentData', function ($q) use ($typeID, $ifHasVoucher) {
+                    $q->whereHas('typeDataSync', function ($query) use ($typeID, $ifHasVoucher) {
                         $query->where('lkp_payment_method_types.id', $typeID);
+                        if ($ifHasVoucher)
+                            $query->where('prepare_func', '<>', 'cashOnDeliverySystem');
                     });
                 })->groupBy("payment_method_id")->where('is_published', 1)->get();
         }
@@ -506,9 +508,9 @@ class OlaHubPaymentsMainController extends BaseController
     {
         $pay_status = $this->payStatusID($this->billing->paid_by, $cycle_order, $success, $fail);
         $this->billing->pay_status = $pay_status;
-        if (isset($this->paymentMethodCountryData->extra_fees)) {
-            $this->billing->billing_fees += $this->paymentMethodCountryData->extra_fees;
-        }
+        // if (isset($this->paymentMethodCountryData->extra_fees)) {
+        //     $this->billing->billing_fees += $this->paymentMethodCountryData->extra_fees;
+        // }
         $this->billing->save();
         $subTotal = (float) $this->billing->billing_total -  $this->billing->shipping_fees +  $this->billing->promo_code_saved;
         $this->checkPromoCode($subTotal, true);
@@ -522,7 +524,7 @@ class OlaHubPaymentsMainController extends BaseController
             $this->finalizeSuccessCelebrationMails();
         }
         if (PRODUCTION_LEVEL)
-        $googleAnalytics = $this->googleAnalytics();
+            $googleAnalytics = $this->googleAnalytics();
 
         if (!$sendEmails) {
             $this->grouppedMers = \OlaHub\UserPortal\Helpers\PaymentHelper::groupBillMerchants($this->billingDetails);

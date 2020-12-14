@@ -1062,9 +1062,9 @@ class OlaHubPostController extends BaseController
                         $likers = [];
                         if (isset($comment->likes) && !empty($comment->likes)) {
                             foreach ($comment->likes as $like) {
-                                    $likersCount =  \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count() ? \OlaHub\UserPortal\Models\CommentLike::where('comment_id',$comment->id)->count():0;
-                                    $isLike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$comment->id)->first() ? true : false;
-                                }
+                                $likersCount =  \OlaHub\UserPortal\Models\CommentLike::where('comment_id', $comment->id)->count() ? \OlaHub\UserPortal\Models\CommentLike::where('comment_id', $comment->id)->count() : 0;
+                                $isLike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id', app('session')->get('tempID'))->where('comment_id', $comment->id)->first() ? true : false;
+                            }
                         }
                         $return["data"][] = [
                             'comment_id' => $comment->id,
@@ -1083,8 +1083,8 @@ class OlaHubPostController extends BaseController
                                 'username' => $userData->first_name . " " . $userData->last_name,
                             ],
                             'replies' => $repliesData,
-                            'likerCount'=>$likersCount,
-                            'is_liked'=>$isLike,
+                            'likerCount' => $likersCount,
+                            'is_liked' => $isLike,
                         ];
                     }
                     $return["status"] = true;
@@ -1561,10 +1561,15 @@ class OlaHubPostController extends BaseController
         if ($post) {
             $comments = $post->comments->where('id', $commentId)->first();
             $isLiked = $comments->likes->where('user_id', app('session')->get('tempID'))->first();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
+
             if ($comments->delete == 0) {
                 if ($isLiked) {
                     $like =  \OlaHub\UserPortal\Models\CommentLike::where('user_id', app('session')->get('tempID'))->where('comment_id', $commentId)->first();
                     $like->delete();
+                    $commentNoti = $notification->where('comment_id', $commentId)->where('friend_id', app('session')->get('tempID'));
+                    $commentNoti->delete();
+
                     return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
                 }
                 if (!$isLiked) {
@@ -1573,6 +1578,31 @@ class OlaHubPostController extends BaseController
                     $like->comment_id = $comments->id;
                     $like->user_id = app('session')->get('tempID');
                     $like->save();
+
+                    if ($comments->user_id != app('session')->get('tempID')) {
+                        $notification->type = 'post';
+                        $notification->content = "notifi_comment_like";
+                        $notification->comment_id =$commentId;
+                        $notification->user_id = $comments->user_id;
+                        $notification->friend_id = app('session')->get('tempID');
+                        $notification->post_id = $postId;
+                        $notification->save();
+
+                        $userData = app('session')->get('tempData');
+                        $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                           9104,
+                            "comment_like",
+                            array(
+                                "type" => "post_like",
+                                "postId" => $postId,
+                                "subject" => $post->content,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $owner->lang,
+                            "$userData->first_name $userData->last_name"
+                        );
+                    }
                     return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
                 }
             }

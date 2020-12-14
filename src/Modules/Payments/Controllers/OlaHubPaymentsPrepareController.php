@@ -72,8 +72,8 @@ class OlaHubPaymentsPrepareController extends OlaHubPaymentsMainController
             $this->voucherUsed = $this->userVoucher;
             $this->voucherAfterPay = 0;
             $this->createUserBillingHistory("0_" . $this->paymentMethodData->id);
-        } elseif ($this->userVoucher > 0 && ($this->total - $this->paymentMethodCountryData->extra_fees) <= $this->userVoucher) {
-            $this->total -= $this->paymentMethodCountryData->extra_fees;
+        } elseif ($this->userVoucher > 0 && ($this->total /* - $this->paymentMethodCountryData->extra_fees */) <= $this->userVoucher) {
+            // $this->total -= $this->paymentMethodCountryData->extra_fees;
             $this->voucherUsed = $this->total;
             $this->voucherAfterPay = $this->userVoucher - $this->total;
             $this->finalSave = TRUE;
