@@ -536,7 +536,7 @@ class OlaHubItemController extends BaseController
             if ($celebrationCart) {
                 $cartItem = \OlaHub\UserPortal\Models\CartItems::withoutGlobalScope('countryUser')
                     ->where('shopping_cart_id', $celebrationCart->id)
-                    ->where("item_type", $item_type)
+                    ->where("item_type", 'store')
                     ->where('item_id', $item->id)->first();
                 if ($cartItem) {
                     $existInCelebration = TRUE;

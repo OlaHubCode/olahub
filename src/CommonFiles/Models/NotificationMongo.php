@@ -37,7 +37,7 @@ class Notifications extends Model
         $username = "$user->first_name $user->last_name";
 
         $url = 'https://fcm.googleapis.com/fcm/send';
-        $data['body']=Notifications::translate($key, $lang, $word, $word2);
+        $data['body'] = Notifications::translate($key, $lang, $word, $word2);
         $fields = array(
             'to' => '/topics/OlaHubFCM-' . $user_id,
             'priority' => "high",
@@ -78,6 +78,7 @@ class Notifications extends Model
             "friend_request" => "Sent you a friend request",
             "accept_request" => "Accepted your friend request",
             "post_like" => "Liked your post",
+            "comment_like" => "Liked your comment",
             "post_comment" => "Commented on your post",
             "post_reply" => "Replied to your comment in a post",
             "cel_part_add" => "Added you to the " . $word . " celebration",
@@ -117,6 +118,7 @@ class Notifications extends Model
             "friend_request" => "أرسل لك طلب صداقة",
             "accept_request" => "وافق على طلب الصداقة",
             "post_like" => "أعجب بمنشورك",
+            "comment_like" => "أعجب بتعليقك",
             "post_comment" => "قام بالتعليق على منشورك",
             "post_reply" => "رد على تعليق لك في منشور",
             "cel_part_add" => "قام بإضافتك إلى الإحتفال " . $word,

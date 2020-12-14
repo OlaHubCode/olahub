@@ -41,7 +41,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             "billFees" => $this->data->billing_fees ? number_format($this->data->billing_fees, 2, ".", ",") . " " . $this->currency : NULL,
             "billVoucher" => isset($this->data->voucher_used) ? number_format($this->data->voucher_used, 2, ".", ",") . " " . $this->currency : 0,
             "billVoucherAfter" => isset($this->data->voucher_after_pay) ? number_format($this->data->voucher_after_pay, 2, ".", ",") . " " . $this->currency : 0,
-            "orderAddress" => isset($this->data->order_address) ? unserialize($this->data->order_address) : [],
+            "orderAddress" => isset($this->data->order_address) ? $this->getCityName($this->data->order_address) : null,
             "billCountryName" => $this->getCountry($this->data, $country),
             "billDate" => isset($this->data->billing_date) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDateTime($this->data->billing_date) : NULL,
             "billStatus" => isset($payStatus["name"]) ? $payStatus["name"] : "Fail",
@@ -49,6 +49,25 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         ];
     }
 
+    private function getCityName($data){
+       
+        $data = @unserialize($data);
+        if(isset($data['city']) && gettype($data['city']) == 'integer'){
+
+            $city = \OlaHub\UserPortal\Models\ShippingCities::where('id',$data['city'])->first();
+            if($city){
+    
+                $city = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($city, 'name');
+                $data['city'] = $city;
+            }
+    
+        }
+        return $data ;
+
+        // var_dump();return $data;
+
+
+    }
     private function getShipmentDetails($data)
     {
         $data = @unserialize($data);

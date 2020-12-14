@@ -13,6 +13,7 @@ use OlaHub\UserPortal\Models\PostReport;
 use OlaHub\UserPortal\Models\VotePostUser;
 use OlaHub\UserPortal\Models\PostVote;
 use OlaHub\UserPortal\Models\PostLikes;
+use OlaHub\UserPortal\Models\CommentLike;
 
 class OlaHubPostController extends BaseController
 {
@@ -106,14 +107,15 @@ class OlaHubPostController extends BaseController
                 })->orderBy('created_at', 'desc')->paginate(20);
             if ($sharedItems->count()) {
                 foreach ($sharedItems as $litem) {
+
                     if ($litem->item_type == 'store') {
                         $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
+                            $all[] = $this->handlePostShared($item, 'item_shared_store', $litem->user_id, $litem->created_at);
                     } else {
                         $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                         if ($item)
-                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $userInfo);
+                            $all[] = $this->handlePostShared($item, 'item_shared_designer', $litem->user_id);
                     }
                 }
             }
@@ -215,38 +217,41 @@ class OlaHubPostController extends BaseController
             }
             $posts = $posts->orderBy('created_at', 'desc')->paginate(20);
         }
-        if ($posts->count() > 0) {
-            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
-            if ($type != 'group') {
-                $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($userID) {
-                        $q->where(function ($query) use ($userID) {
-                            $query->where('user_id', $userID);
-                            $query->where('group_id', NULL);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
+        $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollectionPginate($posts, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
+        if ($type != 'group') {
+            $sharedItems = \OlaHub\UserPortal\Models\SharedItems::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($userID) {
+                    $q->where(function ($query) use ($userID) {
+                        $query->where('user_id', $userID);
+                        $query->where('group_id', NULL);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
+            $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
+                ->where(function ($q) use ($userID) {
+                    $q->where(function ($query) use ($userID) {
+                        $query->where('user_id', $userID);
+                        $query->where('group_id', NULL);
+                    });
+                })->orderBy('created_at', 'desc')->paginate(20);
+            if ($posts->count() > 0 || $sharedPosts->count() || $sharedItems->count()) {
+
+
                 if ($sharedItems->count()) {
                     foreach ($sharedItems as $litem) {
                         if ($litem->item_type == 'store') {
                             $item = \OlaHub\UserPortal\Models\CatalogItem::where('id', $litem->item_id)->first();
                             if ($item)
 
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $userInfo, $litem->created_at);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_store', $litem->user_id, $litem->created_at);
                         } else {
+
                             $item = \OlaHub\UserPortal\Models\DesignerItems::where('id', $litem->item_id)->first();
                             if ($item)
-                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $userInfo, $litem->created_at);
+                                $return['data'][] = $this->handlePostShared($item, 'item_shared_designer', $litem->user_id, $litem->created_at);
                         }
                     }
                 }
 
-                $sharedPosts = \OlaHub\UserPortal\Models\PostShares::withoutGlobalScope('currentUser')
-                    ->where(function ($q) use ($userID) {
-                        $q->where(function ($query) use ($userID) {
-                            $query->where('user_id', $userID);
-                            $query->where('group_id', NULL);
-                        });
-                    })->orderBy('created_at', 'desc')->paginate(20);
                 if ($sharedPosts->count()) {
                     foreach ($sharedPosts as $litem) {
 
@@ -279,12 +284,20 @@ class OlaHubPostController extends BaseController
     }
 
 
-    private function handlePostShared($data, $type, $userInfo, $time = null)
+    private function handlePostShared($data, $type, $userId, $time = null)
     {
-
+        $obj = [];
+        $user = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
+        $userInfo = [
+            'user_id' => isset($user->id) ? $user->id : "",
+            'avatar_url' => isset($user->id) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($user->profile_picture) : "",
+            'profile_url' =>  isset($user->profile_url) ? $user->profile_url : "",
+            'username' =>  isset($user->id) ? "$user->first_name $user->last_name" : "",
+        ];
         $return = [
             'user_info' => $userInfo,
             'time' =>  \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($time),
+            'sharedUser_info' => (object)$obj
         ];
         $images = $data->images;
         $return['type'] = 'item_shared';
@@ -367,13 +380,13 @@ class OlaHubPostController extends BaseController
 
     public function usersLike()
     {
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "usersLike"]);
 
         $return = ['status' => false, 'msg' => 'NoData', 'code' => 204];
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('post_id', $this->requestData['postId'])->first();
-
             if ($post) {
                 $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
                 $likerData = [];
@@ -391,6 +404,29 @@ class OlaHubPostController extends BaseController
 
                 $return['data'] = $likerData;
                 $return['lastPage'] = $likes->lastPage();
+                $return['status'] = TRUE;
+                $return['code'] = 200;
+            }
+        } elseif (isset($this->requestData['commentId']) && $this->requestData['commentId']) {
+            $likers = CommentLike::where('comment_id', $this->requestData['commentId'])->paginate(20);
+            if ($likers) {
+                // var_dump($likers);
+                // $likes = PostLikes::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(20);
+                $likerData = [];
+                foreach ($likers as $like) {
+                    $userData = $like->author;
+                    $name = isset($userData->first_name) ? $userData->first_name . ' ' . $userData->last_name : "";
+
+                    $likerData[] = [
+                        'likerPhoto' => isset($userData->profile_picture) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($userData->profile_picture) : \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
+                        'likerProfileSlug' => isset($userData->profile_url) ? $userData->profile_url : NULL,
+                        'likerName' => isset($name) ? $name : NULL,
+                        'likerid' => isset($userData->id) ? $userData->id  : NULL
+                    ];
+                }
+
+                $return['data'] = $likerData;
+                $return['lastPage'] = $likers->lastPage();
                 $return['status'] = TRUE;
                 $return['code'] = 200;
             }
@@ -872,7 +908,7 @@ class OlaHubPostController extends BaseController
         $userData = app('session')->get('tempData');
 
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 ) {
+        if (count($this->requestData) > 0) {
             $postID = $this->requestData['post_id'];
             $post = Post::where('post_id', $postID)->first();
             $followers = [];
@@ -887,14 +923,14 @@ class OlaHubPostController extends BaseController
                 $comment->comment = $this->requestData['content']['comment'];
                 $comment->save();
 
-                if($post->user_id != app('session')->get('tempID') ) {
+                if ($post->user_id != app('session')->get('tempID')) {
                     $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                     $posPost = array_search($post->user_id, $followers);
                     $posComment = array_search($comment->user_id, $followers);
-                    if($posPost){
+                    if ($posPost) {
                         unset($followers[$posPost]);
                     }
-                    if($posComment){
+                    if ($posComment) {
                         unset($followers[$posComment]);
                     }
                     foreach ($followers as $key => $userId) {
@@ -908,19 +944,19 @@ class OlaHubPostController extends BaseController
                             $notification->save();
 
                             $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
-                                \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                                    $userId,
-                                    "notifi_post_comment_for_follower",
-                                    array(
-                                        "type" => "post_comment",
-                                        "postId" => $postID,
-                                        "subject" => $post->content,
-                                        "username" => "$userData->first_name $userData->last_name",
-                                    ),
-                                    $owner->lang,
-                                    "$userData->first_name $userData->last_name",
-                                    "$posterName->first_name $posterName->last_name"
-                                );
+                            \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                                $userId,
+                                "notifi_post_comment_for_follower",
+                                array(
+                                    "type" => "post_comment",
+                                    "postId" => $postID,
+                                    "subject" => $post->content,
+                                    "username" => "$userData->first_name $userData->last_name",
+                                ),
+                                $owner->lang,
+                                "$userData->first_name $userData->last_name",
+                                "$posterName->first_name $posterName->last_name"
+                            );
                         }
                     }
                     $notification = new \OlaHub\UserPortal\Models\Notifications();
@@ -944,7 +980,6 @@ class OlaHubPostController extends BaseController
                         $posterName->lang,
                         "$userData->first_name $userData->last_name"
                     );
-
                 }
 
                 $authorName = "$userData->first_name $userData->last_name";
@@ -1001,6 +1036,7 @@ class OlaHubPostController extends BaseController
                                 ];
                             }
                         }
+
                         $canEdit = false;
                         $canDelete = false;
                         $canEditReply = false;
@@ -1020,7 +1056,16 @@ class OlaHubPostController extends BaseController
                         if ($post->user_id == app('session')->get('tempID')) {
                             $canDeleteReply = true;
                         }
-
+                        $commentsLikesData = [];
+                        $likersCount = 0;
+                        $isLike = false;
+                        $likers = [];
+                        if (isset($comment->likes) && !empty($comment->likes)) {
+                            foreach ($comment->likes as $like) {
+                                $likersCount =  \OlaHub\UserPortal\Models\CommentLike::where('comment_id', $comment->id)->count() ? \OlaHub\UserPortal\Models\CommentLike::where('comment_id', $comment->id)->count() : 0;
+                                $isLike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id', app('session')->get('tempID'))->where('comment_id', $comment->id)->first() ? true : false;
+                            }
+                        }
                         $return["data"][] = [
                             'comment_id' => $comment->id,
                             'user_id' => $comment->user_id,
@@ -1037,7 +1082,9 @@ class OlaHubPostController extends BaseController
                                 'profile_url' => $userData->profile_url,
                                 'username' => $userData->first_name . " " . $userData->last_name,
                             ],
-                            'replies' => $repliesData
+                            'replies' => $repliesData,
+                            'likerCount' => $likersCount,
+                            'is_liked' => $isLike,
                         ];
                     }
                     $return["status"] = true;
@@ -1057,7 +1104,7 @@ class OlaHubPostController extends BaseController
         $log = new \OlaHub\UserPortal\Helpers\Logs();
         $userData = app('session')->get('tempData');
         $return = ['status' => false, 'msg' => 'someData', 'code' => 406, 'errorData' => []];
-        if (count($this->requestData) > 0 ) {
+        if (count($this->requestData) > 0) {
             $commentId = $this->requestData['comment_id'];
             $comment = PostComments::find($commentId);
             if ($comment) {
@@ -1177,6 +1224,7 @@ class OlaHubPostController extends BaseController
             }
 
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;
@@ -1500,5 +1548,158 @@ class OlaHubPostController extends BaseController
         }
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+
+
+    public function likeComment()
+    {
+        $type = $this->requestData['type'];
+        $postId = $this->requestData['postId'];
+        $commentId = $this->requestData['commentId'];
+
+        $post = Post::where('post_id', $postId)->first();
+        if ($post) {
+            $comments = $post->comments->where('id', $commentId)->first();
+            $isLiked = $comments->likes->where('user_id', app('session')->get('tempID'))->first();
+            $notification = new \OlaHub\UserPortal\Models\Notifications();
+
+            if ($comments->delete == 0) {
+                if ($isLiked) {
+                    $like =  \OlaHub\UserPortal\Models\CommentLike::where('user_id', app('session')->get('tempID'))->where('comment_id', $commentId)->first();
+                    $like->delete();
+                    $commentNoti = $notification->where('comment_id', $commentId)->where('friend_id', app('session')->get('tempID'));
+                    $commentNoti->delete();
+
+                    return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
+                }
+                if (!$isLiked) {
+                    $like = (new \OlaHub\UserPortal\Models\CommentLike);
+                    $like->post_id = $post->post_id;
+                    $like->comment_id = $comments->id;
+                    $like->user_id = app('session')->get('tempID');
+                    $like->save();
+
+                    if ($comments->user_id != app('session')->get('tempID')) {
+                        $notification->type = 'post';
+                        $notification->content = "notifi_comment_like";
+                        $notification->comment_id =$commentId;
+                        $notification->user_id = $comments->user_id;
+                        $notification->friend_id = app('session')->get('tempID');
+                        $notification->post_id = $postId;
+                        $notification->save();
+
+                        $userData = app('session')->get('tempData');
+                        $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+                        \OlaHub\UserPortal\Models\Notifications::sendFCM(
+                           9104,
+                            "comment_like",
+                            array(
+                                "type" => "post_like",
+                                "postId" => $postId,
+                                "subject" => $post->content,
+                                "username" => "$userData->first_name $userData->last_name",
+                            ),
+                            $owner->lang,
+                            "$userData->first_name $userData->last_name"
+                        );
+                    }
+                    return response(['status' => true, 'msg' => 'success', 'code' => 200], 200);
+                }
+            }
+            // $unlike =  \OlaHub\UserPortal\Models\CommentLike::where('user_id',app('session')->get('tempID'))->where('comment_id',$commentId)->first();
+            // $unlike->is_delete = 1 ;
+            // $unlike->save();
+
+            return response(['status' => true, 'msg' => 'noData', 'code' => 204], 200);
+        }
+
+
+        // $likes = $post->likes;
+        // $followers = [];
+        // foreach ($likes as $userID) {
+        //     $x = "ID" . $userID->user_id;
+        //     $followers[$x] = [
+
+        //         'user_id' => $userID->user_id
+        //     ];
+        // }
+        // foreach ($comments as $userID) {
+        //     $x = "ID" . $userID->user_id;
+        //     $followers[$x] = [
+
+        //         'user_id' => $userID->user_id
+        //     ];
+        // }
+
+        // if ($status) {
+        //     $like = (new \OlaHub\UserPortal\Models\PostLikes);
+        //     $like->post_id = $postId;
+        //     $like->user_id = app('session')->get('tempID');
+        //     $like->save();
+        //     foreach ($followers as $userId) {
+
+        //         if (
+        //             $post->user_id != app('session')->get('tempID') && ($post->user_id !=  $userId['user_id']) && app('session')->get('tempID') != $userId['user_id']
+        //         ) {
+        //             $notification = new \OlaHub\UserPortal\Models\Notifications();
+        //             $notification->type = 'post';
+        //             $notification->content = "notifi_post_like_for_follower";
+        //             $notification->user_id = $userId['user_id'];
+        //             $notification->friend_id = app('session')->get('tempID');
+        //             $notification->post_id = $postId;
+        //             $notification->save();
+
+        //             $userData = app('session')->get('tempData');
+        //             $posterName = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+        //             $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId['user_id'])->first();
+        //             \OlaHub\UserPortal\Models\Notifications::sendFCM(
+        //                 $userId['user_id'],
+        //                 "notifi_post_like_for_follower",
+        //                 array(
+        //                     "type" => "post_like",
+        //                     "postId" => $postId,
+        //                     "subject" => $post->content,
+        //                     "username" => "$userData->first_name $userData->last_name",
+
+        //                 ),
+        //                 $owner->lang,
+        //                 "$userData->first_name $userData->last_name",
+        //                 "$posterName->first_name $posterName->last_name"
+        //             );
+        //         }
+        //     }
+
+        //     if ($post->user_id != app('session')->get('tempID')) {
+        //         $notification = new \OlaHub\UserPortal\Models\Notifications();
+        //         $notification->type = 'post';
+        //         $notification->content = "notifi_post_like";
+        //         $notification->user_id = $post->user_id;
+        //         $notification->friend_id = app('session')->get('tempID');
+        //         $notification->post_id = $postId;
+        //         $notification->save();
+
+        //         $userData = app('session')->get('tempData');
+        //         $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
+        //         \OlaHub\UserPortal\Models\Notifications::sendFCM(
+        //             $post->user_id,
+        //             "post_like",
+        //             array(
+        //                 "type" => "post_like",
+        //                 "postId" => $postId,
+        //                 "subject" => $post->content,
+        //                 "username" => "$userData->first_name $userData->last_name",
+        //             ),
+        //             $owner->lang,
+        //             "$userData->first_name $userData->last_name"
+        //         );
+        //     }
+        // } else {
+        //     \OlaHub\UserPortal\Models\PostLikes::where('post_id', $postId)->where('user_id', app('session')->get('tempID'))->delete();
+        //     \OlaHub\UserPortal\Models\Notifications::where('type', 'notifi_post_like')->where('user_id', $post->user_id)->where('friend_id', app('session')->get('tempID'))->delete();
+        // }
+
+        // $return['status'] = TRUE;
+        // $return['code'] = 200;
+        // return response($return, 200);
     }
 }

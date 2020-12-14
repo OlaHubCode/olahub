@@ -9,10 +9,19 @@ class Friends extends Model
 
     protected $table = 'users_friends';
 
+    public function user()
+    {
+        return $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'user_id');
+    }
+    public function friend()
+    {
+        return  $this->belongsTo('OlaHub\UserPortal\Models\UserModel', 'friend_id');
+    }
     static function getFriend($id1, $id2)
     {
         return Friends::whereRaw("user_id = $id1 and  friend_id = $id2")->orWhereRaw("friend_id = $id1 and  user_id = $id2")->first();
     }
+
 
     static function getFriends($id)
     {

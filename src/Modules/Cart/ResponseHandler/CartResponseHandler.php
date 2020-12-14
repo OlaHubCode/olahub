@@ -128,7 +128,29 @@ class CartResponseHandler extends Fractal\TransformerAbstract
     private function setShippingDatesData()
     {
         if ($this->minShipDate > 0) {
-            $dateFrom = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->minShipDate);
+            $isVocher = true;
+            foreach ($this->items as $item) {
+
+                switch ($item->item_type) {
+                    case "store":
+
+                        $item = \OlaHub\UserPortal\Models\CatalogItem::where("id", $item->item_id)->first();
+                        if ($item) {
+
+                            if (!$item->is_voucher) {
+                                $isVocher = false;
+                            }
+                        }
+                        break;
+                    case "designer":
+                        $isVocher = false;
+                        break;
+                }
+            }
+            if ($isVocher)
+                $dateFrom = 0;
+            else
+                $dateFrom = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkHolidaysDatesNumber($this->minShipDate);
             if (app('session')->get('def_lang')->default_locale == 'ar') {
                 $date = ARABIC_DAYS[date("w", strtotime("+$dateFrom Days")) - 1] . " " .
                     date("d", strtotime("+$dateFrom Days")) . " " .
@@ -172,6 +194,7 @@ class CartResponseHandler extends Fractal\TransformerAbstract
             "productDiscountedPrice" => $itemPrice["productHasDiscount"] ? $itemPrice['productDiscountedPrice'] : $itemPrice["productPrice"],
             "productHasDiscount" => $itemPrice['productHasDiscount'],
             "productQuantity" => $cartItem->quantity,
+            "isVoucher" =>     $item['is_voucher'],
             "productTotalPrice" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice((float) \OlaHub\UserPortal\Models\CatalogItem::checkPrice($item, true, false) * $cartItem->quantity),
             "productImage" => $this->setItemImageData($item),
             "productOwner" => $itemOwner['productOwner'],

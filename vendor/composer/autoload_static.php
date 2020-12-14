@@ -5,6 +5,7 @@
 namespace Composer\Autoload;
 
 class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
+
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -630,6 +631,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'OlaHub\\UserPortal\\Models\\CelebrationParticipantsModel' => __DIR__ . '/../..' . '/src/Modules/Celebration/Models/CelebrationParticipantsModel.php',
         'OlaHub\\UserPortal\\Models\\CelebrationShippingAddressModel' => __DIR__ . '/../..' . '/src/Modules/Celebration/Models/CelebrationShippingAddressModel.php',
         'OlaHub\\UserPortal\\Models\\Classification' => __DIR__ . '/../..' . '/src/Modules/Items/Models/Classification.php',
+        'OlaHub\\UserPortal\\Models\\CommentLike' => __DIR__ . '/../..' . '/src/Modules/Posts/Models/CommentLike.php',
         'OlaHub\\UserPortal\\Models\\CompanyStaticData' => __DIR__ . '/../..' . '/src/CommonFiles/Models/CompanyStaticData.php',
         'OlaHub\\UserPortal\\Models\\CountriesShipping' => __DIR__ . '/../..' . '/src/CommonFiles/Models/CountriesShipping.php',
         'OlaHub\\UserPortal\\Models\\Country' => __DIR__ . '/../..' . '/src/CommonFiles/Models/Country.php',

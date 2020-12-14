@@ -176,6 +176,7 @@ return array(
     'OlaHub\\UserPortal\\Models\\CelebrationParticipantsModel' => $baseDir . '/src/Modules/Celebration/Models/CelebrationParticipantsModel.php',
     'OlaHub\\UserPortal\\Models\\CelebrationShippingAddressModel' => $baseDir . '/src/Modules/Celebration/Models/CelebrationShippingAddressModel.php',
     'OlaHub\\UserPortal\\Models\\Classification' => $baseDir . '/src/Modules/Items/Models/Classification.php',
+    'OlaHub\\UserPortal\\Models\\CommentLike' => $baseDir . '/src/Modules/Posts/Models/CommentLike.php',
     'OlaHub\\UserPortal\\Models\\CompanyStaticData' => $baseDir . '/src/CommonFiles/Models/CompanyStaticData.php',
     'OlaHub\\UserPortal\\Models\\CountriesShipping' => $baseDir . '/src/CommonFiles/Models/CountriesShipping.php',
     'OlaHub\\UserPortal\\Models\\Country' => $baseDir . '/src/CommonFiles/Models/Country.php',
