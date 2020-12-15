@@ -198,22 +198,26 @@ class PaymentHelper extends OlaHubCommonHelper
         }
         return $return;
     }
-
     private function getBillDesignerAttributesDetails($oneItem)
     {
         $return = [];
-        if (isset($oneItem->valuesData) && is_array($oneItem->valuesData) && count($oneItem->valuesData)) {
-            $valuesData = \OlaHub\UserPortal\Models\AttrValue::whereIn("id", $oneItem->valuesData)->get();
-            foreach ($valuesData as $valueMain) {
-                $attribute = $valueMain->attributeMainData;
+       
+            
+            $attributes = \OlaHub\UserPortal\Models\Attribute::join('catalog_attribute_values', 'catalog_item_attributes.id', '=', 'catalog_attribute_values.product_attribute_id')
+            ->join('designer_item_attribute_values', 'catalog_attribute_values.id', '=', 'designer_item_attribute_values.value_id')
+            ->Where('item_id',$oneItem->id)->get();
+            
+            foreach ($attributes as $value) {
+                $valueMain = $value;
                 $return[] = array(
-                    'name' => $attribute->name,
-                    'value' => $valueMain->attribute_value,
+                    'name' => isset($valueMain)?$valueMain->name:"",
+                    'value' => isset($valueMain)?$valueMain->attribute_value:"",
                 );
             }
-        }
         return $return;
     }
+             
+
 
     static function groupBillMerchants($billDetails, $toDelete = true)
     {

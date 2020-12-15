@@ -174,7 +174,7 @@ class EmailHelper extends OlaHubCommonHelper
         if (PRODUCTION_LEVEL) {
             $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
         } else {
-            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+            $to = [["Mohannad.zaghmouri@olahub.com", "Rami Hashash"]];
         }
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -205,7 +205,7 @@ class EmailHelper extends OlaHubCommonHelper
         if (PRODUCTION_LEVEL) {
             $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
         } else {
-            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+            $to = [["Mohannad.zaghmouri@olahub.com", "Rami Hashash"]];
         }
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -237,7 +237,7 @@ class EmailHelper extends OlaHubCommonHelper
         if (PRODUCTION_LEVEL) {
             $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
         } else {
-            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+            $to = [["Mohannad.zaghmouri@olahub.com", "Rami Hashash"]];
         }
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -362,7 +362,7 @@ class EmailHelper extends OlaHubCommonHelper
         if (PRODUCTION_LEVEL) {
             $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
         } else {
-            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+            $to = [["Mohannad.zaghmouri@olahub.com", "Rami Hashash"]];
         }
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -404,7 +404,7 @@ class EmailHelper extends OlaHubCommonHelper
             if (PRODUCTION_LEVEL) {
                 $to = [[$store['storeEmail'], $store['storeManagerName']]];
             } else {
-                $to = [["rami.hashash@olahub.com", $store['storeManagerName']]];
+                $to = [["Mohannad.zaghmouri@olahub.com", $store['storeManagerName']]];
             }
             parent::sendEmail($to, $replace, $with, $template);
         }
@@ -637,7 +637,7 @@ class EmailHelper extends OlaHubCommonHelper
         if (PRODUCTION_LEVEL) {
             $to = [[JO_SALES_EMAIL, JO_SALES_NAME]];
         } else {
-            $to = [["rami.hashash@olahub.com", "Rami Hashash"]];
+            $to = [["Mohannad.zaghmouri@olahub.com", "Rami Hashash"]];
         }
         parent::sendEmail($to, $replace, $with, $template);
     }
@@ -685,7 +685,7 @@ class EmailHelper extends OlaHubCommonHelper
             if (PRODUCTION_LEVEL) {
                 $to = [[$store['storeEmail'], $store['storeManagerName']]];
             } else {
-                $to = [["rami.hashash@olahub.com", $store['storeManagerName']]];
+                $to = [["Mohannad.zaghmouri@olahub.com", $store['storeManagerName']]];
             }
             parent::sendEmail($to, $replace, $with, $template);
         }
@@ -928,7 +928,7 @@ class EmailHelper extends OlaHubCommonHelper
                 if (PRODUCTION_LEVEL) {
                     $to = [[$store['storeEmail'], $store['storeManagerName']]];
                 } else {
-                    $to = [["rami.hashash@olahub.com", $store['storeManagerName']]];
+                    $to = [["Mohannad.zaghmouri@olahub.com", $store['storeManagerName']]];
                 }
 
                 parent::sendEmail($to, $replace, $with, $template);
@@ -957,7 +957,7 @@ class EmailHelper extends OlaHubCommonHelper
                 if (PRODUCTION_LEVEL) {
                     $to = [[$store['storeEmail'], $store['storeManagerName']]];
                 } else {
-                    $to = [["rami.hashash@olahub.com", $store['storeManagerName']]];
+                    $to = [["Mohannad.zaghmouri@olahub.com", $store['storeManagerName']]];
                 }
 
                 parent::sendEmail($to, $replace, $with, $template);
