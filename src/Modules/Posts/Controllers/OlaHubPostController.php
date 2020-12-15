@@ -146,24 +146,25 @@ class OlaHubPostController extends BaseController
                 }
             }
 
-            usort($all, array($this, "sortPosts"));
-            $final = [];
-            $count_posts = count($all);
-            $count_sponsers = count($sponsers_arr);
-            $break = $count_sponsers > 0 ? (int) ($count_posts / $count_sponsers - 1) : 0;
-            $start_in = 0;
-            for ($i = 0; $i < $count_posts; $i++) {
-                $final[] = $all[$i];
-                if ($break - 1 == $i) {
-                    if (isset($sponsers_arr[$start_in])) {
-                        $final[] = $sponsers_arr[$start_in];
-                        $start_in++;
-                        $break = $break * 2;
+            if (count($all)) {
+                usort($all, array($this, "sortPosts"));
+                $final = [];
+                $count_posts = count($all);
+                $count_sponsers = count($sponsers_arr);
+                $break = $count_sponsers > 0 ? (int) ($count_posts / $count_sponsers - 1) : 0;
+                $start_in = 0;
+                for ($i = 0; $i < $count_posts; $i++) {
+                    $final[] = $all[$i];
+                    if ($break - 1 == $i) {
+                        if (isset($sponsers_arr[$start_in])) {
+                            $final[] = $sponsers_arr[$start_in];
+                            $start_in++;
+                            $break = $break * 2;
+                        }
                     }
                 }
+                $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200, "=====" => "pp"];
             }
-            $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
-            // }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
             return response($return, 200);
@@ -1582,7 +1583,7 @@ class OlaHubPostController extends BaseController
                     if ($comments->user_id != app('session')->get('tempID')) {
                         $notification->type = 'post';
                         $notification->content = "notifi_comment_like";
-                        $notification->comment_id =$commentId;
+                        $notification->comment_id = $commentId;
                         $notification->user_id = $comments->user_id;
                         $notification->friend_id = app('session')->get('tempID');
                         $notification->post_id = $postId;
@@ -1591,7 +1592,7 @@ class OlaHubPostController extends BaseController
                         $userData = app('session')->get('tempData');
                         $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $post->user_id)->first();
                         \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                           9104,
+                            9104,
                             "comment_like",
                             array(
                                 "type" => "post_like",
