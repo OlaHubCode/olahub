@@ -163,7 +163,7 @@ class OlaHubPostController extends BaseController
                         }
                     }
                 }
-                $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200, "=====" => "pp"];
+                $return = ['status' => true, 'data' => $final, 'meta' => isset($posts["meta"]) ? $posts["meta"] : [], 'code' => 200];
             }
             $log->setLogSessionData(['response' => $return]);
             $log->saveLogSessionData();
