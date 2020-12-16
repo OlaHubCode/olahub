@@ -14,4 +14,10 @@ $router->group([
     $router->post('/', 'PurchasedItemsController@getUserPurchasedItems');
     $router->post('cancelation/{id:[0-9]+}', 'PurchasedItemsController@cancelPurshasedItem');
     $router->post('refund/{id:[0-9]+}', 'PurchasedItemsController@refundPurshasedItem');
+
+});
+$router->group([
+    'prefix' => basename(strtolower(dirname(__DIR__)))
+], function () use ($router) {
+    $router->post('getRatingItems', 'PurchasedItemsController@getNotRatingBillingItems');
 });

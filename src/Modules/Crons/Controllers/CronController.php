@@ -1,7 +1,7 @@
 <?php
-
 namespace OlaHub\UserPortal\Controllers;
 
+use Illuminate\Support\Facades\DB;
 use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 
@@ -410,6 +410,31 @@ class CronController extends BaseController
             $olaHubCountry = \DB::table("countries")->where("two_letter_iso_code", strtoupper($country->code))->first();
             if ($olaHubCountry) {
                 \DB::table("shipping_countries")->where("id", $country->id)->update(["olahub_country_id" => $olaHubCountry->id]);
+            }
+        }
+    }
+    public function RatingAndReviewEmails()
+    {
+        $log = new \OlaHub\UserPortal\Helpers\LogHelper();
+        $log->setLogSessionData(['module_name' => "Crons", 'function_name' => "reviewEmails"]);
+        $occQuery = "shipping_status = 6";
+//        DB::enableQueryLog();
+        $billingHistory = \OlaHub\UserPortal\Models\UserBill::withoutGlobalScope("currntUser")
+            ->whereHas('billDetails', function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('shipping_status', '=', 6);
+                });
+            })
+            ->where("is_rated_email", 0)->get();
+        foreach ($billingHistory as $bill) {
+            if($bill->is_deliverd == true) {
+                if ($bill->user->email) {
+                    (new \OlaHub\UserPortal\Helpers\EmailHelper)->sendNoneRatingAndReview($bill->user, $bill->id);
+                } elseif ($bill->user->mobile_no) {
+                    (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendNoneRatingAndReview($bill->user, $bill->id);
+                }
+                $bill->is_rated_email = 1;
+                $bill->save();
             }
         }
     }

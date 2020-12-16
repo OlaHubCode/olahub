@@ -4,7 +4,8 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit6dd70efd0d32eb564c317c487be7570a
+class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
+
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -723,6 +724,7 @@ class ComposerStaticInit6dd70efd0d32eb564c317c487be7570a
         'OlaHub\\UserPortal\\Providers\\EventServiceProvider' => __DIR__ . '/../..' . '/src/Providers/EventServiceProvider.php',
         'OlaHub\\UserPortal\\Providers\\ValidationServiceProvider' => __DIR__ . '/../..' . '/src/Providers/ValidationServiceProvider.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\AdsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Announcement/ResponseHandler/AdsResponseHandler.php',
+        'OlaHub\\UserPortal\\ResponseHandlers\\BillingItemsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/ResponseHandler/BillingItemsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\BrandSearchResponseHandler' => __DIR__ . '/../..' . '/src/CommonFiles/ResponseHandler/BrandSearchResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\BrandsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Items/ResponseHandler/BrandsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\CalendarForCelebrationResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Calendar/ResponseHandler/CalendarForCelebrationResponseHandler.php',
@@ -1328,11 +1330,11 @@ class ComposerStaticInit6dd70efd0d32eb564c317c487be7570a
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit6dd70efd0d32eb564c317c487be7570a::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$classMap;
 
         }, null, ClassLoader::class);
     }

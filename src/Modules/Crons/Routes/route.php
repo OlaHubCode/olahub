@@ -1,5 +1,4 @@
 <?php
-
 /**
  * MerBankInfos routes
  * Handling URL requests with method type to send to Controller
@@ -24,4 +23,5 @@ $router->group([
     $router->get('/xiaomi', 'CronController@updateXiaomiItem');
     $router->get('/updateCountries', 'CronController@updateCountriesCode');
     $router->get('/updateItem/{slug}', 'CronController@updateItemSlugUnique');
+    $router->get('/ratingAndReview', 'CronController@RatingAndReviewEmails');
 });

@@ -2,6 +2,8 @@
 
 namespace OlaHub\UserPortal\Helpers;
 
+use Illuminate\Support\Facades\Crypt;
+
 class SmsHelper extends OlaHubCommonHelper
 {
 
@@ -398,6 +400,17 @@ class SmsHelper extends OlaHubCommonHelper
         $replace = ['[UserName]', '[RegistryURL]', '[RegistryEvent]'];
         $with = [$registryOwner, FRONT_URL . "/registry/view/" . $registryID, $registryName];
         $to = (int) $mobile;
+        parent::sendSms($to, $replace, $with, $template);
+    }
+    function sendNoneRatingAndReview($userData, $billing_id)
+    {
+        $this->getCountryCode($userData->country_id);
+        $username = "$userData->first_name $userData->last_name";
+        $billing_id = Crypt::encrypt($billing_id, false);
+        $template = 'USR036';
+        $replace = ['[UserName]', '[RatingURL]'];
+        $with = [$username, FRONT_URL . "/rating?" . $billing_id];
+        $to = $this->countryCode . (int) $userData->mobile_no;
         parent::sendSms($to, $replace, $with, $template);
     }
 }

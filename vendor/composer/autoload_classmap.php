@@ -269,6 +269,7 @@ return array(
     'OlaHub\\UserPortal\\Providers\\EventServiceProvider' => $baseDir . '/src/Providers/EventServiceProvider.php',
     'OlaHub\\UserPortal\\Providers\\ValidationServiceProvider' => $baseDir . '/src/Providers/ValidationServiceProvider.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\AdsResponseHandler' => $baseDir . '/src/Modules/Announcement/ResponseHandler/AdsResponseHandler.php',
+    'OlaHub\\UserPortal\\ResponseHandlers\\BillingItemsResponseHandler' => $baseDir . '/src/Modules/MyPurshasedItems/ResponseHandler/BillingItemsResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\BrandSearchResponseHandler' => $baseDir . '/src/CommonFiles/ResponseHandler/BrandSearchResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\BrandsResponseHandler' => $baseDir . '/src/Modules/Items/ResponseHandler/BrandsResponseHandler.php',
     'OlaHub\\UserPortal\\ResponseHandlers\\CalendarForCelebrationResponseHandler' => $baseDir . '/src/Modules/Calendar/ResponseHandler/CalendarForCelebrationResponseHandler.php',

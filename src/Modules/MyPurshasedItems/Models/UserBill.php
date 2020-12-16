@@ -14,7 +14,7 @@ class UserBill extends Model
             $query->where('user_id', app('session')->get('tempID'));
         });
     }
-
+    protected $appends =['is_deliverd'];
     protected $table = 'billing_history';
     static $columnsMaping = [
         'billType' => [
@@ -76,5 +76,21 @@ class UserBill extends Model
     function billDetails()
     {
         return $this->hasMany('\OlaHub\UserPortal\Models\UserBillDetails', 'billing_id');
+    }
+    function user()
+    {
+        return $this->belongsTo('\OlaHub\UserPortal\Models\UserModel', 'user_id');
+    }
+    public function getIsDeliverdAttribute()
+    {
+        $deliverd = false;
+        if($this->billDetails->count() > 0){
+            $deliverd = true;
+            foreach ($this->billDetails as $bill){
+                if($bill->shipping_status != 6)
+                    $deliverd = false;
+            }
+        }
+        return $deliverd;
     }
 }
