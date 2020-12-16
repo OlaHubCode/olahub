@@ -231,11 +231,12 @@ class CatalogItem extends Model
         $occQuery = [];
 
         foreach ($words as $word)
-            array_push($occQuery, "replace(replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', ''), '\"', '') REGEXP '" . json_encode($word, JSON_UNESCAPED_UNICODE) . "'");
+            array_push($occQuery, "( replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '" . json_encode($word, JSON_UNESCAPED_UNICODE) . "' OR replace(replace(LOWER(JSON_EXTRACT(name, '$.ar')), '\'', ''), '\"', '') REGEXP '" . json_encode($word, JSON_UNESCAPED_UNICODE) . "'  ) " );
 
         $itemQuery = [];
         foreach ($words as $word)
             array_push($itemQuery, "replace(replace(LOWER(name), '\'', ''), '\"', '') REGEXP '[[:<:]]" . json_encode($word, JSON_UNESCAPED_UNICODE) . "[[:>:]]'");
+
         $itemQuery = join(' and ', $itemQuery);
         $whereQuery = join(' and ', $occQuery);
         $find = CatalogItem::where(function ($query) {
@@ -270,9 +271,10 @@ class CatalogItem extends Model
             if (strlen($word) < 2)
                 unset($newWords[$key]);
 
+        $whereQuery = "( replace(replace(LOWER(JSON_EXTRACT(name, '$.en')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "' OR replace(replace(LOWER(JSON_EXTRACT(name, '$.ar')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "')";
+        $whereQuery .= " and ( replace(LOWER(JSON_EXTRACT(name,'$.en')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '') OR  replace(LOWER(JSON_EXTRACT(name,'$.ar')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', ''))";
 
-        $whereQuery = "replace(replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', ''), '\"', '') REGEXP '" . join('|', $newWords) . "'";
-        $whereQuery .= " and replace(LOWER(JSON_EXTRACT(name, '$." . self::lang() . "')), '\'', '') <> replace(LOWER('\"$text\"'), '\'', '')";
+
         if ($withRelated) {
             $related = [];
             $occasions = Occasion::whereRaw($whereQuery)->whereHas('occasionItemsData')->get();
