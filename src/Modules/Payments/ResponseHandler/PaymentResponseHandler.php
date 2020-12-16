@@ -25,8 +25,8 @@ class PaymentResponseHandler extends Fractal\TransformerAbstract {
             "paymentID" => isset($this->data->id) ? $this->data->id : 0,
             "paymentName" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->data, 'name'),
             "paymentLogo" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($this->data->logo),
-            "paymentExtraFees" => isset($this->countryData->extra_fees) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->countryData->extra_fees) : 0,
-            "paymentExtraFeesInt" => isset($this->countryData->extra_fees) ? $this->countryData->extra_fees : 0,
+            //"paymentExtraFees" => isset($this->countryData->extra_fees) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($this->countryData->extra_fees) : 0,
+            "paymentExtraFeesInt" => 1,
             "paymentForm" => isset($this->data->is_form) && $this->data->is_form ? $this->data->is_form : 0,
         ];
     }
