@@ -942,6 +942,7 @@ class OlaHubPostController extends BaseController
                             $notification->user_id = $userId;
                             $notification->friend_id = app('session')->get('tempID');
                             $notification->post_id = $postID;
+                            $notification->comment_id =   $comment->id;
                             $notification->save();
 
                             $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $userId)->first();
@@ -966,6 +967,8 @@ class OlaHubPostController extends BaseController
                     $notification->user_id = $post->user_id;
                     $notification->friend_id = app('session')->get('tempID');
                     $notification->post_id = $postID;
+                    $notification->comment_id =   $comment->id;
+
                     $notification->save();
 
                     \OlaHub\UserPortal\Models\Notifications::sendFCM(
@@ -1175,6 +1178,10 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
+        $notification = new \OlaHub\UserPortal\Models\Notifications();
+
+        $commentNoti = $notification->where('post_id', $this->requestData['postId']);
+        $commentNoti->delete();
         $post = Post::where('post_id', $this->requestData['postId'])->first();
         if ($post) {
             if ($post->user_id != app('session')->get('tempID') && $post->friend_id != app('session')->get('tempID')) {
@@ -1224,7 +1231,7 @@ class OlaHubPostController extends BaseController
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
             }
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
-            $post->color = isset($this->requestData['color']) ?json_encode($this->requestData['color']) : NULL;
+            $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
@@ -1249,7 +1256,10 @@ class OlaHubPostController extends BaseController
             $log->saveLogSessionData();
             return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
         }
+        $notification = new \OlaHub\UserPortal\Models\Notifications();
 
+        $commentNoti = $notification->where('comment_id', $this->requestData['commentId']);
+        $commentNoti->delete();
 
         $Comment = PostComments::where('Id', $this->requestData['commentId'])->first();
         $post = Post::where('post_id', $Comment->post_id)->first();
@@ -1557,7 +1567,6 @@ class OlaHubPostController extends BaseController
         $type = $this->requestData['type'];
         $postId = $this->requestData['postId'];
         $commentId = $this->requestData['commentId'];
-
         $post = Post::where('post_id', $postId)->first();
         if ($post) {
             $comments = $post->comments->where('id', $commentId)->first();
@@ -1568,6 +1577,7 @@ class OlaHubPostController extends BaseController
                 if ($isLiked) {
                     $like =  \OlaHub\UserPortal\Models\CommentLike::where('user_id', app('session')->get('tempID'))->where('comment_id', $commentId)->first();
                     $like->delete();
+
                     $commentNoti = $notification->where('comment_id', $commentId)->where('friend_id', app('session')->get('tempID'));
                     $commentNoti->delete();
 
