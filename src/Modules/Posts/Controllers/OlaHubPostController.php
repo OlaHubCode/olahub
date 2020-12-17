@@ -1223,8 +1223,8 @@ class OlaHubPostController extends BaseController
                 $log->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'Not allow to edit this post', 'code' => 400], 200);
             }
-
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
+            $post->color = isset($this->requestData['color']) ?json_encode($this->requestData['color']) : NULL;
             $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
