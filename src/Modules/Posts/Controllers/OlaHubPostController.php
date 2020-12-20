@@ -633,8 +633,8 @@ class OlaHubPostController extends BaseController
             if (!isset($this->requestData['friend']) && !isset($this->requestData['group']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
                 $userData = app('session')->get('tempData');
                 $friends = \OlaHub\UserPortal\Models\Friends::getFriendsList(app('session')->get('tempID'));
-                foreach ($friends as $friend) {
-                    $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $friend)->first();
+                $owners = \OlaHub\UserPortal\Models\UserModel::whereIn('id', $friends)->get();
+                foreach ($owners as $owner) {
                     if ($owner) {
 
                         $notification = new \OlaHub\UserPortal\Models\Notifications();
@@ -648,13 +648,13 @@ class OlaHubPostController extends BaseController
                         }
                         $notification->type = 'post';
                         $notification->content = $notiContent;
-                        $notification->user_id = $friend;
+                        $notification->user_id = $owner->id;
                         $notification->friend_id = app('session')->get('tempID');
                         $notification->post_id = $post->post_id;
                         $notification->save();
 
                         \OlaHub\UserPortal\Models\Notifications::sendFCM(
-                            $friend,
+                            $owner->id,
                             $notiContent,
                             array(
                                 "type" => "post_like",
