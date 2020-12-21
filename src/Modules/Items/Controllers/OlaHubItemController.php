@@ -218,22 +218,30 @@ class OlaHubItemController extends BaseController
         });
 
         $categoryModel->orWhere(function ($wherQ) use ($itemsIDs, $target) {
-            if ($target == "itemsMainData") {
-                $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
-                    $childQ->whereHas($target, function ($q) use ($itemsIDs) {
-                        $q->whereIn('id', $itemsIDs);
-                    });
-                });
-            } else {
-                $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
+            $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
+                $childQ->whereHas($target, function ($q) use ($itemsIDs) {
                     $q->whereIn('id', $itemsIDs);
                 });
-            }
+            });
+
+            // ----------
+            // if ($target == "itemsMainData") {
+            //     $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
+            //         $childQ->whereHas($target, function ($q) use ($itemsIDs) {
+            //             $q->whereIn('id', $itemsIDs);
+            //         });
+            //     });
+            // } else {
+            //     $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
+            //         $q->whereIn('id', $itemsIDs);
+            //     });
+            // }
+            // --------
         });
 
         $categoryModel->groupBy('id');
         $categories = $categoryModel->get();
-        $categories = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs)["data"];
+        $categories = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs, $target)["data"];
         $this->allItemsCategories = array_merge($this->allItemsCategories, $categories);
 
         // Items
