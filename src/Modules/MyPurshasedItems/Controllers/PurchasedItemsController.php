@@ -67,7 +67,16 @@ class PurchasedItemsController extends BaseController
             if ((((int)$bill->paid_by == 255 && $this->setPayStatusDataForCash($bill)) || ((int)$bill->paid_by != 255 && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->cancel_enabled )) && !$purchasedItem->is_canceled && !$purchasedItem->is_refund && $this->getItemPolicy($purchasedItem,'cancel')) {
                 $purchasedItem->is_canceled = 1;
                 $purchasedItem->cancel_date = date("Y-m-d");
-                $purchasedItem->save();
+                $update = $purchasedItem->save();
+
+                if($update) {
+                    $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
+                    $billingTracking->billing_item_id = $purchasedItem->id;
+                    $billingTracking->billing_id = $purchasedItem->billing_id;
+                    $billingTracking->shipping_status = 16;
+                    $billingTracking->save();
+                }
+
                 if ($purchasedItem->item_type == 'designer') {
                     $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 } else {
@@ -107,7 +116,16 @@ class PurchasedItemsController extends BaseController
             if ($this->getItemPolicy($purchasedItem,'refund') && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->refund_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
                 $purchasedItem->is_refund = 1;
                 $purchasedItem->refund_date = date("Y-m-d");
-                $purchasedItem->save();
+                $update = $purchasedItem->save();
+
+                if($update) {
+                    $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
+                    $billingTracking->billing_item_id = $purchasedItem->id;
+                    $billingTracking->billing_id = $purchasedItem->billing_id;
+                    $billingTracking->shipping_status = 17;
+                    $billingTracking->save();
+                }
+
                 if ($purchasedItem->item_type == 'designer') {
                     $purchasedItem->newPrice = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setDesignerPrice($purchasedItem->item_price * $purchasedItem->quantity, true, $bill->country_id);
                 } else {

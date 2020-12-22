@@ -11,7 +11,7 @@ class CartItems extends Model
     protected static function boot()
     {
         parent::boot();
-
+        
         //        static::saved(function ($query) {
         //            $cart = \OlaHub\UserPortal\Models\Cart::withoutGlobalScope('countryUser')->find($query->shopping_cart_id);
         //            $cart->total_price = Cart::getCartSubTotal($cart, TRUE);

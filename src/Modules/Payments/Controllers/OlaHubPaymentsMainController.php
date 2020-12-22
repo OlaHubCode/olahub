@@ -312,7 +312,8 @@ class OlaHubPaymentsMainController extends BaseController
                     $countryCategory = isset($details['category']['catCountry']) ? $details['category']['catCountry'] : 0;
                     $billingDetails->merchant_commision_rate = isset($countryCategory['commission_percentage']) ? $countryCategory['commission_percentage'] : 0;
                     $billingDetails->merchant_commision = $billingDetails['merchant_commision_rate'] > 0 ? $price * $this->cartItem->quantity * ($countryCategory['commission_percentage'] / 100) : 0;
-                    $billingDetails->save();
+                    $save = $billingDetails->save();
+                    
                     break;
                 case "designer":
                     $oneItem = $this->cartItem->itemsDesignerData;
@@ -348,8 +349,16 @@ class OlaHubPaymentsMainController extends BaseController
                     $billingDetails->user_paid = $billingDetails->item_price * $billingDetails->quantity;
                     $billingDetails->merchant_commision_rate = 0;
                     $billingDetails->merchant_commision = 0;
-                    $billingDetails->save();
+                    $save = $billingDetails->save();
                     break;
+            }
+            if($save){
+                $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
+                $billingTracking->billing_item_id = $billingDetails->id;
+                $billingTracking->billing_id = $billingDetails->billing_id;
+                $billingTracking->shipping_status = 1;
+                $billingTracking->save();
+
             }
         }
         $this->billingDetails = $this->billing->billDetails;
