@@ -34,6 +34,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             "billCurrency" => $this->currency,
             "billPaidFor" => isset($this->data->pay_for) ? $this->data->pay_for : 0,
             "celebration" => $this->setCelebration(),
+
             "billIsGift" => isset($this->data->is_gift) ? $this->data->is_gift : 0,
             "billSubtotal" => number_format($this->data->billing_total - $this->data->shipping_fees + $this->data->promo_code_saved, 2, ".", ",") . " " . $this->currency,
             "billShippingFees" => isset($this->data->shipment_details) ? $this->getShipmentDetails($this->data->shipment_details) : NULL,
@@ -49,20 +50,31 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         ];
     }
 
-    private function getCityName($data){
-       
-        $data = @unserialize($data);
-        if(isset($data['city']) && gettype($data['city']) == 'integer'){
+    private function setItemCustomData($item)
+    {
+        $return = [];
+        if ($item != null) {
+            $customItem = unserialize($item);
+            $return["productCustomImage"] = isset($customItem['image']) ? $customItem['image'] : '';
+            $return["productCustomeText"] = isset($customItem['text']) ? $customItem['text'] : '';
+        }
 
-            $city = \OlaHub\UserPortal\Models\ShippingCities::where('id',$data['city'])->first();
-            if($city){
-    
+        return $return;
+    }
+    private function getCityName($data)
+    {
+
+        $data = @unserialize($data);
+        if (isset($data['city']) && gettype($data['city']) == 'integer') {
+
+            $city = \OlaHub\UserPortal\Models\ShippingCities::where('id', $data['city'])->first();
+            if ($city) {
+
                 $city = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($city, 'name');
                 $data['city'] = $city;
             }
-    
         }
-        return $data ;
+        return $data;
 
         // var_dump();return $data;
 
@@ -165,15 +177,15 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         if ($policy) {
             $exchange_days = $policy->exchange_days;
             $allow_exchange = $policy->allow_exchange;
-            if($allow_exchange && $exchange_days > 0) {
+            if ($allow_exchange && $exchange_days > 0) {
                 $billDate = $userBillDetail->created_at;
-                $allow_date_exchange = date('Y-m-d', strtotime("+" . $exchange_days-1 . " days", strtotime($billDate)));
-                if(strtotime($allow_date_exchange) >= strtotime(date('Y-m-d'))){
+                $allow_date_exchange = date('Y-m-d', strtotime("+" . $exchange_days - 1 . " days", strtotime($billDate)));
+                if (strtotime($allow_date_exchange) >= strtotime(date('Y-m-d'))) {
                     if ((int)$this->data->paid_by == 255) {
                         if ((($this->paymenStatus && $this->paymenStatus->id == 13)) && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
                             $cancelStatus = 1;
                         }
-                    }else{
+                    } else {
                         if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->cancel_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
                             $cancelStatus = 1;
                         }
@@ -191,15 +203,15 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
         if ($policy) {
             $refund_days = $policy->refund_days;
             $allow_refund = $policy->allow_refund;
-            if($allow_refund && $refund_days > 0) {
+            if ($allow_refund && $refund_days > 0) {
                 $deliveryDate = $userBillDetail->updated_at;
-                $allow_date_refund = date('Y-m-d', strtotime("+" . $refund_days-1 . " days", strtotime($deliveryDate)));
-                if(strtotime($allow_date_refund) >= strtotime(date('Y-m-d'))) {
+                $allow_date_refund = date('Y-m-d', strtotime("+" . $refund_days - 1 . " days", strtotime($deliveryDate)));
+                if (strtotime($allow_date_refund) >= strtotime(date('Y-m-d'))) {
                     if ((int)$this->data->paid_by == 255) {
                         if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
                             $refundStatus = 1;
                         }
-                    }else{
+                    } else {
                         if ((($this->paymenStatus && $this->paymenStatus->shipping_enabled)) && isset($this->shippingStatus[$userBillDetail->id]) && $this->shippingStatus[$userBillDetail->id]->refund_enabled && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
                             $refundStatus = 1;
                         }
@@ -219,13 +231,15 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
             $shipping = \OlaHub\UserPortal\Models\PaymentShippingStatus::where("review_enabled", "1")->find($userBillDetail->shipping_status);
             $existReview = \OlaHub\UserPortal\Models\ItemReviews::where('item_id', $userBillDetail->item_id)->where('item_type', $userBillDetail->item_type)->first();
             $itemsDetails[] = [
+                "productCustomeItem" => $this->setItemCustomData($userBillDetail->customize_data),
+
                 'itemOrderNumber' => $userBillDetail->id,
                 'itemName' => $userBillDetail->item_name,
                 'itemQuantity' => $userBillDetail->quantity,
                 'itemPrice' => number_format($userBillDetail->country_paid, 2, ".", ",") . " " . $this->currency,
                 'itemImage' => $this->setItemImageData($userBillDetail->item_image),
-                'paymentImage' =>$userBillDetail->payment_image!= ""? $this->setPaymentImageData($userBillDetail->payment_image) : 
-                $userBillDetail->payment_image,
+                'paymentImage' => $userBillDetail->payment_image != "" ? $this->setPaymentImageData($userBillDetail->payment_image) :
+                    $userBillDetail->payment_image,
                 'itemAttribute' => isset($attr['attributes']) ? $attr['attributes'] : [],
                 'itemShippingStatus' => $this->setItemStatus($userBillDetail),
                 'itemEnableCancel' => $this->setItemCancelStatus($userBillDetail),
@@ -265,7 +279,7 @@ class PurchasedItemsResponseHandler extends Fractal\TransformerAbstract
 
                 break;
         }
-        if($item){
+        if ($item) {
             $policy = $item->exchangePolicy;
         }
         return $policy;
