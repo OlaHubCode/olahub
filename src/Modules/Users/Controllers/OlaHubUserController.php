@@ -219,7 +219,7 @@ class OlaHubUserController extends BaseController
     {
         $v1 = $a['status'];
         $v2 = $b['status'];
-        return strcmp($v1, $v2);
+        return strcmp($v2,$v1);
     }
     public function getUserRequests()
     {
