@@ -78,7 +78,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
                         $this->return['currentUserRate'] = $rate->rating;
                     }
                 }
-                $this->return['productRate'] = (int) ($productRate / $rater);
+                $this->return['productRate'] = (float) ($productRate / $rater);
                 $this->parentData->item_rate = $this->return['productRate'];
                 $this->parentData->save();
             }

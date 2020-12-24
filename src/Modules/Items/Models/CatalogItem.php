@@ -242,7 +242,9 @@ class CatalogItem extends Model
         $find = CatalogItem::where(function ($query) {
             $query->whereNull('parent_item_id');
             $query->orWhere('parent_item_id', '0');
-        })->where(function ($q) use ($whereQuery) {
+        })->where(function ($q1) use ($itemQuery) {
+            $q1->whereRaw($itemQuery);
+        })->orWhere(function ($q) use ($whereQuery) {
             //occasions
             $q->whereHas("occasionSync", function ($q1) use ($whereQuery) {
                 $q1->whereRaw($whereQuery);
@@ -262,8 +264,6 @@ class CatalogItem extends Model
             $q->orWhereHas("classification", function ($q1) use ($whereQuery) {
                 $q1->whereRaw($whereQuery);
             });
-        })->orWhere(function ($q1) use ($itemQuery) {
-            $q1->whereRaw($itemQuery);
         });
         $related = false;
         $newWords = $words;
@@ -323,7 +323,7 @@ class CatalogItem extends Model
                 }
             }
 
-            $find->orWhere(function ($q1) use ($whereQuery, $tempWords) {
+            $find->orWhere(function ($q1) use ($whereQuery, $tempWords,$text,$itemQuery) {
                 $q1->where(function ($query) {
                     $query->whereNull('parent_item_id');
                     $query->orWhere('parent_item_id', '0');

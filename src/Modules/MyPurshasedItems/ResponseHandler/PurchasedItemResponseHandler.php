@@ -12,7 +12,7 @@ class PurchasedItemResponseHandler extends Fractal\TransformerAbstract
     private $data;
     private $bill;
     private $shippingStatus = [];
-    private $paymenStatus;addReviewToPurchasedItem
+    private $paymenStatus;
 
     public function transform(UserBillDetails $data)
     {
