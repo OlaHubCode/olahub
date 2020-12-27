@@ -37,8 +37,15 @@ class OlaHubItemReviewsController extends BaseController
         if ($reviews->count() < 1) {
             throw new NotAcceptableHttpException(404);
         }
+        $rateCount = [];
+        for ($i = 0; $i < 5; $i++) {
+
+            $rateCount[$i] = $reviews->where('rating', '=', $i + 1)->count();
+        }
+      
         $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($reviews, '\OlaHub\UserPortal\ResponseHandlers\ItemReviewsResponseHandler');
         $return['status'] = true;
+        $return['rateCount'] = $rateCount;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);
         $log->saveLogSessionData();
