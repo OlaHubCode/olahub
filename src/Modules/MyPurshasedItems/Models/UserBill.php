@@ -14,7 +14,7 @@ class UserBill extends Model
             $query->where('user_id', app('session')->get('tempID'));
         });
     }
-    protected $appends =['is_deliverd'];
+    protected $appends =['is_deliverd','is_tracking'];
     protected $table = 'billing_history';
     static $columnsMaping = [
         'billType' => [
@@ -92,5 +92,20 @@ class UserBill extends Model
             }
         }
         return $deliverd;
+    }
+
+    public function getIsTrackingAttribute()
+    {
+        $tracking = false;
+        if($this->billDetails->count() > 0){
+            $tracking = false;
+            foreach ($this->billDetails as $bill){
+                if($bill->trackingItem()->count() > 0){
+                    $tracking = true;
+                    break;
+                }
+            }
+        }
+        return $tracking;
     }
 }

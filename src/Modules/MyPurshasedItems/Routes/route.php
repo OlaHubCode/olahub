@@ -14,6 +14,7 @@ $router->group([
     $router->post('/', 'PurchasedItemsController@getUserPurchasedItems');
     $router->post('cancelation/{id:[0-9]+}', 'PurchasedItemsController@cancelPurshasedItem');
     $router->post('refund/{id:[0-9]+}', 'PurchasedItemsController@refundPurshasedItem');
+    $router->post('trackingOrder/{id}', 'PurchasedItemsController@trackingOrder');
 
 });
 $router->group([

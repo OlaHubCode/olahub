@@ -10,4 +10,10 @@ class UserBillTracking extends Model {
      use SoftDeletes;
     protected $table = 'billing_items_tracking';
 
+  
+    function trackingStatus()
+    {
+        return $this->belongsTo('\OlaHub\UserPortal\Models\PaymentShippingStatus', 'shipping_status');
+    }
+
 }
