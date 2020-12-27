@@ -238,4 +238,22 @@ class PurchasedItemsController extends BaseController
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
 
     }
+    public function trackingOrder($id){
+        
+        $user = app('session')->get('tempID');
+
+        $order = UserBill::where("billing_number", $id)->where('user_id',$user)->first();
+        if($order){
+            $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($order, '\OlaHub\UserPortal\ResponseHandlers\TrackingResponseHandler');
+            $return['status'] = TRUE;
+            $return['msg'] = "getOrderSuccessfully";
+            $return['code'] = 200;
+            $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
+            $logHelper->setLog($this->requestData, $return, 'trackingOrder', $this->userAgent);
+            return response($return, 200);
+        }
+        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
+        $logHelper->setLog($this->requestData, "No data found", 'trackingOrder', $this->userAgent);
+        return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
 }
