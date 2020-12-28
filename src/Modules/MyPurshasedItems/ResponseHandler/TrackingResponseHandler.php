@@ -83,12 +83,9 @@ class TrackingResponseHandler extends Fractal\TransformerAbstract
     }
     private function setItemStatus($userBillDetail)
     {
-        $orderStatus = '';
-        if (($this->paymenStatus && $this->paymenStatus->shipping_enabled) || ($this->data->pay_status == 0 && $this->data->voucher_used > 0)  && isset($this->shippingStatus[$userBillDetail->id]) && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
-            $this->shippingStatus[$userBillDetail->id] = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($userBillDetail->shipping_status);
-            if ($this->shippingStatus[$userBillDetail->id]) {
-                $orderStatus = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->shippingStatus[$userBillDetail->id], "name");
-            }
+        $orderStatus = 0;
+        if ( isset($userBillDetail->shipping_status) && !$userBillDetail->is_canceled && !$userBillDetail->is_refund) {
+            $orderStatus = $userBillDetail->shipping_status;
         }
         return $orderStatus;
     }

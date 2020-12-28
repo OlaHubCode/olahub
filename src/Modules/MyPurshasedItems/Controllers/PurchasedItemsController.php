@@ -242,7 +242,7 @@ class PurchasedItemsController extends BaseController
         
         $user = app('session')->get('tempID');
 
-        $order = UserBill::where("billing_number", $id)->where('user_id',$user)->first();
+        $order = UserBill::where('user_id',$user)->where("billing_number", "LIKE", "%" . $id . "%")->first();
         if($order){
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($order, '\OlaHub\UserPortal\ResponseHandlers\TrackingResponseHandler');
             $return['status'] = TRUE;
