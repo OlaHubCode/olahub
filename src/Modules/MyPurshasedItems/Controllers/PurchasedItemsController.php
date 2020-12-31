@@ -64,12 +64,12 @@ class PurchasedItemsController extends BaseController
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
-            if ((((int)$bill->paid_by == 255 && $this->setPayStatusDataForCash($bill)) || ((int)$bill->paid_by != 255 && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->cancel_enabled )) && !$purchasedItem->is_canceled && !$purchasedItem->is_refund && $this->getItemPolicy($purchasedItem,'cancel')) {
+            if ((((int)$bill->paid_by == 255 && $this->setPayStatusDataForCash($bill)) || ((int)$bill->paid_by != 255 && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->cancel_enabled)) && !$purchasedItem->is_canceled && !$purchasedItem->is_refund && $this->getItemPolicy($purchasedItem, 'cancel')) {
                 $purchasedItem->is_canceled = 1;
                 $purchasedItem->cancel_date = date("Y-m-d");
                 $update = $purchasedItem->save();
 
-                if($update) {
+                if ($update) {
                     $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
                     $billingTracking->billing_item_id = $purchasedItem->id;
                     $billingTracking->billing_id = $purchasedItem->billing_id;
@@ -113,12 +113,12 @@ class PurchasedItemsController extends BaseController
         if ($purchasedItem) {
             $bill = $purchasedItem->mainBill;
             $shippingStatus = \OlaHub\UserPortal\Models\PaymentShippingStatus::find($purchasedItem->shipping_status);
-            if ($this->getItemPolicy($purchasedItem,'refund') && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->refund_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
+            if ($this->getItemPolicy($purchasedItem, 'refund') && $this->setPayStatusData($bill) && $shippingStatus && $shippingStatus->refund_enabled && !$purchasedItem->is_canceled && !$purchasedItem->is_refund) {
                 $purchasedItem->is_refund = 1;
                 $purchasedItem->refund_date = date("Y-m-d");
                 $update = $purchasedItem->save();
 
-                if($update) {
+                if ($update) {
                     $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
                     $billingTracking->billing_item_id = $purchasedItem->id;
                     $billingTracking->billing_id = $purchasedItem->billing_id;
@@ -179,7 +179,7 @@ class PurchasedItemsController extends BaseController
         return false;
     }
 
-    private function getItemPolicy($purchasedItem ,$type)
+    private function getItemPolicy($purchasedItem, $type)
     {
         $policy = false;
         switch ($purchasedItem->item_type) {
@@ -190,7 +190,7 @@ class PurchasedItemsController extends BaseController
                 $item = \OlaHub\UserPortal\Models\DesignerItems::where("id", $purchasedItem->item_id)->first();
                 break;
         }
-        if($item){
+        if ($item) {
             $policy = $item->exchangePolicy;
             if ($policy) {
                 switch ($type) {
@@ -227,7 +227,7 @@ class PurchasedItemsController extends BaseController
             return response(['status' => false, 'msg' => 'rightBillingId', 'code' => 406, 'errorData' => []], 200);
         }
         $billing_id = Crypt::decrypt($this->requestData["billing_id"], false);
-        $billingItems = UserBillDetails::query()->where('billing_id',$billing_id)->where('is_rated','=',0)->get();
+        $billingItems = UserBillDetails::query()->where('billing_id', $billing_id)->where('is_rated', '=', 0)->get();
         if ($billingItems->count() > 0) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseCollection($billingItems, '\OlaHub\UserPortal\ResponseHandlers\BillingItemsResponseHandler');
             $return['status'] = TRUE;
@@ -236,7 +236,54 @@ class PurchasedItemsController extends BaseController
         }
 
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);
+    }
+    public function confirmOrder($id, $status)
+    {
 
+        $billing_id = Crypt::decrypt($id, false);
+
+        $order = UserBill::where('id', $billing_id)->first();
+
+        if ($order) {
+            $orderData = [
+                'billingnumber' => $order->billing_number,
+                'billingTotal' => $order->billing_total,
+                'payStatus' => $order->pay_status,
+
+                'expired' => true,
+            ];
+            if ($order->pay_status != 13)
+                return (['status' => true,  'code' => 200, 'data' => $orderData]);
+
+            $order->pay_status = $status == 0 ? 15 : 14;
+            $order->save();
+            $orderData = [
+                'billingnumber' => $order->billing_number,
+                'payStatus' => $order->pay_status,
+                'billingTotal' => $order->billing_total,
+
+            ];
+            return (['status' => true, 'msg' => 'confirmed', 'data' => $orderData, 'code' => 200]);
+        } else
+            return (['status' => false,  'code' => 204]);
+    }
+    public function getOrderData($id)
+    {
+        // $billing_id = Crypt::decrypt($id, false);
+        // $order = UserBill::where('id',2464)->first();
+        $orderData = [];
+        $order = UserBill::where('id', 2464)->first();
+        // dd($order->billing_total);
+        if ($order) {
+            $orderData = [
+                'billingnumber' => $order->billing_number,
+                'payStatus' => $order->pay_status,
+                'billingTotal' => $order->billing_total,
+
+            ];
+            return (['status' => true, 'msg' => 'confirmed', 'data' => $orderData, 'code' => 200]);
+        } else
+            return (['status' => false,  'code' => 204]);
     }
     public function trackingOrder($id){
         
