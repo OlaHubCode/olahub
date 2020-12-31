@@ -606,7 +606,6 @@ class OlaHubItemController extends BaseController
             $itemsTarget = "valueDesignerData";
             $itemsData = "itemsMainData";
         }
-
         $item = $model->newQuery()->where('item_slug', $slug)->first();
         if ($item->parent_item_id > 0) {
             $itemsIDs = [$item->parent_item_id];
@@ -614,16 +613,18 @@ class OlaHubItemController extends BaseController
             $itemsIDs = [$item->id];
         }
         $attributes = NULL;
+        $publishedItems = \OlaHub\UserPortal\Models\CatalogItem::whereIn('id', $itemsIDs)->orWhereIn('parent_item_id', $itemsIDs)->pluck('id')->toArray();
 
-        $attributes = \OlaHub\UserPortal\Models\Attribute::whereHas('valuesData', function ($values) use ($itemsIDs, $itemsTarget, $itemsData) {
-            $values->whereHas($itemsTarget, function ($q) use ($itemsIDs, $itemsData) {
-                $q->whereIn('parent_item_id', $itemsIDs);
+        $attributes = \OlaHub\UserPortal\Models\Attribute::whereHas('valuesData', function ($values) use ($publishedItems, $itemsTarget, $itemsData) {
+            $values->whereHas($itemsTarget, function ($q) use ($publishedItems, $itemsData) {
+                $q->whereIn('item_id', $publishedItems);
                 $q->whereHas($itemsData, function ($q2) {
+
                     $q2->where("is_published", "1");
                 });
             })->whereNotIn('product_attribute_id', $this->requestFilter['attributesParent']);
         })->groupBy('id')->get();
-        $return = \OlaHub\UserPortal\Models\Attribute::setOneProductReturnResponse($attributes, $itemsIDs, true, $itemsTarget);
+        $return = \OlaHub\UserPortal\Models\Attribute::setOneProductReturnResponse($attributes, $publishedItems, true, $itemsTarget);
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);

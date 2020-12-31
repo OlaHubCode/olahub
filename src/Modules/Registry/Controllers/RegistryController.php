@@ -71,7 +71,7 @@ class RegistryController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400], 200);
-            } elseif ($this->registry->status > 1) {
+            } elseif ($this->registry->status > 2) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400], 200);
