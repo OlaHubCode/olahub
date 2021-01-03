@@ -267,30 +267,14 @@ class PurchasedItemsController extends BaseController
         } else
             return (['status' => false,  'code' => 204]);
     }
-    public function getOrderData($id)
-    {
-        // $billing_id = Crypt::decrypt($id, false);
-        // $order = UserBill::where('id',2464)->first();
-        $orderData = [];
-        $order = UserBill::where('id', 2464)->first();
-        // dd($order->billing_total);
-        if ($order) {
-            $orderData = [
-                'billingnumber' => $order->billing_number,
-                'payStatus' => $order->pay_status,
-                'billingTotal' => $order->billing_total,
 
-            ];
-            return (['status' => true, 'msg' => 'confirmed', 'data' => $orderData, 'code' => 200]);
-        } else
-            return (['status' => false,  'code' => 204]);
-    }
-    public function trackingOrder($id){
-        
+    public function trackingOrder($id)
+    {
+
         $user = app('session')->get('tempID');
 
-        $order = UserBill::where('user_id',$user)->where("billing_number", "LIKE", "%" . $id . "%")->first();
-        if($order){
+        $order = UserBill::withoutGlobalScope("currntUser")->where("billing_number", "LIKE", "%" . $id . "%")->first();
+        if ($order) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($order, '\OlaHub\UserPortal\ResponseHandlers\TrackingResponseHandler');
             $return['status'] = TRUE;
             $return['msg'] = "getOrderSuccessfully";
