@@ -106,27 +106,29 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
 
     private function setBrandData()
     {
+        $brand = $this->parentData->brand;
+
+        $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $brand->id)
+            ->where('type', 1)->first();
         $brandData = $this->parentData->brand;
         $this->return["productBrand"] = 0;
         $this->return["productBrandName"] = null;
         $this->return["productBrandSlug"] = null;
         $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
-        $this->return["productOwnerFollowed"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
+        $this->return["productOwnerFollowed"] = isset($follow) ? true : false;
         if ($brandData) {
             $this->return["productBrand"] = isset($brandData->id) ? $brandData->id : NULL;
             $this->return["productBrandName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brandData, 'name');
             $this->return["productBrandSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brandData, 'store_slug', $this->return["productBrandName"]);
             $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brandData->image_ref);
-            $this->setFollowStatus($brandData);
+            $this->setFollowStatus($brandData->id);
         }
     }
 
     private function setFollowStatus($brand)
     {
-        $this->return["productOwnerFollowed"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
+        $follower =  \OlaHub\UserPortal\Models\Following::where("target_id", $brand)->where('type', 1)->count();
+        $this->return["productOwnerFollowers"] =   $follower ? $follower : 0;
     }
 
     private function setAddData()
