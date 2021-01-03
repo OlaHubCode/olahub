@@ -14,13 +14,13 @@ $router->group([
     $router->post('/', 'PurchasedItemsController@getUserPurchasedItems');
     $router->post('cancelation/{id:[0-9]+}', 'PurchasedItemsController@cancelPurshasedItem');
     $router->post('refund/{id:[0-9]+}', 'PurchasedItemsController@refundPurshasedItem');
-    $router->post('trackingOrder/{id}', 'PurchasedItemsController@trackingOrder');
     $router->post('confirmOrder/{id}/{status}', 'PurchasedItemsController@confirmOrder');
     $router->post('getOrderData/{id}', 'PurchasedItemsController@getOrderData');
-
+    
 });
 $router->group([
     'prefix' => basename(strtolower(dirname(__DIR__)))
 ], function () use ($router) {
+    $router->post('trackingOrder/{id}', 'PurchasedItemsController@trackingOrder');
     $router->post('getRatingItems', 'PurchasedItemsController@getNotRatingBillingItems');
 });
