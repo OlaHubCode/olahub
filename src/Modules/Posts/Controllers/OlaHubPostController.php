@@ -1012,13 +1012,19 @@ class OlaHubPostController extends BaseController
 
     public function getPostComments()
     {
+
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Posts", 'function_name' => "getPostComments"]);
 
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('post_id', $this->requestData['postId'])->first();
             if ($post) {
+                if(isset($this->requestData['count'])){
+                    $postComments = PostComments::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(4);
+            }else{
+
                 $postComments = PostComments::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(10);
+            }
                 if (isset($postComments)) {
                     $return["data"] = [];
                     foreach ($postComments as $comment) {
@@ -1077,7 +1083,7 @@ class OlaHubPostController extends BaseController
                             'canDelete' => $canDelete,
                             'canEditReply' => $canEditReply,
                             'canDeleteReply' => $canDeleteReply,
-                            'canReply' => $canDeleteReply,
+                            // 'canReply' => $canDeleteReply,
                             'comment' => $comment->comment,
                             'time' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($comment->created_at),
                             'user_info' => [
@@ -1092,6 +1098,7 @@ class OlaHubPostController extends BaseController
                         ];
                     }
                     $return["status"] = true;
+                    $return['lastPage'] = $postComments->lastPage();
                     $return["code"] = 200;
                     $log->setLogSessionData(['response' => $return]);
                     $log->saveLogSessionData();
