@@ -2,9 +2,9 @@
 
 namespace OlaHub\UserPortal\ResponseHandlers;
 
-use OlaHub\UserPortal\Models\CatalogItem;
-use League\Fractal;
 use Illuminate\Http\Request;
+use League\Fractal;
+use OlaHub\UserPortal\Models\CatalogItem;
 
 class ItemResponseHandler extends Fractal\TransformerAbstract
 {
@@ -41,15 +41,15 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
 
     private function setDefaultData()
     {
-        $itemName = isset($this->parentData->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->parentData, 'name') : NULL;
-        $itemDescription = isset($this->parentData->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->parentData, 'description') : NULL;
+        $itemName = isset($this->parentData->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->parentData, 'name') : null;
+        $itemDescription = isset($this->parentData->description) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($this->parentData, 'description') : null;
         $customizeData = isset($this->data->customize_type) ? unserialize($this->data->customize_type) : 0;
         $this->return = [
             "productType" => "store",
             "productID" => isset($this->data->id) ? $this->data->id : 0,
             "productShowLabel" => isset($this->data->show_discount_label) ? $this->data->show_discount_label : 1,
             "productSlug" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($this->parentData, 'item_slug', $itemName),
-            "productSKU" => isset($this->parentData->sku) ? $this->parentData->sku : NULL,
+            "productSKU" => isset($this->parentData->sku) ? $this->parentData->sku : null,
             "productName" => $itemName,
             "productDescription" => $itemDescription,
             "productIsCustomized" => $this->data->is_customized,
@@ -78,7 +78,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
                         $this->return['currentUserRate'] = $rate->rating;
                     }
                 }
-                $this->return['productRate'] = (int) ($productRate / $rater);
+                $this->return['productRate'] = (float) ($productRate / $rater);
                 $this->parentData->item_rate = $this->return['productRate'];
                 $this->parentData->save();
             }
@@ -91,6 +91,11 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
         $this->return['productPrice'] = $return['productPrice'];
         $this->return['productDiscountedPrice'] = $return['productDiscountedPrice'];
         $this->return['productHasDiscount'] = $return['productHasDiscount'];
+        $p1 = (float) str_replace(',', '', $return['productPrice']);
+        $p2 = (float) str_replace(',', '', $return['productDiscountedPrice']);
+        $this->return["productWillSavePerc"] = ceil((($p1 -$p2) / $p1) * 100);
+        $this->return["productWillSaveMount"] = \OlaHub\UserPortal\Helpers\CommonHelper::setPrice($p1-$p2, true);
+
     }
 
     private function setMerchantData()
@@ -98,7 +103,7 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
         $brand = $this->parentData->brand;
         $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $brand->id)
             ->where('type', 1)->first();
-        $this->return["productOwner"] = isset($brand->id) ? $brand->id : NULL;
+        $this->return["productOwner"] = isset($brand->id) ? $brand->id : null;
         $this->return["productOwnerName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brand, 'name');
         $this->return["productOwnerSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brand, 'store_slug', $this->return["productOwnerName"]);
         $this->return['followed'] = isset($follow) ? true : false;
@@ -106,27 +111,29 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
 
     private function setBrandData()
     {
+        $brand = $this->parentData->brand;
+
+        $follow = \OlaHub\UserPortal\Models\Following::where("user_id", app('session')->get('tempID'))->where('target_id', $brand->id)
+            ->where('type', 1)->first();
         $brandData = $this->parentData->brand;
         $this->return["productBrand"] = 0;
         $this->return["productBrandName"] = null;
         $this->return["productBrandSlug"] = null;
         $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false);
-        $this->return["productOwnerFollowed"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
+        $this->return["productOwnerFollowed"] = isset($follow) ? true : false;
         if ($brandData) {
-            $this->return["productBrand"] = isset($brandData->id) ? $brandData->id : NULL;
+            $this->return["productBrand"] = isset($brandData->id) ? $brandData->id : null;
             $this->return["productBrandName"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($brandData, 'name');
             $this->return["productBrandSlug"] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::checkSlug($brandData, 'store_slug', $this->return["productBrandName"]);
             $this->return['productBrandLogo'] = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($brandData->image_ref);
-            $this->setFollowStatus($brandData);
+            $this->setFollowStatus($brandData->id);
         }
     }
 
     private function setFollowStatus($brand)
     {
-        $this->return["productOwnerFollowed"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
-        $this->return["productOwnerFollowers"] = 0;
+        $follower =  \OlaHub\UserPortal\Models\Following::where("target_id", $brand)->where('type', 1)->count();
+        $this->return["productOwnerFollowers"] =   $follower ? $follower : 0;
     }
 
     private function setAddData()
@@ -178,29 +185,29 @@ class ItemResponseHandler extends Fractal\TransformerAbstract
     }
 
     /*private function setAttrData() {
-        $values = \OlaHub\UserPortal\Models\ItemAttrValue::where('parent_item_id', $this->parentData->id)->get();
-        $addedParnts = [];
-        $this->return['productAttributes'] = [];
-        foreach ($values as $itemValue) {
-            $value = $itemValue->valueMainData;
-            if (in_array($value->product_attribute_id, $addedParnts)) {
-                $this->return['productAttributes'][$value->product_attribute_id]['childsData'][] = [
-                    "value" => isset($value->id) ? $value->id : 0,
-                    "text" => isset($value->attribute_value) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($value, 'attribute_value') : NULL,
-                ];
-            } else {
-                $parent = $value->attributeMainData;
-                $this->return['productAttributes'][$value->product_attribute_id] = [
-                    "valueID" => isset($parent->id) ? $parent->id : 0,
-                    "valueName" => isset($parent->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($parent, 'name') : NULL,
-                ];
-                $this->return['productAttributes'][$value->product_attribute_id]['childsData'][] = [
-                    "value" => isset($value->id) ? $value->id : 0,
-                    "text" => isset($value->attribute_value) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($value, 'attribute_value') : NULL,
-                ];
-                $addedParnts[] = $value->product_attribute_id;
-            }
-        }
+    $values = \OlaHub\UserPortal\Models\ItemAttrValue::where('parent_item_id', $this->parentData->id)->get();
+    $addedParnts = [];
+    $this->return['productAttributes'] = [];
+    foreach ($values as $itemValue) {
+    $value = $itemValue->valueMainData;
+    if (in_array($value->product_attribute_id, $addedParnts)) {
+    $this->return['productAttributes'][$value->product_attribute_id]['childsData'][] = [
+    "value" => isset($value->id) ? $value->id : 0,
+    "text" => isset($value->attribute_value) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($value, 'attribute_value') : NULL,
+    ];
+    } else {
+    $parent = $value->attributeMainData;
+    $this->return['productAttributes'][$value->product_attribute_id] = [
+    "valueID" => isset($parent->id) ? $parent->id : 0,
+    "valueName" => isset($parent->name) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($parent, 'name') : NULL,
+    ];
+    $this->return['productAttributes'][$value->product_attribute_id]['childsData'][] = [
+    "value" => isset($value->id) ? $value->id : 0,
+    "text" => isset($value->attribute_value) ? \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($value, 'attribute_value') : NULL,
+    ];
+    $addedParnts[] = $value->product_attribute_id;
+    }
+    }
     }*/
 
     private function setItemSelectedAttrData()

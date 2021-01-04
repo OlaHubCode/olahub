@@ -218,22 +218,30 @@ class OlaHubItemController extends BaseController
         });
 
         $categoryModel->orWhere(function ($wherQ) use ($itemsIDs, $target) {
-            if ($target == "itemsMainData") {
-                $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
-                    $childQ->whereHas($target, function ($q) use ($itemsIDs) {
-                        $q->whereIn('id', $itemsIDs);
-                    });
-                });
-            } else {
-                $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
+            $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
+                $childQ->whereHas($target, function ($q) use ($itemsIDs) {
                     $q->whereIn('id', $itemsIDs);
                 });
-            }
+            });
+
+            // ----------
+            // if ($target == "itemsMainData") {
+            //     $wherQ->whereHas('childsData', function ($childQ) use ($itemsIDs, $target) {
+            //         $childQ->whereHas($target, function ($q) use ($itemsIDs) {
+            //             $q->whereIn('id', $itemsIDs);
+            //         });
+            //     });
+            // } else {
+            //     $wherQ->whereHas($target, function ($q) use ($itemsIDs) {
+            //         $q->whereIn('id', $itemsIDs);
+            //     });
+            // }
+            // --------
         });
 
         $categoryModel->groupBy('id');
         $categories = $categoryModel->get();
-        $categories = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs)["data"];
+        $categories = \OlaHub\UserPortal\Models\ItemCategory::setReturnResponse($categories, $itemsIDs, $target)["data"];
         $this->allItemsCategories = array_merge($this->allItemsCategories, $categories);
 
         // Items
@@ -598,7 +606,6 @@ class OlaHubItemController extends BaseController
             $itemsTarget = "valueDesignerData";
             $itemsData = "itemsMainData";
         }
-
         $item = $model->newQuery()->where('item_slug', $slug)->first();
         if ($item->parent_item_id > 0) {
             $itemsIDs = [$item->parent_item_id];
@@ -606,16 +613,18 @@ class OlaHubItemController extends BaseController
             $itemsIDs = [$item->id];
         }
         $attributes = NULL;
+        $publishedItems = \OlaHub\UserPortal\Models\CatalogItem::whereIn('id', $itemsIDs)->orWhereIn('parent_item_id', $itemsIDs)->pluck('id')->toArray();
 
-        $attributes = \OlaHub\UserPortal\Models\Attribute::whereHas('valuesData', function ($values) use ($itemsIDs, $itemsTarget, $itemsData) {
-            $values->whereHas($itemsTarget, function ($q) use ($itemsIDs, $itemsData) {
-                $q->whereIn('parent_item_id', $itemsIDs);
+        $attributes = \OlaHub\UserPortal\Models\Attribute::whereHas('valuesData', function ($values) use ($publishedItems, $itemsTarget, $itemsData) {
+            $values->whereHas($itemsTarget, function ($q) use ($publishedItems, $itemsData) {
+                $q->whereIn('item_id', $publishedItems);
                 $q->whereHas($itemsData, function ($q2) {
+
                     $q2->where("is_published", "1");
                 });
             })->whereNotIn('product_attribute_id', $this->requestFilter['attributesParent']);
         })->groupBy('id')->get();
-        $return = \OlaHub\UserPortal\Models\Attribute::setOneProductReturnResponse($attributes, $itemsIDs, true, $itemsTarget);
+        $return = \OlaHub\UserPortal\Models\Attribute::setOneProductReturnResponse($attributes, $publishedItems, true, $itemsTarget);
         $return['status'] = true;
         $return['code'] = 200;
         $log->setLogSessionData(['response' => $return]);

@@ -25,7 +25,8 @@ class ItemReviewsResponseHandler extends Fractal\TransformerAbstract {
             "reviewContent" => $this->data->review,
             "reviewUserImage" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl(false),
             "reviewForCurrent" => false,
-            "reviewDate" => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::convertStringToDate($this->data->created_at),
+            "reviewDate" =>\OlaHub\UserPortal\Helpers\OlaHubCommonHelper::timeElapsedString($this->data->created_at)
+            
         ];
         if($this->data->user_id == app('session')->get('tempID')){
             $this->return['reviewForCurrent'] = true;

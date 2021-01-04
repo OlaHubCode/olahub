@@ -47,7 +47,7 @@ class RegistryGiftController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
                 return response(['status' => false, 'msg' => 'NotAuthorizedToAddGift', 'code' => 400], 200);
-            } elseif ($registry->status != 1) {
+            } elseif ($registry->status > 2) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowedToAddGift', 'code' => 400]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
 
@@ -143,11 +143,10 @@ class RegistryGiftController extends BaseController
         if (isset($this->requestData['registryId']) && $this->requestData['registryId'] > 0) {
             $items = RegistryGiftModel::where('registry_id', $this->requestData['registryId'])->get();
             foreach ($items as $key => $item) {
-                if ($item->item_type == 'store'){
+                if ($item->item_type == 'store') {
                     $nitem = \OlaHub\UserPortal\Models\CatalogItem::withoutGlobalScope('country')->where('id', $item->item_id)->first();
                     $qty = @$nitem->quantityData()->first()->quantity;
-                }
-                else{
+                } else {
                     $nitem = \OlaHub\UserPortal\Models\DesignerItems::where('id', $item->item_id)->first();
                     $qty = $nitem->item_stock;
                 }

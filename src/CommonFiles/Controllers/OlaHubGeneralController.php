@@ -332,9 +332,15 @@ class OlaHubGeneralController extends BaseController
         if (!$page) {
             throw new NotAcceptableHttpException(404);
         }
+        if(app('session')->get('def_lang')->default_locale == 'en'){
+        $pageData = [
+            "content" => $page->content_text_en,
+        ];
+    }else{
         $pageData = [
             "content" => $page->content_text,
         ];
+    }
         $return['data'] = $pageData;
         $return['status'] = true;
         $return['code'] = 200;

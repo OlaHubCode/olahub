@@ -59,7 +59,7 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model
         return $this->hasMany('OlaHub\UserPortal\Models\DesignerItems', 'category_id');
     }
 
-    static function setReturnResponse($categories, $itemsIDs = false)
+    static function setReturnResponse($categories, $itemsIDs = false,$target='itemsMainData')
     {
         $return['data'] = [];
         foreach ($categories as $category) {
@@ -71,11 +71,11 @@ class ItemCategory extends \Illuminate\Database\Eloquent\Model
 
             $catData['childsData'] = [];
             if ($itemsIDs) {
-                $childs = $category->childsData()->whereHas('itemsMainData', function ($q) use ($itemsIDs) {
+                $childs = $category->childsData()->whereHas($target, function ($q) use ($itemsIDs) {
                     $q->whereIn('id', $itemsIDs);
                 })->get();
             } else {
-                $childs = $category->childsData()->has('itemsMainData')->whereHas('countryRelation', function ($q) {
+                $childs = $category->childsData()->has($target)->whereHas('countryRelation', function ($q) {
                     $q->where('country_id', app('session')->get('def_country')->id);
                 })->get();
             }

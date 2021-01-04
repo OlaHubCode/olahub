@@ -36,7 +36,7 @@ class Attribute extends Model
                         $q->whereIn('item_id', $itemsIDs);
                     }
                 })->whereNotIn('id', $otherAttrs)
-                ->groupBy('id')->get();
+                    ->groupBy('id')->get();
             } else {
                 $childs = $attribute->childsData()->has('itemsMainData')->groupBy('id')->get();
             }
@@ -67,7 +67,7 @@ class Attribute extends Model
             if ($itemsIDs) {
                 $childs = $attribute->valuesData()->whereHas($itemTarget, function ($q) use ($itemsIDs, $first) {
                     if ($first) {
-                        $q->whereIn('parent_item_id', $itemsIDs);
+                        $q->whereIn('item_id', $itemsIDs);
                     } else {
                         $q->whereIn('item_id', $itemsIDs);
                     }

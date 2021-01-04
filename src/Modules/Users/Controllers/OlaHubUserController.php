@@ -227,7 +227,7 @@ class OlaHubUserController extends BaseController
         $friends = \OlaHub\UserPortal\Models\Friends::where(function ($q) use ($userId) {
             $q->where('user_id', $userId);
             $q->orWhere('friend_id', $userId);
-        })->where("status", "2")->get();
+        })->where("status", "2")->paginate(10);
         if ($friends) {
             $return = [];
             foreach ($friends as $friend) {
@@ -245,9 +245,8 @@ class OlaHubUserController extends BaseController
                         'status' => $friend->user_id == app('session')->get('tempID') ? 'request' : "response"
                     ];
             }
-
             usort($return, array($this, "sortRequests"));
-            return response(['data' => $return, 'status' => true, 'msg' => 'success'], 200);
+            return response(['data' => $return, 'status' => true, 'lastPage' => $friends->lastPage(), 'msg' => 'success'], 200);
         }
         return response(['status' => false, 'msg' => 'failed'], 201);
     }
