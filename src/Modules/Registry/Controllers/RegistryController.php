@@ -64,6 +64,9 @@ class RegistryController extends BaseController
         $log->saveLog($userData->id, $this->requestData, ' update_Registry');
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['module_name' => "Registry", 'function_name' => "Update Registry"]);
         (new \OlaHub\UserPortal\Helpers\LogHelper)->setActionsData(["action_name" => "Start updating Registry"]);
+        $image = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryImage'], "registries/" . $this->registry->id);
+
+        $video = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryVideo'], "registries/" . $this->registry->id);
 
         if (RegistryModel::validateRegistryId($this->requestData)) {
             $this->registry = RegistryModel::where('id', $this->requestData['registryId'])->first();
@@ -71,7 +74,7 @@ class RegistryController extends BaseController
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'NotAuthorizedToUpdateRegistry', 'code' => 400], 200);
-            } elseif ($this->registry->status > 2) {
+            } elseif ($this->registry->status > 2 && !$image && !$video) {
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->setLogSessionData(['response' => ['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400]]);
                 (new \OlaHub\UserPortal\Helpers\LogHelper)->saveLogSessionData();
                 return response(['status' => false, 'msg' => 'NotAllowedToUpdateCompletedRegistry', 'code' => 400], 200);
@@ -81,12 +84,9 @@ class RegistryController extends BaseController
                     $this->registry->{\OlaHub\UserPortal\Helpers\CommonHelper::getColumnName(RegistryModel::$columnsMaping, $input)} = $value;
                 }
             }
-
-            $image = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryImage'], "registries/" . $this->registry->id);
             if ($image) {
                 $this->registry->image = $image;
             }
-            $video = @\OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($this->requestData['registryVideo'], "registries/" . $this->registry->id);
             if ($video) {
                 $this->registry->video = $video;
             }
