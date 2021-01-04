@@ -1018,9 +1018,10 @@ class OlaHubPostController extends BaseController
         if (isset($this->requestData['postId']) && $this->requestData['postId']) {
             $post = Post::where('post_id', $this->requestData['postId'])->first();
             if ($post) {
-                if (isset($post->comments)) {
+                $postComments = PostComments::where('post_id', $this->requestData['postId'])->orderBy('created_at', 'desc')->paginate(10);
+                if (isset($postComments)) {
                     $return["data"] = [];
-                    foreach ($post->comments as $comment) {
+                    foreach ($postComments as $comment) {
                         $userData = $comment->author;
                         $repliesData = [];
                         if (isset($comment->replies)) {
@@ -1040,7 +1041,6 @@ class OlaHubPostController extends BaseController
                                 ];
                             }
                         }
-
                         $canEdit = false;
                         $canDelete = false;
                         $canEditReply = false;
