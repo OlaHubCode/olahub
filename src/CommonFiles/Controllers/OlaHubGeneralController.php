@@ -9,6 +9,7 @@ use Symfony\Component\HttpKernel\Exception\NotAcceptableHttpException;
 use \OlaHub\UserPortal\Models\Post;
 use OlaHub\UserPortal\Models\Occasion;
 use Irazasyed\LaravelGAMP\Facades\GAMP;
+use Illuminate\Support\Facades\Crypt;
 
 
 class OlaHubGeneralController extends BaseController

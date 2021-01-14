@@ -130,7 +130,42 @@ class OlaHubGuestController extends BaseController
     /*
      * Login Functions
      */
+    public function analitics()
+    {
+        $analiticsData = new  \OlaHub\UserPortal\Models\AnaliticsData;
+        if (env('REQUEST_TYPE') != 'postMan') {
+            $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
+        }
+        $utm = explode('&', $this->requestData["utmData"]);
+        foreach ($utm as $url) {
+            $utm1 = explode('=', $url);
+            if ($utm1[0] == 'utm_source')
+                $analiticsData->utm_source = $utm1[1];
+            if ($utm1[0] == 'utm_medium')
+                $analiticsData->utm_medium = $utm1[1];
+            if ($utm1[0] == 'utm_campaign')
 
+                $analiticsData->utm_campaign = $utm1[1];
+        }
+        $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
+        $ipInfo = \OlaHub\UserPortal\Helpers\UserHelper::getIPInfo();
+        $analiticsData->device_id = $this->requestData["deviceID"];
+        $analiticsData->device_platform = $this->requestData["platform"];
+        $analiticsData->device_model = $this->requestData["deviceModel"];
+        $analiticsData->url = $this->requestData["url"];
+        $analiticsData->ip = $ipInfo->ip;
+        $analiticsData->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
+        $analiticsData->geolocation = $ipInfo->latitude . "," . $ipInfo->longitude;
+
+        $analiticsData->save();
+
+        //  return response(['status' => true, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
+
+        $return = ['status' => true, 'detect' => true, 'code' => 200];
+
+
+        return response($return, 200);
+    }
     function login()
     {
         $log = new \OlaHub\UserPortal\Helpers\Logs();
@@ -145,9 +180,9 @@ class OlaHubGuestController extends BaseController
         $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $country_id = @$this->requestData["userCountry"];
         $fromCart = @$this->requestData["fromCart"];
-        $emailPhone = !empty($this->requestData["cartEmail"]) ? 
-            Crypt::decrypt($this->requestData["cartEmail"], false) : 
-            $this->requestData["userEmail"] ;
+        $emailPhone = !empty($this->requestData["cartEmail"]) ?
+            Crypt::decrypt($this->requestData["cartEmail"], false) :
+            $this->requestData["userEmail"];
         $type = $this->userHelper->checkEmailOrPhoneNumber($emailPhone);
         $userData = NULL;
         // check if email or phone with ip country
@@ -623,17 +658,17 @@ class OlaHubGuestController extends BaseController
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                    
+
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "activationCodePhoneEmail", 'code' => 200], 200);
                 } else if ($userData->mobile_no) {
                     if ($lastActivation > 0)
                         return response(['status' => false,  'timeLeft' => true]);
-                        
+
                     (new \OlaHub\UserPortal\Helpers\SmsHelper)->sendAccountActivationCode($userData, $userData->activation_code);
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                    
+
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodePhone", 'code' => 200], 200);
                 } else if ($userData->email) {
                     if ($lastActivation > 0)
@@ -643,7 +678,7 @@ class OlaHubGuestController extends BaseController
                     $log->setLogSessionData(['response' => ['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200]]);
                     $log->saveLogSessionData();
 
-                   
+
                     return response(['status' => true, 'logged' => 'new', 'token' => false, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
                 }
             }

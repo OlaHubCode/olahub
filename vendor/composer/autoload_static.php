@@ -4,8 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
-
+class ComposerStaticInite3e3cb41662964f296265902fa3a30ce
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -13,6 +12,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
         'bd9634f2d41831496de0d3dfe4c94881' => __DIR__ . '/..' . '/symfony/polyfill-php56/bootstrap.php',
         '72579e7bd17821bb1321b87411366eae' => __DIR__ . '/..' . '/illuminate/support/helpers.php',
+        'e69f7f6ee287b969198c3c9d6777bd38' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/bootstrap.php',
         '25072dd6e2470089de65ae7bf11d3109' => __DIR__ . '/..' . '/symfony/polyfill-php72/bootstrap.php',
         '1d1b89d124cc9cb8219922c9d5569199' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest.php',
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
@@ -47,6 +47,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
             'Symfony\\Polyfill\\Php70\\' => 23,
             'Symfony\\Polyfill\\Php56\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
+            'Symfony\\Polyfill\\Intl\\Normalizer\\' => 33,
             'Symfony\\Polyfill\\Intl\\Idn\\' => 26,
             'Symfony\\Polyfill\\Iconv\\' => 23,
             'Symfony\\Polyfill\\Ctype\\' => 23,
@@ -93,6 +94,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
             'Illuminate\\Pagination\\' => 22,
             'Illuminate\\Mail\\' => 16,
             'Illuminate\\Http\\' => 16,
+            'Illuminate\\Hashing\\' => 19,
             'Illuminate\\Filesystem\\' => 22,
             'Illuminate\\Events\\' => 18,
             'Illuminate\\Encryption\\' => 22,
@@ -178,6 +180,10 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
+        'Symfony\\Polyfill\\Intl\\Normalizer\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer',
         ),
         'Symfony\\Polyfill\\Intl\\Idn\\' => 
         array (
@@ -314,6 +320,10 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'Illuminate\\Http\\' => 
         array (
             0 => __DIR__ . '/..' . '/illuminate/http',
+        ),
+        'Illuminate\\Hashing\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/illuminate/hashing',
         ),
         'Illuminate\\Filesystem\\' => 
         array (
@@ -538,6 +548,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'Hamcrest\\Util' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Util.php',
         'Hamcrest\\Xml\\HasXPath' => __DIR__ . '/..' . '/hamcrest/hamcrest-php/hamcrest/Hamcrest/Xml/HasXPath.php',
         'Laravel\\Lumen\\Console\\Commands\\createModuleCommand' => __DIR__ . '/../..' . '/src/Console/Commands/createModuleCommand.php',
+        'Normalizer' => __DIR__ . '/..' . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
         'OlaHub\\Exceptions\\Handler' => __DIR__ . '/../..' . '/src/Exceptions/Handler.php',
         'OlaHub\\Helpers\\DTemplatesHelper' => __DIR__ . '/../..' . '/src/Console/Commands/templatesData/Utilities/DTemplatesHelper.php',
         'OlaHub\\Models\\AdSlots' => __DIR__ . '/../..' . '/src/Modules/Announcement/Models/AdSlots.php',
@@ -704,6 +715,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'OlaHub\\UserPortal\\Models\\StorePickups' => __DIR__ . '/../..' . '/src/Modules/Items/Models/StorePickups.php',
         'OlaHub\\UserPortal\\Models\\UserBill' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/Models/UserBill.php',
         'OlaHub\\UserPortal\\Models\\UserBillDetails' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/Models/UserBillDetails.php',
+        'OlaHub\\UserPortal\\Models\\UserBillTracking' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/Models/UserBillTracking.php',
         'OlaHub\\UserPortal\\Models\\UserLoginsModel' => __DIR__ . '/../..' . '/src/Modules/Users/Models/UserLoginsModel.php',
         'OlaHub\\UserPortal\\Models\\UserModel' => __DIR__ . '/../..' . '/src/Modules/Users/Models/UserModel.php',
         'OlaHub\\UserPortal\\Models\\UserMongo' => __DIR__ . '/../..' . '/src/Modules/Users/Models/UserMongo.php',
@@ -777,6 +789,7 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
         'OlaHub\\UserPortal\\ResponseHandlers\\RegistryGiftResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Registry/ResponseHandler/RegistryGiftResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\RegistryParticipantResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Registry/ResponseHandler/RegistryParticipantResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\RegistryResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Registry/ResponseHandler/RegistryResponseHandler.php',
+        'OlaHub\\UserPortal\\ResponseHandlers\\TrackingResponseHandler' => __DIR__ . '/../..' . '/src/Modules/MyPurshasedItems/ResponseHandler/TrackingResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\UpcomingEventsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Profile/ResponseHandler/UpcomingEventsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\UserBalanceDetailsResponseHandler' => __DIR__ . '/../..' . '/src/Modules/Users/ResponseHandler/UserBalanceDetailsResponseHandler.php',
         'OlaHub\\UserPortal\\ResponseHandlers\\UserSearchResponseHandler' => __DIR__ . '/../..' . '/src/CommonFiles/ResponseHandler/UserSearchResponseHandler.php',
@@ -1330,11 +1343,11 @@ class ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit85d95f7e1cd48c65b8e2b871b8f433ed::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInite3e3cb41662964f296265902fa3a30ce::$classMap;
 
         }, null, ClassLoader::class);
     }

@@ -38,6 +38,7 @@ $router->post('resendCode', 'OlaHubGuestController@resendActivationCode');
 $router->post('checkSecureActive', 'OlaHubGuestController@checkSecureActive');
 $router->post('resendSecureCode', 'OlaHubGuestController@resendSecureCode');
 $router->post('login', 'OlaHubGuestController@login');
+$router->post('analitics', 'OlaHubGuestController@analitics');
 $router->post('loginFacebook', 'OlaHubGuestController@loginWithFacebook');
 $router->post('appleBack', 'OlaHubGuestController@appleBack');
 $router->post('loginApple', 'OlaHubGuestController@loginWithApple');
