@@ -128,7 +128,7 @@ class OlaHubGuestController extends BaseController
     }
 
     /*
-     * Login Functions
+     * analitics Functions
      */
     public function analitics()
     {
@@ -136,19 +136,28 @@ class OlaHubGuestController extends BaseController
         if (env('REQUEST_TYPE') != 'postMan') {
             $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
         }
-        $utm = explode('&', $this->requestData["utmData"]);
-        foreach ($utm as $url) {
-            $utm1 = explode('=', $url);
-            if ($utm1[0] == 'utm_source')
-                $analiticsData->utm_source = $utm1[1];
-            if ($utm1[0] == 'utm_medium')
-                $analiticsData->utm_medium = $utm1[1];
-            if ($utm1[0] == 'utm_campaign')
+        if(isset($this->requestData["utmData"]) && !empty($this->requestData["utmData"])){
 
+            $utm = explode('&', $this->requestData["utmData"]);
+            foreach ($utm as $url) {
+                $utm1 = explode('=', $url);
+                if ($utm1[0] == 'utm_source')
+                $analiticsData->utm_source = $utm1[1];
+                if ($utm1[0] == 'utm_medium')
+                $analiticsData->utm_medium = $utm1[1];
+                if ($utm1[0] == 'utm_campaign')
+                
                 $analiticsData->utm_campaign = $utm1[1];
+            }
         }
-        $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
+            $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $ipInfo = \OlaHub\UserPortal\Helpers\UserHelper::getIPInfo();
+        $cheackId=\OlaHub\UserPortal\Models\UserLoginsModel::where('device_id',$this->requestData["deviceID"])->orderby('created_at','desc')->first();
+        if($cheackId){
+          $analiticsData->is_new=0;
+        }else{
+            $analiticsData->is_new=1;
+        }
         $analiticsData->device_id = $this->requestData["deviceID"];
         $analiticsData->device_platform = $this->requestData["platform"];
         $analiticsData->device_model = $this->requestData["deviceModel"];
@@ -156,11 +165,7 @@ class OlaHubGuestController extends BaseController
         $analiticsData->ip = $ipInfo->ip;
         $analiticsData->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
         $analiticsData->geolocation = $ipInfo->latitude . "," . $ipInfo->longitude;
-
         $analiticsData->save();
-
-        //  return response(['status' => true, 'msg' => "apiActivationCodeEmail", 'code' => 200], 200);
-
         $return = ['status' => true, 'detect' => true, 'code' => 200];
 
 
