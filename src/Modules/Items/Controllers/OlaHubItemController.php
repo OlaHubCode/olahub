@@ -492,6 +492,7 @@ class OlaHubItemController extends BaseController
     }
     public function getOneItem($slug)
     {
+        $slug = urldecode($slug);
         $log = new \OlaHub\UserPortal\Helpers\LogHelper();
         $log->setLogSessionData(['module_name' => "Items", 'function_name' => "getOneItem"]);
         $this->force = true;
