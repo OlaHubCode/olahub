@@ -27,13 +27,12 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         parent::boot();
     }
 
-    static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL, $celebration = NULL)
+    static function getShippingFees($countryID, $defaultCountry = NULL, $cart = NULL, $celebration = NULL, $cityID = null)
     {
-        $promoSave = CountriesShipping::checkPromoCode($cart);
-        $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($defaultCountry);
-        $currency = $country->currencyData;
-        $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
 
+        $promoSave = CountriesShipping::checkPromoCode($cart);
+
+        $cityIsMust = false;
         $shoppingItems = $cart->cartDetails()->get();
         $chkItems = \OlaHub\UserPortal\Models\CartItems::with('itemsData')->where('shopping_cart_id', $cart->id)->get()->toArray();
         $checkVoucherItems = \OlaHub\UserPortal\Models\CartItems::checkIfItemsNotVoucher($chkItems);
@@ -56,6 +55,10 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                     $brand = \OlaHub\UserPortal\Models\Designer::find($item->merchant_id);
                 else
                     $brand = \OlaHub\UserPortal\Models\Merchant::withoutGlobalScope('country')->find($item->merchant_id);
+                $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($brand->country_id);
+                $currency = $country->currencyData;
+                $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
+
                 $shipping = CountriesShipping::join('countries', 'countries_shipping_fees.country_from', 'countries.id')
                     ->where("country_from", $brand->country_id)
                     ->where("country_to", $countryID)
@@ -69,6 +72,15 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                         ->first();
                 }
                 $countryName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($shipping, 'name');
+
+                if ($brand->country_id == $countryID && $shipping && $brand->country_id != 0) {
+
+                    $cityShipping = ShippingCities::where("country_id", $countryID)->where("id", $cityID)->first();
+                    $shipping = @$cityShipping->total_shipping > 0 ? $cityShipping : $shipping;
+                    $cityIsMust = true;
+                    $cityName = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::returnCurrentLangField($cityShipping, 'name');
+                }
+
                 $key = array_search($countryName, array_column($shippingFees, 'country'));
                 if ($key == false && gettype($key) == 'boolean') {
                     $amount = CurrnciesExchange::getCurrncy("USD", $currency->code, @$shipping->total_shipping);
@@ -84,18 +96,23 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                         else
                             $amount = $debt;
                     }
+                    $needCity = "depend on shipping address";
+                    if ((app('session')->get('def_lang')->default_locale == 'ar'))
+                        $needCity = "سسسسسسسسسسسسسس";
+                    $shippingFees[] = array('country' => $countryName, 'amount' => ($cityIsMust && !isset($cityName)) ? $needCity : number_format($amount, 2) . " " . $transCur, 'city' => isset($cityName) ? $cityName : "");
+                    if (($cityIsMust && $cityName) || !$cityIsMust)
+                        $shippingFeesTotal += $amount;
 
-                    $shippingFees[] = array('country' => $countryName, 'amount' => number_format($amount, 2) . " " . $transCur);
-                    $shippingFeesTotal += $amount;
                     $shippingSavings[] = array(
                         'amount' => number_format($amount, 2),
                         'currency' => $currency->toArray(),
                         'country' => json_decode(@$shipping->name)
+
                     );
                 }
             }
             return array(
-                'total' => $shippingFeesTotal,
+                'total' => ($cityIsMust && !$cityName) ? "needCity" : $shippingFeesTotal,
                 'shipping' => $shippingFees,
                 'saving' => $shippingSavings
             );

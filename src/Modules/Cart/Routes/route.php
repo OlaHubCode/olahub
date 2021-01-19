@@ -19,6 +19,7 @@ $router->group([
     $router->post('/gift_details', 'OlaHubCartController@getDefaultCartGiftDetails');
     $router->post('/gift_cancel', 'OlaHubCartController@cancelDefaultCartToBeGift');
     $router->post('/changeCountry/{id:[0-9]+}', 'OlaHubCartController@setNewCountryForDefaultCart');
+    $router->post('/changeCity/{id:[0-9]+}', 'OlaHubCartController@setNewCityForDefaultCart');
     $router->post('add/{itemType:\bstore|designer\b}/{type:\bdefault|event|celebration\b}', 'OlaHubCartController@newCartItem');
     $router->put('update/{itemType:\bstore|designer\b}/{type:\bdefault|event|celebration\b}', 'OlaHubCartController@newCartItem');
     $router->delete('remove/{type:\bdefault|event|celebration\b}/{itemType:\bstore|designer\b}', 'OlaHubCartController@removeCartItem');

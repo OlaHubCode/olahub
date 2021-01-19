@@ -40,10 +40,12 @@ class CartTotalsResponseHandler extends Fractal\TransformerAbstract
         $userVoucher += $userReedem;
 
         $countryTo = $this->data->shipped_to ? $this->data->shipped_to : $this->data->country_id;
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $this->data->country_id, $this->data);
+        $cityTo = $this->data->city_id;
+
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $this->data->country_id, $this->data, null, $cityTo);
 
         $cashOnDeliver = TRUE ? 0 : 3;
-        $total = (float) $cartSubTotal + $shippingFees['total'] + $cashOnDeliver - $this->promoCodeSave;
+        $total = (float) $cartSubTotal + ($shippingFees['total'] != "needCity" ? $shippingFees['total'] : 0) + $cashOnDeliver - $this->promoCodeSave;
 
         $this->return[] = ['label' => 'subtotal', 'value' => \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setPrice($cartSubTotal), 'className' => "subtotal"];
         $this->return[] = ['label' => 'shippingFees', 'value' => $shippingFees['shipping'], 'className' => "shippingFees"];

@@ -175,6 +175,8 @@ class Cart extends Model
     {
         $return = 0;
         $country = $cart->shipped_to ? $cart->shipped_to : $cart->country_id;
+        $cityTo = $cart->city_id ;
+          
         $addedCountries = [];
         $designerItems = CartItems::withoutGlobalScope('countryUser')->where('shopping_cart_id', $cart->id)->get();
         foreach ($designerItems as $item) {
@@ -182,7 +184,7 @@ class Cart extends Model
                 $designer = Designer::find($item->merchant_id);
                 if ($designer && !in_array($designer->country_id, $addedCountries) && $country != $designer->country_id) {
                     $designerCountry = $designer->country_id;
-                    $shippingFees = CountriesShipping::getShippingFees($designerCountry, $country);
+                    $shippingFees = CountriesShipping::getShippingFees($designerCountry, $country,null,null,$cityTo);
                     $return += $shippingFees;
                     $item->shipping_fees = $shippingFees;
                     $item->save();

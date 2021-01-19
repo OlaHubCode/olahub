@@ -93,6 +93,21 @@ class OlaHubCartController extends BaseController
         $logHelper->setLog($this->cart, $return, 'getListCart', $this->userAgent);
         return response($return, 200);
     }
+    public function setNewCityForDefaultCart($country)
+    {
+        $type = "default";
+        $checkPermission = $this->checkActionPermission($type);
+        if (isset($checkPermission['status']) && !$checkPermission['status']) {
+            return response($checkPermission, 200);
+        }
+        $this->checkCart($type);
+        $this->cart->city_id = $country;
+        $this->cart->save();
+        $return["status"] = true;
+        $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
+        $logHelper->setLog($this->cart, $return, 'getListCart', $this->userAgent);
+        return response($return, 200);
+    }
 
     public function setDefaultCartToBeGift($type = "default")
     {
@@ -381,12 +396,15 @@ class OlaHubCartController extends BaseController
             $this->cart->shipped_to = null;
             $this->cart->for_friend = null;
             $this->cart->gift_date = null;
+            $this->cart->city_id = 0;
+
             $this->cart->save();
         }
         $countryData = \OlaHub\UserPortal\Models\Country::where('two_letter_iso_code', $this->countryId)->first();
         $countryTo = $this->celebration ? $this->celebration->country_id : ($this->cart->shipped_to ? $this->cart->shipped_to : $countryData->id);
+
         $defaultCountry = $this->celebration ? $this->celebration->country_id : $countryData->id;
-        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart);
+        $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, null, null);
         $shippingFeesCelebration = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($countryTo, $defaultCountry, $this->cart, $this->celebration);
         $this->cart->shipment_fees = $shippingFees['total'];
         $this->cart->shipment_details = serialize($shippingFeesCelebration['saving']);

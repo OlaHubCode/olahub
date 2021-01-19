@@ -171,7 +171,7 @@ class OlaHubPaymentsMainController extends BaseController
             if ($this->promoCodeName == 'June2020') {
                 $this->shippingFees = 0;
             } else {
-                $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration);
+                $shippingFees = \OlaHub\UserPortal\Models\CountriesShipping::getShippingFees($this->cart->country_id, $this->cart->country_id, $this->cart, $this->celebration, $this->cart->city_id);
                 $this->shippingFees = $shippingFees['total'];
             }
 
@@ -313,7 +313,7 @@ class OlaHubPaymentsMainController extends BaseController
                     $billingDetails->merchant_commision_rate = isset($countryCategory['commission_percentage']) ? $countryCategory['commission_percentage'] : 0;
                     $billingDetails->merchant_commision = $billingDetails['merchant_commision_rate'] > 0 ? $price * $this->cartItem->quantity * ($countryCategory['commission_percentage'] / 100) : 0;
                     $save = $billingDetails->save();
-                    
+
                     break;
                 case "designer":
                     $oneItem = $this->cartItem->itemsDesignerData;
@@ -352,13 +352,12 @@ class OlaHubPaymentsMainController extends BaseController
                     $save = $billingDetails->save();
                     break;
             }
-            if($save){
+            if ($save) {
                 $billingTracking = new \OlaHub\UserPortal\Models\UserBillTracking;
                 $billingTracking->billing_item_id = $billingDetails->id;
                 $billingTracking->billing_id = $billingDetails->billing_id;
                 $billingTracking->shipping_status = 1;
                 $billingTracking->save();
-
             }
         }
         $this->billingDetails = $this->billing->billDetails;

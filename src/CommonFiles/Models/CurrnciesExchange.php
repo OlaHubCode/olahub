@@ -26,6 +26,7 @@ class CurrnciesExchange extends \Illuminate\Database\Eloquent\Model {
     
     static function getCurrncy($from, $to, $amount){
         $return = $amount;
+        // dd($from," " ,$to);
         $currnecyExchange = CurrnciesExchange::where("currency_from", $from)
                 ->where("currency_to", $to)
                 ->first();
