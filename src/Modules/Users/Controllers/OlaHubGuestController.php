@@ -136,19 +136,14 @@ class OlaHubGuestController extends BaseController
         if (env('REQUEST_TYPE') != 'postMan') {
             $this->requestData = (array) json_decode(Crypt::decrypt($this->requestData, false));
         }
-        if(isset($this->requestData["utmData"]) && !empty($this->requestData["utmData"])){
-
-            $utm = explode('&', $this->requestData["utmData"]);
-            foreach ($utm as $url) {
-                $utm1 = explode('=', $url);
-                if ($utm1[0] == 'utm_source')
-                $analiticsData->utm_source = $utm1[1];
-                if ($utm1[0] == 'utm_medium')
-                $analiticsData->utm_medium = $utm1[1];
-                if ($utm1[0] == 'utm_campaign')
-                
-                $analiticsData->utm_campaign = $utm1[1];
-            }
+        if(isset($this->requestData["Source"]) && !empty($this->requestData["Source"])){
+            $analiticsData->utm_source = $this->requestData["Source"];
+        }
+        if(isset($this->requestData["Medium"]) && !empty($this->requestData["Medium"])){
+            $analiticsData->utm_medium = $this->requestData["Medium"];
+        }
+        if(isset($this->requestData["Campain"]) && !empty($this->requestData["Campain"])){
+            $analiticsData->utm_campaign = $this->requestData["Campain"];
         }
             $this->requestData["deviceID"] = empty($this->requestData['deviceID']) ? $this->userHelper->getDeviceID() : $this->requestData["deviceID"];
         $ipInfo = \OlaHub\UserPortal\Helpers\UserHelper::getIPInfo();
