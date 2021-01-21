@@ -36,7 +36,10 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
         $shoppingItems = $cart->cartDetails()->get();
         $chkItems = \OlaHub\UserPortal\Models\CartItems::with('itemsData')->where('shopping_cart_id', $cart->id)->get()->toArray();
         $checkVoucherItems = \OlaHub\UserPortal\Models\CartItems::checkIfItemsNotVoucher($chkItems);
+        $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($countryID);
+        $currency = $country->currencyData;
 
+        $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
         if ($checkVoucherItems || $promoSave) {
             return array(
                 'total' => 0,
@@ -57,6 +60,7 @@ class CountriesShipping extends \Illuminate\Database\Eloquent\Model
                     $brand = \OlaHub\UserPortal\Models\Merchant::withoutGlobalScope('country')->find($item->merchant_id);
                 $country = \OlaHub\UserPortal\Models\Country::withoutGlobalScope('countrySupported')->find($brand->country_id);
                 $currency = $country->currencyData;
+
                 $transCur = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::getTranslatedCurrency($currency);
 
                 $shipping = CountriesShipping::join('countries', 'countries_shipping_fees.country_from', 'countries.id')
