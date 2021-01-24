@@ -159,6 +159,7 @@ class OlaHubGuestController extends BaseController
         $analiticsData->url = $this->requestData["url"];
         $analiticsData->ip = $ipInfo->ip;
         $analiticsData->location = $ipInfo->country_name . ", " . $ipInfo->region_name . ", " . $ipInfo->city;
+        $analiticsData->country = isset($ipInfo->country_name)?$ipInfo->country_name:"jordan";
         $analiticsData->geolocation = $ipInfo->latitude . "," . $ipInfo->longitude;
         $analiticsData->save();
         $return = ['status' => true, 'detect' => true, 'code' => 200];
