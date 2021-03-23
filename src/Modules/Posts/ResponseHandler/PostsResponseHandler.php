@@ -3,6 +3,7 @@
 namespace OlaHub\UserPortal\ResponseHandlers;
 
 use OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\PostMedia;
 use OlaHub\UserPortal\Models\PostReplies;
 use League\Fractal;
 
@@ -26,7 +27,6 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
         $this->setVoteData();
         $this->reportedBefore();
         $this->countComment();
-
         return $this->return;
     }
 
@@ -110,15 +110,16 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function setPostImg()
     {
         $finalPath = NULL;
-        if (!empty($this->data->post_images)) {
-            $imgs = explode(",", $this->data->post_images);
-            $path = [];
-            foreach ($imgs as $img) {
-                $imagePath = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($img);
-                array_push($path, $imagePath);
+            $images = PostMedia::where('post_id',$this->data->id)->get();
+            if($images){
+                $path = [];
+                foreach ($images as $img) {
+                    $imagePath = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($img);
+                    array_push($path, $imagePath);
+                }
+                $finalPath = $path;
             }
-            $finalPath = $path;
-        }
+
         $this->return['post_img'] = $finalPath;
     }
     private function setPostImgLinks()
@@ -138,8 +139,17 @@ class PostsResponseHandler extends Fractal\TransformerAbstract
     private function setPostVideo()
     {
         $finalPath = NULL;
-        if (!empty($this->data->post_videos)) {
-            $videos = explode(",", $this->data->post_videos);
+        // if (!empty($this->data->post_videos)) {
+        //     $videos = explode(",", $this->data->post_videos);
+        //     $path = [];
+        //     foreach ($videos as $video) {
+        //         $imagePath = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($video);
+        //         array_push($path, $imagePath);
+        //     }
+        //     $finalPath = $path;
+        // }
+        $videos = PostMedia::where('post_id',$this->data->id)->get();
+        if($videos){
             $path = [];
             foreach ($videos as $video) {
                 $imagePath = \OlaHub\UserPortal\Helpers\OlaHubCommonHelper::setContentUrl($video);

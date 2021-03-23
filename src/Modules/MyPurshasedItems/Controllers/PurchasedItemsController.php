@@ -274,6 +274,7 @@ class PurchasedItemsController extends BaseController
         $user = app('session')->get('tempID');
 
         $order = UserBill::withoutGlobalScope("currntUser")->where("billing_number", "LIKE", "%" . $id . "%")->first();
+
         if ($order) {
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($order, '\OlaHub\UserPortal\ResponseHandlers\TrackingResponseHandler');
             $return['status'] = TRUE;
@@ -283,6 +284,7 @@ class PurchasedItemsController extends BaseController
             $logHelper->setLog($this->requestData, $return, 'trackingOrder', $this->userAgent);
             return response($return, 200);
         }
+
         $logHelper = new \OlaHub\UserPortal\Helpers\LogHelper;
         $logHelper->setLog($this->requestData, "No data found", 'trackingOrder', $this->userAgent);
         return response(['status' => false, 'msg' => 'NoData', 'code' => 204], 200);

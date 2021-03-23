@@ -6,6 +6,7 @@ use Laravel\Lumen\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use OlaHub\UserPortal\Models\groups;
 use OlaHub\UserPortal\Models\Post;
+use OlaHub\UserPortal\Models\PostMedia;
 use OlaHub\UserPortal\Models\PostComments;
 use OlaHub\UserPortal\Models\PostReplies;
 use OlaHub\UserPortal\Models\PostShares;
@@ -511,7 +512,9 @@ class OlaHubPostController extends BaseController
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
             $post->privacy = isset($this->requestData['privacy']) ? json_encode($this->requestData['privacy']) : 2;
             $post->friend_id = isset($this->requestData['friend']) ? $this->requestData['friend'] : NULL;
-            $post->prev_link_data = isset($this->requestData['linkPrevData']) && $this->requestData['linkPrevData'] ? serialize($this->requestData['linkPrevData']) : NULL;
+            // $post->prev_link_data = isset($this->requestData['linkPrevData']) && $this->requestData['linkPrevData'] ? serialize($this->requestData['linkPrevData']) : NULL;
+            // obeidat add
+            $post->vote_start_date = 
             $groupData = NULL;
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $groupData = \OlaHub\UserPortal\Models\groups::where('id', $this->requestData["group"])->first();
@@ -540,30 +543,6 @@ class OlaHubPostController extends BaseController
                 $post->is_approve = 1;
             }
 
-            if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
-                $postImage = [];
-                foreach ($this->requestData['post_file'] as $image) {
-                    if (isset($this->requestData['group']) && $this->requestData['group']) {
-                        $file = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($image, 'posts/' . $this->requestData['group']);
-                    } else {
-                        $file = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($image, 'posts/' . app('session')->get('tempID'));
-                    }
-                    array_push($postImage, $file);
-                }
-                $post->post_images = !count($postImage) ? NULL : implode(",", $postImage);
-            }
-            if ($this->requestData['post_video'] && count($this->requestData['post_video']) > 0) {
-                $postVideo = [];
-                foreach ($this->requestData['post_video'] as $video) {
-                    if (isset($this->requestData['group']) && $this->requestData['group']) {
-                        $fileVideo = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($video, 'posts/' . $this->requestData['group']);
-                    } else {
-                        $fileVideo = \OlaHub\UserPortal\Helpers\GeneralHelper::moveImage($video, 'posts/' . app('session')->get('tempID'));
-                    }
-                    array_push($postVideo, $fileVideo);
-                }
-                $post->post_videos = !count($postVideo) ? NULL : implode(",", $postVideo);
-            }
             if (isset($this->requestData['group']) && $this->requestData['group']) {
                 $group = $groupData;
                 $owner = \OlaHub\UserPortal\Models\UserModel::where('id', $group->creator)->first();
@@ -673,6 +652,36 @@ class OlaHubPostController extends BaseController
 
             $post->save();
 
+            if ($this->requestData['post_file'] && count($this->requestData['post_file']) > 0) {
+                foreach ($this->requestData['post_file'] as $file) {
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'path' => str_replace(STORAGE_URL, '', $file),
+                        'type' => 'image',
+                    ]);
+                }
+            }
+            if ($this->requestData['post_video'] && count($this->requestData['post_video']) > 0) {
+                foreach ($this->requestData['post_video'] as $file) {
+                    PostMedia::create([
+                        'post_id' => $post->id,
+                        'path' => str_replace(STORAGE_URL, '', $file),
+                        'type' => 'video',
+                    ]);
+                }
+            }
+
+                // var_dump($this->requestData['post_file']);
+            // if (count($this->requestData['post_file'])) {
+            //     foreach ($this->requestData['post_file'] as $file) {
+            //         PostMedia::create([
+            //             'post_id' => $post->id,
+            //             'path' => $file['dir'],
+            //             'type' => $file['type'],
+            //         ]);
+            //     }
+            // }
+
 
             if (isset($this->requestData['mentions']) && isset($this->requestData['privacy']) && ($this->requestData['privacy'] == 2 || $this->requestData['privacy'] == 1)) {
 
@@ -714,23 +723,23 @@ class OlaHubPostController extends BaseController
                     foreach ($this->requestData['optionsTextData'] as $value) {
                         $dataRows[] = array(
                             'post_id' => $post->post_id,
-                            'end_date' => $this->requestData['voteEndDate'],
-                            'option' => $value,
-                            'type' => 'text',
-                            'start_date' => \Carbon\Carbon::now()
+                            'text' => $value['type'] == 'image' ? '' : $this->requestData['value'],
+                            'image' =>  $value['type'] == 'image' ? $this->requestData['value'] : '',
+                            // 'type' => 'text',
+                            // 'start_date' => \Carbon\Carbon::now()
                         );
                     }
                 }
-                if (!empty($this->requestData['voteItems'])) {
-                    foreach ($this->requestData['voteItems'] as $value) {
-                        $dataRows[] = array(
-                            'post_id' => $post->post_id,
-                            'end_date' => $this->requestData['voteEndDate'],
-                            'option' => $value['value'],
-                            'type' => $value['type']
-                        );
-                    }
-                }
+                // if (!empty($this->requestData['voteItems'])) {
+                //     foreach ($this->requestData['voteItems'] as $value) {
+                //         $dataRows[] = array(
+                //             'post_id' => $post->post_id,
+                //             'end_date' => $this->requestData['voteEndDate'],
+                //             'option' => $value['value'],
+                //             'type' => $value['type']
+                //         );
+                //     }
+                // }
                 $postVote::insert($dataRows);
             }
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
@@ -1239,7 +1248,7 @@ class OlaHubPostController extends BaseController
             }
             $post->content = isset($this->requestData['content']) ? $this->requestData['content'] : NULL;
             $post->color = isset($this->requestData['color']) ? json_encode($this->requestData['color']) : NULL;
-            $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
+            // $post->prev_link_data = isset($this->requestData['linkPrevData']) ? serialize($this->requestData['linkPrevData']) : null;
             $post->save();
             $return = \OlaHub\UserPortal\Helpers\CommonHelper::handlingResponseItem($post, '\OlaHub\UserPortal\ResponseHandlers\PostsResponseHandler');
             $return['status'] = TRUE;

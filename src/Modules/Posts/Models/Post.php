@@ -46,4 +46,9 @@ class Post extends Model
     {
         return $this->hasMany('OlaHub\UserPortal\Models\PostVote', 'post_id', 'post_id');
     }
+
+    public function media (){
+        return $this->hasMany('OlaHub\UserPortal\Models\PostMidia', 'post_id', 'post_id');
+
+    }
 }
